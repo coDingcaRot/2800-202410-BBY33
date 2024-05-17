@@ -208,6 +208,34 @@ app.get('/loggedin', (req, res) => {
     }
 });
 
+//Forgot password function for users who forgot their password
+app.get('/forgotPass', (req, res) => {
+    res.render('forgotPass');
+});
+
+app.post('/forgotPass', async (req, res) => {
+    var email = req.body.email;
+    var password = req.body.password;
+
+    const user = await userCollection.findOne({ email: email });
+    if (!user) {
+        res.render('forgotPassError', { error: 'Email ' });
+        return;
+    }
+
+    const schema = Joi.string().min(6).max(30).required();
+    const validationRes = schema.validate(password);
+    if (validationRes.error != null) {
+        res.render('forgotPassError', { error: `${validationRes.error.details[0].message}` });
+        return;
+    }
+
+    var hashedPassword = await bcrypt.hash(password, saltRounds);
+    await userCollection.updateOne({ email: email }, { $set: { password: hashedPassword } });
+
+    res.render('passwordChanged');
+});
+
 //Members area for users who are logged in
 app.get('/members', (req, res) => {
     if (!req.session.authenticated) {
