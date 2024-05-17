@@ -1,0 +1,24 @@
+<%- include("templates/headerBefore", {page: "/login"}) %>
+    <div class="container-fluid">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-6">
+                <h1 class="display-3 text-center mb-3">Login</h1>
+                <form action="/loggingin" method="post">
+                    <div class="form-floating mb-3">
+                        <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com">
+                        <label for="email">Email Address</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="password" name="password"
+                            placeholder="Password">
+                        <label for="password">Password</label>
+                    </div>
+                    <div class="d-flex justify-content-center my-4">
+                        <button type="submit" class="btn btn-primary btn-lg me-3 w-50">Login</button>
+                        <a class="btn btn-danger btn-lg" href="/forgotPass" role="button">Forgot Password</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<%- include("templates/footerBefore") %>
