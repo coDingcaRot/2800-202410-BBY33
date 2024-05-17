@@ -5,6 +5,8 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const bcrypt = require('bcrypt');
 const Joi = require('joi');
+const favicon = require('serve-favicon');
+const path = require('path');
 const saltRounds = 12;
 const port = process.env.Port || 3000;
 
@@ -26,6 +28,8 @@ var { database } = include('databaseConnection');
 const userCollection = database.db(mongodb_database).collection('users');
 
 app.use(express.urlencoded({ extended: false }));
+
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
 //MongoStore for session storage
 var mongoStore = MongoStore.create({
