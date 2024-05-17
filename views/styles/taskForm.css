@@ -1,0 +1,233 @@
+body{
+    position: relative;
+    background:#f7f8fa
+}
+/* Dropdown */
+.dropdown {
+    display: inline-block;
+    position: relative;
+  }
+  
+  .dd-button {
+    display: inline-block;
+    border: 1px solid gray;
+    border-radius: 4px;
+    padding: 10px 30px 10px 20px;
+    background-color: #ffffff;
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+    display: flex;
+    align-items: center; 
+    justify-content: center;
+    height: 35px;
+    width: 150px;  /* adjust width of dropdown menu */
+  }
+  
+  .dd-button:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 10px; /* Adjusted right position */
+    transform: translateY(-50%);
+    width: 0; 
+    height: 0; 
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid black;
+  }
+  
+  .dd-button:hover {
+    background-color: #eeeeee;
+  }
+  
+  .dd-input {
+    display: none;
+  }
+  
+  .dd-menu {
+    position: absolute;
+    top: 100%;
+    left: 0; /* Adjusted left position */
+    z-index: 999; /* Ensure dropdown is above other content */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0;
+    margin: 2px 0 0 0;
+    box-shadow: 0 0 6px 0 rgba(0,0,0,0.1);
+    background-color: #ffffff;
+    list-style-type: none;
+  }
+  
+  .dd-input + .dd-menu {
+    display: none;
+  } 
+  
+  .dd-input:checked + .dd-menu {
+    display: block;
+  } 
+  
+  .dd-menu li {
+    padding: 10px 20px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  
+  .dd-menu li:hover {
+    background-color: #f6f6f6;
+  }
+  
+  .dd-menu li a {
+    display: block;
+    margin: -10px -20px;
+    padding: 10px 20px;
+  }
+  
+  .dd-menu li.divider{
+    padding: 0;
+    border-bottom: 1px solid #cccccc;
+  }
+  
+  @media (max-width: 768px) {
+    .dd-menu {
+      left: -1px; /* Adjusted left position for smaller screens */
+    }
+  }
+  
+  #dd-custom-modal {
+    display: none;
+    position: fixed;
+    top: 20%; 
+    left: 50%;
+    transform: translate(-50%, 0%);
+    z-index: 9999;
+    width: 100%;
+    max-width: 800px;
+    padding: 20px;
+    background-color: transparent;
+    border: none;
+    outline: none;
+}
+
+
+
+
+
+
+
+.picker-window {
+    position: absolute;
+    border-top: 1px solid #ccd0d0;
+    border-bottom: 1px solid #ccd0d0;
+    height: 1.4em;
+    left: 0;
+    top: 50%;
+    transform: translateY(-65%);
+    width: 100%;
+    pointer-events: none;
+  }
+  
+  .picker {
+    display: inline-grid;
+    box-shadow: 0 .5vw 2vw -5px rgba(0, 0, 0, .2);
+    border-radius: 15px;
+    position: relative;
+    border-top: 2rem solid white;
+    border-bottom: 2rem solid white;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    background: white;
+    grid-template-columns: repeat(3, fit-content(600px));
+    font-size: calc(.5rem + 2.4vw);
+    position: relative;
+    font-feature-settings: "tnum";
+    font-weight: 400;
+    width: 100%;
+  }
+  
+  .picker:before,
+  .picker:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2.2em;
+    pointer-events: none;
+  }
+  
+  .picker:before {
+    top: -.2em;
+    background: linear-gradient(white, rgba(255, 255, 255, .7));
+  }
+  
+  .picker:after {
+    bottom: -.2em;
+    height: 2.4em;
+    background: linear-gradient(rgba(255, 255, 255, .7), white);
+  }
+
+  .picker-week {
+    padding-right: .5em;
+  }
+  
+  .picker-week span {
+    padding-left: .56em;
+  }
+
+  .picker ul {
+    max-height: 4em;
+    overflow-y: scroll;
+    margin-right: 1em;
+    scroll-snap-type: y mandatory;
+    padding-bottom: 3em;
+    padding-top: 3em;
+  }
+
+  .picker ul::-webkit-scrollbar {
+    display: none; 
+}
+  
+  .picker li {
+    list-style: none;
+    scroll-snap-align: center;
+    height: 1.4em;
+    text-align: right;
+    word-spacing: .2em;
+  }
+  
+  .picker-week span {
+    padding-left: .56em;
+  }
+  
+
+
+
+  .container {
+    max-height: 700px;
+    overflow-y: auto;
+    margin-top: 20%;
+    padding: 5%;
+    border-radius: 10px;
+    background-color: #ffffff;
+  }
+
+  .line {
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background-color: gainsboro; 
+}
+
+  .taskform-wrapper {
+    padding: 5%;
+  }
+
+  .taskform-header{
+    position: relative;
+    margin-left: 5px;
+  }
+
+  #taskform-close-btn {
+   position: absolute;
+   top: 0;
+   right: 0; 
+  }
