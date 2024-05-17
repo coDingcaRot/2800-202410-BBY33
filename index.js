@@ -43,6 +43,7 @@ app.use(session({
 })
 );
 
+/*** MIDDLEWARE VALIDATIONS ***/
 function isValidSession(req) {
     if (req.session.authenticated) {
         return true;
@@ -58,6 +59,9 @@ function sessionValidation(req, res, next) {
     }
 }
 
+
+/*** PAGES ***/
+
 //Checks if the user is logged in or not
 app.get('/', (req, res) => {
     if (req.session.authenticated) {
@@ -67,6 +71,7 @@ app.get('/', (req, res) => {
         res.render('main');
     }
 });
+
 
 app.get("/nosql-injection", sessionValidation, async (req, res) => {
     var username = req.query.user;
@@ -195,7 +200,6 @@ app.post('/loggingin', async (req, res) => {
 });
 
 app.use('/loggedin', sessionValidation);
-
 app.get('/loggedin', (req, res) => {
     if (!req.session.authenticated) {
         res.redirect('/');
@@ -227,6 +231,8 @@ app.get('*', (req, res) => {
     res.render('404error');
 });
 
+
+/**** END OF PAGES ****/
 app.listen(port, () => {
-    console.log("SyncPro node application listening on port " + port);
+    console.log(`SyncPro node application listening on port ${port}`);
 }); 
