@@ -1,0 +1,125 @@
+<%- include("templates/header", { currentURL: '/projectSetting', navLinks: navLinks }) %>
+
+<style>
+.input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.form-check-input {
+    margin-left: 10px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+</style>
+
+<!-- The Modal -->
+<div class="modal modal-sheet position-static d-block bg-body-secondary p-4 py-md-5" tabindex="-1" role="dialog" id="modalSheet">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content rounded-4 shadow">
+      <div class="modal-header border-bottom-0">
+        <h1 class="modal-title fs-5">Create New Project</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body py-0">
+        <form action="/createProject" method="POST">
+            <div class="mb-3">
+                <label for="project-name" class="form-label">Project Name</label>
+                <input type="text" class="form-control" id="projectName" name="projectName" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+            </div>
+
+            <input type="hidden" id="hiddenMembersInput" name="members">
+
+            <div class="mb-3">
+                <label for="team" class="form-label">Team</label>
+                <div id="team" class="team-inputs">
+                    <div class="input-group mb-3">
+                      <div class="input-group mb-3">
+                        <input type="email" class="form-control" placeholder="Member Email" id="member-email-input">
+                        <button type="button" class="btn btn-primary" onclick="addMember()">Add Member</button>
+                    </div>
+                    
+                    <!-- Members List -->
+                    <ul id="members-list" class="list-group"></ul>
+
+                </div>
+            </div>
+
+            <div class="modal-footer flex-column align-items-stretch w-100 gap-2 pb-3 border-top-0">
+              <button type="submit" class="btn btn-lg btn-primary" onclick="showNotification()">Create</button>
+              <button type="button" class="btn btn-lg btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  var members = [];
+  
+  function addMember() {
+      const emailInput = document.getElementById('member-email-input');
+      const email = emailInput.value;
+      fetch(`/addMember?email=${email}`)
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  members.push({ email: data.email, name: data.name });
+                  updateMembersList();
+              } else {
+                  alert(data.error);
+              }
+            emailInput.value=''; //clear the input
+          });
+  }
+  
+  function updateMembersList() {
+    const list = document.getElementById('members-list');
+    const hiddenInput = document.getElementById('hiddenMembersInput');
+    list.innerHTML = '';
+    let membersEmails = [];
+
+    members.forEach(member => {
+        const item = `<li class="list-group-item">
+                        ${member.name} (${member.email})
+                        <button type="button" onclick="removeMember('${member.email}')">Remove</button>
+                      </li>`;
+        list.innerHTML += item;
+        membersEmails.push(member.email);
+    });
+
+    // Update the hidden input's value to the members' emails array as a JSON string
+    hiddenInput.value = JSON.stringify(membersEmails);
+}
+
+  function removeMember(email) {
+      members = members.filter(member => member.email !== email);
+      updateMembersList();
+  }
+  </script>
+
+<%- include("templates/footer") %>
+
+

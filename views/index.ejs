@@ -1,0 +1,38 @@
+<%- include("templates/header", { currentURL: currentURL, navLinks: navLinks }) %>
+<div class="container my-5">
+    <div class="p-5 text-center bg-body-tertiary rounded-3">
+        <h1 class="text-body-emphasis">SyncPro</h1>
+<% if (authenticated) { %>
+    <!-- <h2>Hello, <%= userName %>!</h2> -->
+    <br>
+    <form action="/workspaceSetting" method="get">
+        <button class="btn btn-primary d-inline-flex align-items-center" type="submit">Go to Workspace</button>
+    </form>
+    <br>
+    <form action="/logout" method="get">
+        <button class="btn btn-primary d-inline-flex align-items-center" type="submit">Logout</button>
+    </form>
+<% } else { %>
+
+            <p class="lead text-muted">
+                Welcome to SyncPro
+            </p>
+            
+                <form action="/signup" method="get">
+                    <button class="btn btn-primary d-inline-flex align-items-center" type="submit">Sign Up</button>
+                </form>
+                <br>
+                <form action="/login" method="get">
+                    <button class="btn btn-primary d-inline-flex align-items-center" type="submit">Login</button>
+                </form>
+
+
+
+<% } %>
+            
+</div>
+</div>
+
+<%- include("templates/footer") %>
+
+

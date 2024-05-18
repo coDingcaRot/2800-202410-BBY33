@@ -1,0 +1,213 @@
+<%- include("templates/header", { currentURL: '/projectManagement' , navLinks: navLinks }) %>
+
+    <style>
+        .input-group-text {
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-check-input {
+            margin-left: 10px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+    </style>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>My Projects</h1>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                data-bs-target="#createProjectModal">Create a Project</button>
+        </div>
+
+        <!-- Project List -->
+        <div class="d-flex flex-column flex-md-row p-4 gap-4 py-md-5 align-items-center justify-content-center">
+            <div class="list-group" id="projectList">
+                <% projects.forEach(project=> { %>
+                    <div class="list-group-item list-group-item-action d-flex gap-3 py-3">
+                        <div class="d-flex gap-2 w-100 justify-content-between">
+                            <div>
+                                <h6 class="mb-0">
+                                    <%= project.projectName %>
+                                </h6>
+                                <p class="mb-0 opacity-75">
+                                    <%= project._id %>
+                                </p>
+                            </div>
+                            <div>
+                                <button class="btn btn-danger btn-sm"
+                                    onclick="confirmDelete('<%= project._id %>')">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+            </div>
+        </div>
+        <div class="d-flex justify-content-center mt-3">
+            <a href="/workspaceSetting" class="btn btn-secondary">Back</a>
+        </div>
+    </div>
+
+    <!-- Create Project Modal -->
+    <div class="modal fade" id="createProjectModal" tabindex="-1" aria-labelledby="createProjectModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createProjectModalLabel">Create New Project</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="/projectManagement" method="POST">
+                        <div class="mb-3">
+                            <label for="projectName" class="form-label">Project Name</label>
+                            <input type="text" class="form-control" id="projectName" name="projectName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                required></textarea>
+                        </div>
+                        <input type="hidden" id="hiddenMembersInput" name="members">
+                        <div class="mb-3">
+                            <label for="team" class="form-label">Team</label>
+                            <div id="team" class="team-inputs">
+                                <div class="input-group mb-3">
+                                    <input type="email" class="form-control" placeholder="Member Email"
+                                        id="memberEmailInput">
+                                    <button type="button" class="btn btn-primary" onclick="addMember()">Add
+                                        Member</button>
+                                </div>
+                                <ul id="membersList" class="list-group"></ul>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Create</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <h5 class="mb-0">Are you sure you want to delete this project?</h5>
+                    <p class="mb-0"></p>
+                </div>
+                <div class="modal-footer flex-nowrap p-0">
+                    <button type="button" class="btn btn-link fs-6 col-6 py-3 m-0 rounded-0 border-end"
+                        onclick="deleteProject()"><strong>Yes, delete</strong></button>
+                    <button type="button" class="btn btn-link fs-6 col-6 py-3 m-0 rounded-0" data-bs-dismiss="modal">No,
+                        thanks</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        var projectIdToDelete = null;
+
+
+        function confirmDelete(projectId) {
+            projectIdToDelete = projectId;
+            var confirmDeleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+            confirmDeleteModal.show();
+        }
+
+        function deleteProject() {
+            fetch(`/deleteProject?projectId=${projectIdToDelete}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Project deleted successfully');
+                        location.reload();
+                    } else {
+                        alert(data.error);
+                    }
+                });
+        }
+
+
+        var members = [];
+
+        function addMember() {
+            const emailInput = document.getElementById('memberEmailInput');
+            const email = emailInput.value;
+
+            // Check if email already exists
+            if (members.some(member => member.email === email)) {
+                alert('This email is already added.');
+                emailInput.value = ''; // clear the input
+                return;
+            }
+
+
+            fetch(`/addMember?email=${email}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        members.push({ email: data.email, name: data.name });
+                        updateMembersList();
+                    } else {
+                        alert(data.error);
+                    }
+                    emailInput.value = '';
+                });
+        }
+
+
+ /**
+ * update Members list after delete or add
+ * Generated by ChatGPT 3.5
+ * 
+ * @author https://chat.openai.com/
+ */
+        function updateMembersList() {
+            const list = document.getElementById('membersList');
+            const hiddenInput = document.getElementById('hiddenMembersInput');
+            list.innerHTML = '';
+            let membersEmails = [];
+
+            members.forEach(member => {
+                const item = `<li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${member.name} (${member.email})
+                        <a href="#" class="text" onclick="removeMember('${member.email}')">Remove</a>
+                      </li>`;
+                list.innerHTML += item;
+                membersEmails.push(member.email);
+            });
+
+            // Update the hidden input's value to the members' emails array as a JSON string
+            hiddenInput.value = JSON.stringify(membersEmails);
+        }
+
+        function removeMember(email) {
+            members = members.filter(member => member.email !== email);
+            updateMembersList();
+        }
+    </script>
+
+    <%- include("templates/footer") %>
