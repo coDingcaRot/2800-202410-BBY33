@@ -1,38 +1,14 @@
-<%- include("templates/header", { currentURL: currentURL, navLinks: navLinks }) %>
-<div class="container my-5">
-    <div class="p-5 text-center bg-body-tertiary rounded-3">
-        <h1 class="text-body-emphasis">SyncPro</h1>
-<% if (authenticated) { %>
-    <!-- <h2>Hello, <%= userName %>!</h2> -->
-    <br>
-    <form action="/workspaceSetting" method="get">
-        <button class="btn btn-primary d-inline-flex align-items-center" type="submit">Go to Workspace</button>
-    </form>
-    <br>
-    <form action="/logout" method="get">
-        <button class="btn btn-primary d-inline-flex align-items-center" type="submit">Logout</button>
-    </form>
-<% } else { %>
+<%- include("templates/header") %>
 
-            <p class="lead text-muted">
-                Welcome to SyncPro
-            </p>
-            
-                <form action="/signup" method="get">
-                    <button class="btn btn-primary d-inline-flex align-items-center" type="submit">Sign Up</button>
-                </form>
-                <br>
-                <form action="/login" method="get">
-                    <button class="btn btn-primary d-inline-flex align-items-center" type="submit">Login</button>
-                </form>
-
-
-
-<% } %>
-            
-</div>
-</div>
+    <div class="container my-5">
+        <div class="justify-content-center align-items-center">
+            <h1 class="display-2 text-center mb-4">Hello, <%= username %>
+            </h1>
+            <div class="d-flex justify-content-center my-4">
+                <a class="btn btn-primary btn-lg ms-5 me-3 w-50" href="/members" role="button">Temp Index</a>
+                <a class="btn btn-danger btn-lg" href="/logout" role="button">Log out</a>
+            </div>
+        </div>
+    </div>
 
 <%- include("templates/footer") %>
-
-

@@ -1,38 +1,27 @@
-<%- include("templates/header", { currentURL: '/signup', navLinks: navLinks }) %>
- 
-<main class="form-signin w-100 m-auto" style="max-width: 400px; margin: 50px auto;">
-  <img class="mb-4" src="/favicon.png" alt="" width="55" height="55">   
-  <h1 class="h3 mb-3 fw-normal">Create User</h1>
-    <form action="/signupSubmit" method="post">
-
-
-    <div class="form-floating">
-      <input name="userName" id="userName" type="text" class="form-control" placeholder="Name" required>
-      <label for="floatingInput">Name</label>
+<%- include("templates/headerBefore", {page: "/signup"}) %>
+    <div class="container-fluid ">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-6">
+                <h1 class="text-center mb-3">Sign Up</h1>
+                <form action="/signupSubmit" method="post">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username"
+                            placeholder="Enter username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email"
+                            placeholder="Enter email address">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password"
+                            placeholder="Enter password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign Up</button>
+                </form>
+            </div>
+        </div>
     </div>
-    <div class="form-floating">
-      <input name="email" id="email" type="email" class="form-control" placeholder="Email" required>
-      <label for="floatingInput">Email address</label>
-    </div>
-    <div class="form-floating">
-      <input name="password" id="password" type="password" class="form-control" placeholder="Password" required>
-      <label for="floatingPassword">Password</label>
-    </div>
-
-    <button class="btn btn-primary w-100 py-2" type="submit">Submit</button>
-</form>
-
-<% if (message) { %>
-  <p style="color: red;"><%= message %></p>
-<% } %>
-<% if (retry) { %>
-  <br>
-  <a href="/signup">Try again</a>
-<% } %>
-
-    <!-- <p class="mt-5 mb-3 text-body-secondary">© 2017–2024</p> -->
-
-</main>
-<script src="/docs/5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-
-<%- include("templates/footer") %>   
+<%- include("templates/footerBefore") %>

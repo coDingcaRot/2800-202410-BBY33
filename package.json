@@ -1,32 +1,22 @@
 {
-  "name": "assignment-2-annkclu",
+  "name": "project-repo",
   "version": "1.0.0",
-  "description": "This assignment builds on the previous assignment, Assignment 1.",
+  "description": "Team Name: BBY33\r Team Members: \r - Jonathaniel Alipes\r - Alex Huynh\r - Anne Kang\r - Joyce Huang\r ## More details to come\r TBA",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/comp2537-s24/assignment-2-annkclu.git"
-  },
-  "author": "Anne",
+  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/comp2537-s24/assignment-2-annkclu/issues"
-  },
-  "homepage": "https://github.com/comp2537-s24/assignment-2-annkclu#readme",
   "dependencies": {
     "bcrypt": "^5.1.1",
-    "connect": "^3.7.0",
-    "connect-flash": "^0.1.1",
     "connect-mongo": "^5.1.0",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
     "joi": "^17.13.1",
-    "mongo": "^0.1.0",
-    "nodemon": "^3.1.0"
+    "mongodb": "^6.6.0",
+    "serve-favicon": "^2.5.0"
   }
 }
