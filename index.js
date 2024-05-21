@@ -1,17 +1,17 @@
 require("./utils.js");
 require('dotenv').config();
 const express = require('express');
+const app = express();
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const bcrypt = require('bcrypt');
-
-const projectCollection = database.db(mongodb_database).collection('projects');
-const projectMemberCollection = database.db(mongodb_database).collection('projectMembers');
-
-app.set('view engine', 'ejs');
-
-// Parse URL-encoded bodies (as sent by HTML forms)
-app.use(express.urlencoded({ extended: false })); // 'extended: true' allows for rich objects and arrays to be encoded.
+const Joi = require('joi');
+const favicon = require('serve-favicon');
+const path = require('path');
+const saltRounds = 12;
+const port = process.env.Port || 3000;
+const expireTime = 1 * 60 * 60 * 1000; // Expires after 1 hour
+app.set("view engine", "ejs");
 
 // Configure session management with MongoDB storage
 var mongoStore = MongoStore.create({
@@ -20,15 +20,6 @@ var mongoStore = MongoStore.create({
         secret: process.env.MONGODB_SESSION_SECRET
     }
 });
-const Joi = require('joi');
-const favicon = require('serve-favicon');
-const path = require('path');
-const saltRounds = 12;
-const port = process.env.Port || 3000;
-
-const app = express();
-const expireTime = 1 * 60 * 60 * 1000; // Expires after 1 hour
-app.set("view engine", "ejs");
 
 /* secret info section */
 const mongodb_host = process.env.MONGODB_HOST;
@@ -43,17 +34,12 @@ var { database } = include('databaseConnection');
 
 const userCollection = database.db(mongodb_database).collection('users');
 
+const projectCollection = database.db(mongodb_database).collection('projects');
+const projectMemberCollection = database.db(mongodb_database).collection('projectMembers');
+
 app.use(express.urlencoded({ extended: false }));
 
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-
-//MongoStore for session storage
-var mongoStore = MongoStore.create({
-    mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/comp2800-a1`,
-    crypto: {
-        secret: mongodb_session_secret
-    }
-})
 
 app.use(session({
     secret: node_session_secret, //key that will sign cookie
@@ -78,7 +64,6 @@ function sessionValidation(req, res, next) {
         res.redirect('/login');
     }
 }
-
 
 /*** PAGES ***/
 
@@ -256,45 +241,28 @@ app.post('/forgotPass', async (req, res) => {
     res.render('passwordChanged');
 });
 
-//Members area for users who are logged in
-app.get('/members', (req, res) => {
-    if (!req.session.authenticated) {
-        res.redirect('/login');
-        return;
-    } else {
-        res.render('members', { authenticated: req.session.authenticated, username: req.session.username });
-
-    }
-});
-
-
-const navLinks = [
-    { name: 'Home', link: '/' },
-    { name: 'Login', link: '/login' },
-    { name: 'Sign Up', link: '/signup' },
-    { name: 'Profile', link:'/profile'},
-    { name: 'Workspace', link: '/workspaceSetting'},
-
-];
-const images = ['/image1.jpg', '/image2.jpg', '/image3.jpg'];
+// const navLinks = [
+//     { name: 'Home', link: '/' },
+//     { name: 'Login', link: '/login' },
+//     { name: 'Sign Up', link: '/signup' },
+//     { name: 'Profile', link:'/profile'},
+//     { name: 'Workspace', link: '/workspaceSetting'}
+// ];
+// const images = ['/image1.jpg', '/image2.jpg', '/image3.jpg'];
 
 // Members only page
 app.get('/members', (req, res) => {
     if (!req.session.authenticated) {
-        return res.redirect('/');
+        return res.redirect('/login');
+    } else {
+        res.render('members', {user: req.session.username});   
     }
-    res.render("members", {
-        user: req.session.userName,
-        navLinks,
-        currentURL: '/members',
-        images
-    });
 });
 
 //profile page
 app.get('/profile', sessionValidation, async(req, res) => {
-    try {
-        const userinfo = await userCollection.findOne({ _id: new ObjectId(req.session.userId) });
+        const userinfo = await userCollection.findOne({ _id: new ObjectId(req.session.userId)});
+        console.log('User info:', userinfo);  // Add this line to log userinfo
         const timezones = [
             "Pacific/Midway (UTC-11:00)",
             "America/Adak (UTC-10:00)",
@@ -313,12 +281,7 @@ app.get('/profile', sessionValidation, async(req, res) => {
             "Asia/Tokyo (UTC+09:00)",
             "Australia/Sydney (UTC+10:00)"
         ];
-        res.render('profile', {userinfo, timezones, navLinks, currentURL:'/profile'});
-    } catch (error) {
-        console.error("Failed to fetch userinfo:", error);
-        res.status(500).render('errormessage', { errorMessage: "Failed to load userinfo." });
-    }
-
+        res.render('profile', {userinfo: userinfo});
 });
 
 //handle profile update

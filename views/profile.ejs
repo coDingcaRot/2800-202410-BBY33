@@ -1,4 +1,4 @@
-<%- include("templates/header", { currentURL: '/profile' , navLinks: navLinks }) %>
+<%- include("templates/header") %>  <!-- Deleted , { currentURL: '/profile' , navLinks: navLinks }-->
     <div class="container my-5">
         <div class="p-5 text-center bg-body-tertiary rounded-3">
             <form>
@@ -13,21 +13,21 @@
             
                             <div class="col-12 text-start">
                                 <label for="userID" class="form-label">User ID</label>
-                                <input type="text" class="form-control" id="userID" value="<%= userinfo._id %>" readonly>
+                                <input type="text" class="form-control" id="userID" value="<%#= userinfo._id %>" readonly>
                             </div>
             
                             <div class="col-12 text-start">
                                 <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" value="<%= userinfo.email %>" readonly>
+                                <input type="email" class="form-control" id="email" value="<%#= userinfo.email %>" readonly>
                             </div>
             
                             <div class="col-12 text-start">
                                 <label for="timezone" class="form-label">Timezone</label>
                                 <select class="form-select" id="timezone" name="timezone" required>
                                     <option value="">Choose...</option>
-                                    <% timezones.forEach(function(timezone) { %>
-                                        <option value="<%= timezone %>" <%= userinfo.timezone === timezone ? 'selected' : '' %>><%= timezone %></option>
-                                    <% }) %>
+                                    <%# timezones.forEach(function(timezone) { %>
+                                        <option value="<%#= timezone %>" <%#= userinfo.timezone === timezone ? 'selected' : '' %>><%#= timezone %></option>
+                                    <%# }) %>
                                 </select>
                                 <div class="invalid-feedback">
                                     Please select a valid timezone.
