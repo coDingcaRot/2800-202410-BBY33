@@ -105,11 +105,10 @@ app.get('/', (req, res) => {
     res.render('main'); 
 });
 
-//Sign up function for new users
+/***** SIGN UP FEATURE *****/
 app.get('/signup', (req, res) => {
     res.render('signup');
 });
-
 
 app.post('/signupSubmit', async (req, res) => {
     const { username, name, email, password } = req.body;
@@ -127,8 +126,11 @@ app.post('/signupSubmit', async (req, res) => {
         if (existingUser) {
             res.status(400);
             return res.render("signupError", {error: 'User already exists with that email.'});
+        } else{
+            // return res.redirect("/initializeTimezone");
         }
 
+        /***** Move functions to /initializeTimezone *****/
         //creates the user and saves to db
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ username, name, email, password: hashedPassword });
@@ -142,19 +144,28 @@ app.post('/signupSubmit', async (req, res) => {
             }
             res.redirect('/homepage');
         });
+
+        /***** Move functions to /initializeTimezone *****/
+
     } catch (err) {
         res.status(500)
         return res.render("signupError", {error: 'Error during signup process: ' + err.message});
     }
 });
 
+app.get('/initializeTimezone', (req, res) => {
+    res.render('initializeTimezone');
+});
+
+app.post('/initializeTimezoneSubmit', (req, res) => {
+});
 
 /***** HOMEPAGE *****/
 app.get('/homepage', ensureAuth, (req, res) => {
     res.render("homepage");
 });
 
-/***** LOGIN ROUTES ****/
+/***** LOGIN ROUTES *****/
 app.get('/login', (req, res) => {
     res.render('login');
 });
@@ -180,6 +191,7 @@ app.post('/loggingin', (req, res, next) => {
     })(req, res, next);
 });
 
+/***** FORGET PASS ROUTES *****/
 app.get('/forgotPass', (req, res) => {
     res.render('forgotPass');
 });
@@ -216,7 +228,7 @@ app.post('/forgotPass', async (req, res) => {
 //     }
 // });
 
-//profile page
+/***** PROFILE ROUTES *****/
 app.get('/profile', ensureAuth, async(req, res) => {
         // const email = req.User.email;
         // const name = req.User.username;
@@ -246,7 +258,7 @@ app.post('/profile', ensureAuth, async (req, res) => {
     }
 });
 
-
+/***** WORKSPACE SETTING ROUTES *****/
 //Workspace Setting page
 app.get('/workspaceSetting', sessionValidation, (req, res) => {
     res.render('workspaceSetting', { navLinks, currentURL:'/workspaceSetting' }); // Adjust navLinks as needed
