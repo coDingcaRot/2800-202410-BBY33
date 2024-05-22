@@ -25,6 +25,7 @@ const node_session_secret = process.env.NODE_SESSION_SECRET;
 app.use(express.json()) //parsing json bodies
 app.use(express.urlencoded({ extended: true })); // complex parsing set true: used for json formatting
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico'))); 
+app.use(express.static(path.join(__dirname, 'public')));
 app.set("view engine", "ejs"); // ejs engine setup
 
 
@@ -153,6 +154,7 @@ app.post('/signupSubmit', async (req, res) => {
     }
 });
 
+/***** INITIALIZE TIMEZONE *****/
 app.get('/initializeTimezone', (req, res) => {
     res.render('initializeTimezone');
 });
@@ -175,7 +177,8 @@ app.post('/loggingin', (req, res, next) => {
     passport.authenticate('local', (err, email, info) => {
         // console.log(email)
         if (err) {
-            return res.status(500).render("loginError", {error: "Internal server error"});
+            console.log(err);
+            return res.status(500).render("loginError", {error: "User does not exist"});
         }
         if (!email) {
             return res.status(401).render("loginError", {error: "Someone has your email"});
@@ -184,7 +187,7 @@ app.post('/loggingin', (req, res, next) => {
         //logins in the user
         req.login(email, loginErr => {
             if (loginErr) {
-                return res.status(500).render("loginError", {error: "Interal server error"});
+                return res.status(500).render("loginError", {error: "Password not a match"});
             }
             return res.redirect("/homepage");
         });

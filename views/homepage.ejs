@@ -1,7 +1,11 @@
-<%- include("templates/headerAfter") %>
-
-
-
-<div>You are in homepage</div>
-
+<%- include("templates/headerAfter", {page: "/homepage"}) %>
+    <br><br><br>
+    <nav class="navbar navbar-expand-lg border-bottom">
+        <div class="d-flex justify-content-between">
+            <span class="navbar-brand">Projects</span>
+            <a  class="navbar" href="" style="text-decoration: none; size: 10em;">+</a>
+        </div>
+    </nav>
+    <br>
+    <div class="d-flex justify-content-center" id="">No projects created</div> <!-- Gets replaced one a project is created -->
 <%- include("templates/footerAfter") %>
