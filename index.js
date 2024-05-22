@@ -2,6 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
+const session = require('express-session');
 /***** REQUIRED TO START! *****/
 
 // storing or securing data
@@ -12,20 +13,20 @@ const saltRounds = 12;
 // utilities
 require("./modules/utils.js");
 const favicon = require('serve-favicon');
+const passport = require('passport'); // ease in signup and login verifications
 const path = require('path');
 const port = process.env.PORT || 3000;
+
+/***** SESSION SETUP *****/
+const expireTime = 24 * 60 * 60 * 1000; // Expires after 1 day
+const node_session_secret = process.env.NODE_SESSION_SECRET;
 
 //node built in middleware
 app.use(express.json()) //parsing json bodies
 app.use(express.urlencoded({ extended: true })); // complex parsing set true: used for json formatting
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico'))); 
-
 app.set("view engine", "ejs"); // ejs engine setup
 
-/***** SESSION SETUP *****/
-const session = require('express-session');
-const expireTime = 24 * 60 * 60 * 1000; // Expires after 1 day
-const node_session_secret = process.env.NODE_SESSION_SECRET;
 
 /** MONGO/MONGOOSE SETUP **/
 const mongoose = require('mongoose');
@@ -34,7 +35,6 @@ const mongodb_user = process.env.MONGODB_USER;
 const mongodb_password = process.env.MONGODB_PASSWORD;
 const mongodb_database = process.env.MONGODB_DATABASE;
 const mongodb_session_secret = process.env.MONGODB_SESSION_SECRET;
-const {mongoStart, mongoClient} = require('./modules/mongoClient.js'); // fetches a connection to mongoDB
 
 // Configure session management with MongoDB storage
 const MongoStore = require('connect-mongo');
@@ -51,7 +51,25 @@ app.use(session({
 })
 );
 
-mongoStart().catch(console.error);
+//Passport ease of use for login and signup
+app.use(passport.initialize()); //sets up passport
+app.use(passport.session()); 
+require('./modules/passport.js')(passport);
+
+mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/comp2800-a1`)
+    .then(async () => {
+        console.log(("\n***MongoDB connected successfully***\n").toUpperCase());
+
+    })
+    .catch(err => {
+        console.error("Failed to connect to MongoDB:", err);
+        process.exit(1);
+    });
+
+/**
+ *  mongoStart().catch(console.error); <--- Original way of starting doesnt work. 
+ *  Since we are using mongoose we need to use mongoose to connect and to use its features
+ * */ 
 
 // Mongodb schema fetching
 const User = require('./modules/user.js');
@@ -75,6 +93,13 @@ function sessionValidation(req, res, next) {
     }
 }
 
+function ensureAuth(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/');
+}
+
 /*** PAGES ***/
 app.get('/', (req, res) => {
     res.render('main'); 
@@ -92,7 +117,7 @@ app.post('/signupSubmit', async (req, res) => {
     //checks if the fields are empty
     if (!username || !email || !password) {
         res.status(400);
-        return res.render("signupError", {error: 'Signup Failed: All fields are required.'});
+        return res.render("signupError", {error: 'All fields are required.'});
     }
 
     try {
@@ -101,20 +126,19 @@ app.post('/signupSubmit', async (req, res) => {
         // console.log(existingUser);
         if (existingUser) {
             res.status(400);
-            return res.render("signupError", {error: 'Signup Failed: User already exists with that email.'});
+            return res.render("signupError", {error: 'User already exists with that email.'});
         }
-
 
         //creates the user and saves to db
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ username, name, email, password: hashedPassword });
         await newUser.save();
-        console.log(`new user saved `)
+
         //Attempst to log the user in unless an error is popped up
         req.login(newUser, loginErr => {
             if (loginErr) {
                 res.status(500);
-                return res.render("signupError", {error: 'Error during signup process.'});
+                return res.render("signupError", {error: `Error during signup process. ${loginErr}`});
             }
             res.redirect('/homepage');
         });
@@ -124,53 +148,36 @@ app.post('/signupSubmit', async (req, res) => {
     }
 });
 
+
+/***** HOMEPAGE *****/
+app.get('/homepage', ensureAuth, (req, res) => {
+    res.render("homepage");
+});
+
 /***** LOGIN ROUTES ****/
 app.get('/login', (req, res) => {
     res.render('login');
 });
 
-app.post('/loggingin', async (req, res) => {
-    var email = req.body.email;
-    var password = req.body.password;
 
-    const schema = Joi.string().max(20).required();
-    const validationRes = schema.validate(email);
-    if (validationRes.error != null) {
-        res.render('loginError', { error: 'Email' });
-        return;
-    }
+app.post('/loggingin', (req, res, next) => {
+    passport.authenticate('local', (err, email, info) => {
+        // console.log(email)
+        if (err) {
+            return res.status(500).render("loginError", {error: "Internal server error"});
+        }
+        if (!email) {
+            return res.status(401).render("loginError", {error: "Someone has your email"});
+        }
 
-    const result = await User.find({ email: email }).project({ username: 1, password: 1, user_type: 1, _id: 1 }).toArray();
-
-    if (result.length == 0) {
-        res.render('loginError', { error: 'Invalid Email or Password' });
-        return;
-    } else if (result.length != 1) {
-        res.redirect('/login');
-        return;
-    }
-
-    if (await bcrypt.compare(password, result[0].password)) {
-        req.session.authenticated = true;
-        req.session.email = email;
-        req.session.username = result[0].username;
-        req.session.user_type = result[0].user_type;
-        req.session.cookie.maxAge = expireTime;
-        res.redirect('/homepage');
-        return;
-    } else {
-        res.render('loginError', { error: 'Invalid Password', authenticated: req.session.authenticated });
-        return;
-    }
-});
-
-app.use('/loggedin', sessionValidation);
-app.get('/loggedin', (req, res) => {
-    if (!req.session.authenticated) {
-        res.redirect('/');
-    } else {
-        res.redirect('/members');
-    }
+        //logins in the user
+        req.login(email, loginErr => {
+            if (loginErr) {
+                return res.status(500).render("loginError", {error: "Interal server error"});
+            }
+            return res.redirect("/homepage");
+        });
+    })(req, res, next);
 });
 
 app.get('/forgotPass', (req, res) => {
@@ -201,41 +208,25 @@ app.post('/forgotPass', async (req, res) => {
 });
 
 // Members only page
-app.get('/members', (req, res) => {
-    if (!req.session.authenticated) {
-        return res.redirect('/login');
-    } else {
-        res.render('members', {user: req.session.username});   
-    }
-});
+// app.get('/members', (req, res) => {
+//     if (!req.session.authenticated) {
+//         return res.redirect('/login');
+//     } else {
+//         res.render('members', {user: req.session.username});   
+//     }
+// });
 
 //profile page
-app.get('/profile', sessionValidation, async(req, res) => {
-        const userinfo = await userCollection.findOne({ _id: new ObjectId(req.session.userId)});
-        console.log('User info:', userinfo);  // Add this line to log userinfo
-        const timezones = [
-            "Pacific/Midway (UTC-11:00)",
-            "America/Adak (UTC-10:00)",
-            "Pacific/Honolulu (UTC-10:00)",
-            "America/Anchorage (UTC-09:00)",
-            "America/Los_Angeles (UTC-08:00)",
-            "America/Denver (UTC-07:00)",
-            "America/Chicago (UTC-06:00)",
-            "America/New_York (UTC-05:00)",
-            "Europe/London (UTC+00:00)",
-            "Europe/Paris (UTC+01:00)",
-            "Europe/Moscow (UTC+03:00)",
-            "Asia/Dubai (UTC+04:00)",
-            "Asia/Kolkata (UTC+05:30)",
-            "Asia/Singapore (UTC+08:00)",
-            "Asia/Tokyo (UTC+09:00)",
-            "Australia/Sydney (UTC+10:00)"
-        ];
-        res.render('profile', {userinfo: userinfo});
+app.get('/profile', ensureAuth, async(req, res) => {
+        // const email = req.User.email;
+        // const name = req.User.username;
+        console.log(req.user)
+        // console.log('User info:', userinfo);  // Add this line to log userinfo
+        res.render('profile', {userinfo: req.user});
 });
 
 //handle profile update
-app.post('/profile', sessionValidation, async (req, res) => {
+app.post('/profile', ensureAuth, async (req, res) => {
     const { timezone } = req.body;
     console.log("Timezone received:", timezone);
     if (!timezone) {
