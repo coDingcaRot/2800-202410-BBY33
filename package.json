@@ -17,6 +17,7 @@
     "express-session": "^1.18.0",
     "joi": "^17.13.1",
     "mongodb": "^6.6.0",
+    "mongoose": "^8.4.0",
     "serve-favicon": "^2.5.0"
   }
 }

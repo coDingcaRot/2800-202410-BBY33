@@ -1,55 +1,65 @@
-require("./utils.js");
+/***** REQUIRED TO START! *****/
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
+/***** REQUIRED TO START! *****/
+
+// storing or securing data
 const bcrypt = require('bcrypt');
 const Joi = require('joi');
+const saltRounds = 12;
+
+// utilities
+require("./modules/utils.js");
 const favicon = require('serve-favicon');
 const path = require('path');
-const saltRounds = 12;
-const port = process.env.Port || 3000;
-const expireTime = 1 * 60 * 60 * 1000; // Expires after 1 hour
-app.set("view engine", "ejs");
+const port = process.env.PORT || 3000;
 
-// Configure session management with MongoDB storage
-var mongoStore = MongoStore.create({
-    mongoUrl: `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}/sessions`,
-    crypto: {
-        secret: process.env.MONGODB_SESSION_SECRET
-    }
-});
+//node built in middleware
+app.use(express.json()) //parsing json bodies
+app.use(express.urlencoded({ extended: true })); // complex parsing set true: used for json formatting
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico'))); 
 
-/* secret info section */
+app.set("view engine", "ejs"); // ejs engine setup
+
+/***** SESSION SETUP *****/
+const session = require('express-session');
+const expireTime = 24 * 60 * 60 * 1000; // Expires after 1 day
+const node_session_secret = process.env.NODE_SESSION_SECRET;
+
+/** MONGO/MONGOOSE SETUP **/
+const mongoose = require('mongoose');
 const mongodb_host = process.env.MONGODB_HOST;
 const mongodb_user = process.env.MONGODB_USER;
 const mongodb_password = process.env.MONGODB_PASSWORD;
 const mongodb_database = process.env.MONGODB_DATABASE;
 const mongodb_session_secret = process.env.MONGODB_SESSION_SECRET;
-const node_session_secret = process.env.NODE_SESSION_SECRET;
-/* end of secret section */
+const {mongoStart, mongoClient} = require('./modules/mongoClient.js'); // fetches a connection to mongoDB
 
-var { database } = include('databaseConnection');
-
-const userCollection = database.db(mongodb_database).collection('users');
-
-const projectCollection = database.db(mongodb_database).collection('projects');
-const projectMemberCollection = database.db(mongodb_database).collection('projectMembers');
-
-app.use(express.urlencoded({ extended: false }));
-
-app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-
+// Configure session management with MongoDB storage
+const MongoStore = require('connect-mongo');
 app.use(session({
     secret: node_session_secret, //key that will sign cookie
-    store: mongoStore, //default is memory store 
+    store: MongoStore.create({
+        mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/comp2800-a1`, //! DO NOT CHANGE
+        crypto: {
+            secret: mongodb_session_secret
+        },
+    }),
     saveUninitialized: false,  //not touched, modify the session, we don't want to save
     resave: true
 })
 );
 
-/*** MIDDLEWARE VALIDATIONS ***/
+mongoStart().catch(console.error);
+
+// Mongodb schema fetching
+const User = require('./modules/user.js');
+
+// const projectCollection = database.db(mongodb_database).collection('projects');
+// const projectMemberCollection = database.db(mongodb_database).collection('projectMembers');
+
+/*** MIDDLEWARE FUNCTIONS  ***/
 function isValidSession(req) {
     if (req.session.authenticated) {
         return true;
@@ -66,45 +76,8 @@ function sessionValidation(req, res, next) {
 }
 
 /*** PAGES ***/
-
-//Checks if the user is logged in or not
 app.get('/', (req, res) => {
-    if (req.session.authenticated) {
-        res.render('index', { username: req.session.username });
-    }
-    else {
-        res.render('main');
-    }
-});
-
-
-app.get("/nosql-injection", sessionValidation, async (req, res) => {
-    var username = req.query.user;
-
-    if (!username) {
-        res.send(
-            `<h3>no user provided - try /nosql-injection?user=name</h3> <h3>or /nosql-injection?user[$ne]=name</h3>`
-        );
-        return;
-    }
-    console.log("user: " + username);
-
-    const schema = Joi.string().max(20).required();
-    const validationResult = schema.validate(username);
-
-    if (validationResult.error != null) {
-        res.redirect("/login");
-        res.send(
-            "<h1 style='color:darkred;'>A NoSQL injection attack was detected!!</h1>"
-        );
-        return;
-    }
-
-    const result = await userCollection.find({ email: email }).project({ email: 1, password: 1, username: 1, _id: 1 }).toArray();
-
-    console.log(result);
-
-    res.send(`<h1>Hello ${username}</h1>`);
+    res.render('main'); 
 });
 
 //Sign up function for new users
@@ -112,63 +85,50 @@ app.get('/signup', (req, res) => {
     res.render('signup');
 });
 
-//Takes in the inputs of the user for sign up
+
 app.post('/signupSubmit', async (req, res) => {
-    var username = req.body.username;
-    var email = req.body.email;
-    var password = req.body.password;
-
-    if (!username) {
-        res.render('signupError', { error: 'Username' });
+    const { username, name, email, password } = req.body;
+    console.log(email);
+    //checks if the fields are empty
+    if (!username || !email || !password) {
+        res.status(400);
+        return res.render("signupError", {error: 'Signup Failed: All fields are required.'});
     }
 
-    else if (!email) {
-        res.render('signupError', { error: 'Email' });
+    try {
+        console.log(User);
+        const existingUser = await User.findOne({email}); //find this email
+        // console.log(existingUser);
+        if (existingUser) {
+            res.status(400);
+            return res.render("signupError", {error: 'Signup Failed: User already exists with that email.'});
+        }
+
+
+        //creates the user and saves to db
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ username, name, email, password: hashedPassword });
+        await newUser.save();
+        console.log(`new user saved `)
+        //Attempst to log the user in unless an error is popped up
+        req.login(newUser, loginErr => {
+            if (loginErr) {
+                res.status(500);
+                return res.render("signupError", {error: 'Error during signup process.'});
+            }
+            res.redirect('/homepage');
+        });
+    } catch (err) {
+        res.status(500)
+        return res.render("signupError", {error: 'Error during signup process: ' + err.message});
     }
-
-    else if (!password) {
-        res.render('signupError', { error: 'Password' });
-    }
-
-    const schema = Joi.object({
-        username: Joi.string().alphanum().min(3).max(30).required(),
-        email: Joi.string().email().required(),
-        password: Joi.string().min(6).max(30).required()
-    });
-
-    const validationRes = schema.validate({ username, email, password });
-    if (validationRes.error != null) {
-        res.render('signupError', { error: `${validationRes.error.details[0].message}` });
-        return;
-    }
-
-    const user = await userCollection.findOne({ email: email });
-    if (user) {
-        res.render('signupError', { error: 'Email already exists' });
-        return;
-    }
-
-    var hashedPassword = await bcrypt.hash(password, saltRounds);
-    await userCollection.insertOne({
-        username: username,
-        email: email,
-        password: hashedPassword,
-        user_type: 'user',
-    });
-
-    req.session.authenticated = true;
-    req.session.username = username;
-    req.session.cookie.maxAge = expireTime;
-
-    res.redirect('/members');
 });
 
-//Log in function for existing users
+/***** LOGIN ROUTES ****/
 app.get('/login', (req, res) => {
     res.render('login');
 });
 
-//Takes in the inputs of the user for log in
 app.post('/loggingin', async (req, res) => {
     var email = req.body.email;
     var password = req.body.password;
@@ -180,7 +140,7 @@ app.post('/loggingin', async (req, res) => {
         return;
     }
 
-    const result = await userCollection.find({ email: email }).project({ username: 1, password: 1, user_type: 1, _id: 1 }).toArray();
+    const result = await User.find({ email: email }).project({ username: 1, password: 1, user_type: 1, _id: 1 }).toArray();
 
     if (result.length == 0) {
         res.render('loginError', { error: 'Invalid Email or Password' });
@@ -196,7 +156,7 @@ app.post('/loggingin', async (req, res) => {
         req.session.username = result[0].username;
         req.session.user_type = result[0].user_type;
         req.session.cookie.maxAge = expireTime;
-        res.redirect('/loggedin');
+        res.redirect('/homepage');
         return;
     } else {
         res.render('loginError', { error: 'Invalid Password', authenticated: req.session.authenticated });
@@ -213,7 +173,6 @@ app.get('/loggedin', (req, res) => {
     }
 });
 
-//Forgot password function for users who forgot their password
 app.get('/forgotPass', (req, res) => {
     res.render('forgotPass');
 });
@@ -240,15 +199,6 @@ app.post('/forgotPass', async (req, res) => {
 
     res.render('passwordChanged');
 });
-
-// const navLinks = [
-//     { name: 'Home', link: '/' },
-//     { name: 'Login', link: '/login' },
-//     { name: 'Sign Up', link: '/signup' },
-//     { name: 'Profile', link:'/profile'},
-//     { name: 'Workspace', link: '/workspaceSetting'}
-// ];
-// const images = ['/image1.jpg', '/image2.jpg', '/image3.jpg'];
 
 // Members only page
 app.get('/members', (req, res) => {
@@ -400,7 +350,6 @@ app.delete('/deleteProject', sessionValidation, async (req, res) => {
     }
   });   
   
-
   app.get('/memberManagement', sessionValidation, async (req, res) => {
     try {
       const projects = await projectCollection.find({ projectOwnerId: req.session.userId }).toArray();
@@ -477,8 +426,8 @@ app.get('*', (req, res) => {
     res.render('404error');
 });
 
-
 /**** END OF PAGES ****/
+
 app.listen(port, () => {
     console.log(`SyncPro node application listening on port ${port}`);
 }); 
