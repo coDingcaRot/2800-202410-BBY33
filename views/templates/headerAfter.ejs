@@ -14,13 +14,21 @@
 </head>
 <body>
 
-    <% if(page == "/homepage" ){ %>
+    <% if(page == "/homepage" ){ %> <!-- Define if its the homepage or pages that require burger -->
         <!-- Image and text -->
         <nav class="navbar navbar-light bg-light">
             <a class="navbar-brand" href="#">
             <img src="/img/menuButton.png" width="30" height="30" class="d-inline-block align-top" alt="menuButton.png">
             </a>
         </nav>
-    <% } %>
+    <% } else { %>
+        <div class="container">
+            <header class="d-flex flex-wrap py-3 mb-4">
+                <ul class="nav nav-pills">
+                    <li class="nav-item"><a href=<%= backlink %> class="nav-link">&ltBack</a></li> <!-- define backlink -->
+                </ul>
+            </header>
+        </div>
+    <% }%>
 
     <!-- insert the burger icon here -->

@@ -174,20 +174,21 @@ app.get('/login', (req, res) => {
 
 
 app.post('/loggingin', (req, res, next) => {
-    passport.authenticate('local', (err, email, info) => {
-        // console.log(email)
-        if (err) {
-            console.log(err);
-            return res.status(500).render("loginError", {error: "User does not exist"});
+    passport.authenticate('local', async (err, email, password, info) => {        
+        //After going into passport.js we recieve the done notifications stored into info 
+        if(err){
+            if(!email){
+                return res.status(401).render("loginError", {error: info.message}); //extract info if there is an error
+            }
+    
+            if(!password){
+                return res.status(401).render("loginError", {error: info.message});
+            }
         }
-        if (!email) {
-            return res.status(401).render("loginError", {error: "Someone has your email"});
-        }
-
-        //logins in the user
+        //Attempts to login in the user Goes to 
         req.login(email, loginErr => {
             if (loginErr) {
-                return res.status(500).render("loginError", {error: "Password not a match"});
+                return res.status(500).render("loginError", {error: "Username and password not a match"});
             }
             return res.redirect("/homepage");
         });

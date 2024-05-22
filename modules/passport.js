@@ -3,24 +3,28 @@ const bcrypt = require("bcrypt");
 const User = require('./user.js');
 
 module.exports = function (passport) {
-    passport.use(new LocalStrategy(
-        { usernameField: 'email', passwordField: 'password'},
-        async (email, password, done) => {
+    passport.use(new LocalStrategy({ usernameField: 'email', passwordField: 'password'},
+        async (email, password, done) => { //params are req.body from login form field
             try {
-                //Fetching and checking for user in database
-                const emailVerify = await User.findOne({ email: email });
-                if (!emailVerify) {
-                    return done(null, false, { message: 'username' }); 
+                const user = await User.findOne({ email: email }); // find user with this email and store the whole user
+                if(user === null){
+                    return done(user, false, {message: `user doesnt exist with email ${email}`})
                 }
 
-                // password match checkign
-                const isMatch = await bcrypt.compare(password, user.password); 
+                if (!user) {
+                    // console.log("user doesnt exist")
+                    return done(null, false, { message: 'username' }); 
+                }
+                // password match checking
+                const isMatch = await bcrypt.compare(password, user.password);  //check with given pass and stored user.password
                 if (!isMatch) { 
-                    return done(null, false, { message: 'password' });
+                    // console.log("not a match")
+                    return done(null, false, { message: `password not a match`});
                 }
 
                 //if match return the user
-                return done(null, user);
+                return done(null, user); //return the valid usesr
+                
             } catch (err) {
                 return done(err);
             }
