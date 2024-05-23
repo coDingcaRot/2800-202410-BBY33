@@ -1,28 +1,28 @@
-<%- include("templates/headerBefore", {page: "/initializeTimezone", backlink: "/signup"}) %>
+<%- include("templates/headerBefore", { location: location, timezone: timezone, page: page, backlink: backlink }) %>
 
-    <div class="container mt-5 d-flex justify-content-center">
-        <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" type="button" id="timezoneDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Select Timezone
-            </button>
-            <div class="dropdown-menu" aria-labelledby="timezoneDropdown"> <!-- you can have a loop of timezones -->
-                <a class="dropdown-item" href="#">Pacific Time (US & Canada)</a>
-                <a class="dropdown-item" href="#">Mountain Time (US & Canada)</a>
-                <a class="dropdown-item" href="#">Central Time (US & Canada)</a>
-                <a class="dropdown-item" href="#">Eastern Time (US & Canada)</a>
-                <a class="dropdown-item" href="#">Atlantic Time (Canada)</a>
-                <a class="dropdown-item" href="#">Newfoundland</a>
-                <a class="dropdown-item" href="#">Greenwich Mean Time</a>
-                <a class="dropdown-item" href="#">Central European Time</a>
-                <a class="dropdown-item" href="#">Eastern European Time</a>
-                <a class="dropdown-item" href="#">Japan Standard Time</a>
-                <a class="dropdown-item" href="#">Australian Eastern Time</a>
-                <a class="dropdown-item" href="#">Australian Central Time</a>
-                <!-- Add more timezones as needed -->
-            </div>
+    <div class="container my-5">
+        <div class="p-5 text-center bg-body-tertiary rounded-3">
+            <form action="/initializeTimezoneSubmit" method="post">
+                <!-- Display user's location -->
+                <div class="row g-3" style="justify-content: center; max-width: 450px; margin: auto;">
+                    <div class="col-12 text-start">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" value="<%= location %>" readonly>
+                    </div>
+                </div>
+                <!-- Display user's time zone -->
+                <div class="row g-3" style="justify-content: center; max-width: 450px; margin: auto;">
+                    <div class="col-12 text-start">
+                        <label for="timezone" class="form-label">Time Zone</label>
+                        <input type="text" class="form-control" id="timezone" name="timezone" value="<%= timezone %>" readonly>
+                    </div>
+                </div>
+
+            </form>
         </div>
     </div>
 
     <!-- Add a button that redirects to the homepage -->
 
-<%- include("templates/footerBefore") %>
+
+    <%- include("templates/footerBefore") %>

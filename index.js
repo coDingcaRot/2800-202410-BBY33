@@ -3,6 +3,9 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const session = require('express-session');
+
+const axios = require('axios');
+const requestIp = require('request-ip');
 /***** REQUIRED TO START! *****/
 
 // storing or securing data
@@ -155,11 +158,41 @@ app.post('/signupSubmit', async (req, res) => {
 });
 
 /***** INITIALIZE TIMEZONE *****/
-app.get('/initializeTimezone', (req, res) => {
-    res.render('initializeTimezone');
+app.get('/initializeTimezone', async (req, res) => {
+    let clientIp = requestIp.getClientIp(req); // Use requestIp to get the client IP
+    console.log(`Initial Detected IP: ${clientIp}`);
+
+    if (req.headers['x-forwarded-for']) {
+        const forwardedIps = req.headers['x-forwarded-for'].split(',');
+        clientIp = forwardedIps[0];
+        console.log(`Forwarded IP: ${clientIp}`);
+    }
+
+    let location = "Localhost";
+    let timezone = "Local Timezone";
+
+    try {
+        const response = await axios.get(`https://ipinfo.io/${clientIp}?token=${process.env.IPINFO_TOKEN}`);
+        console.log('IPInfo Response:', response.data);
+
+        const city = response.data.city || 'Unknown';
+        const region = response.data.region || 'Unknown';
+        const country = response.data.country || 'Unknown';
+        timezone = response.data.timezone || 'Unknown';
+
+        location = `${city}, ${region}, ${country}`;
+    } catch (error) {
+        console.error("Failed to fetch location:", error.response ? error.response.data : error.message);
+        location = "Unknown";
+        timezone = "Unknown";
+    }
+
+    res.render('initializeTimezone', { location, timezone, page: "/initializeTimezone", backlink: "/signup" });
 });
 
+
 app.post('/initializeTimezoneSubmit', (req, res) => {
+
 });
 
 /***** LOGIN ROUTES *****/
@@ -394,24 +427,24 @@ app.delete('/deleteProject', sessionValidation, async (req, res) => {
  * need to fix, cannot update to db.
  * @author https://chat.openai.com/
  */
-  app.post('/updateMembersPermissions', sessionValidation, async (req, res) => {
-    const { projectId, members } = req.body;
+//   app.post('/updateMembersPermissions', sessionValidation, async (req, res) => {
+//     const { projectId, members } = req.body;
   
-    try {
-      for (const email in members) {
-        const member = members[email];
-        await projectMemberCollection.updateOne(
-          { projectId: new ObjectId(projectId), memberEmail: email },
-          { $set: { view: member.view === 'on', edit: member.edit === 'on' } }
-        );
-      }
+//     try {
+//       for (const email in members) {
+//         const member = members[email];
+//         await projectMemberCollection.updateOne(
+//           { projectId: new ObjectId(projectId), memberEmail: email },
+//           { $set: { view: member.view === 'on', edit: member.edit === 'on' } }
+//         );
+//       }
   
-      res.redirect(`/memberManagement?projectId=${projectId}`);
-    } catch (error) {
-      console.error("Failed to update members permissions:", error);
-      res.status(500).render('errorPage', { errorMessage: "Failed to update member permissions." });
-    }
-  });
+//       res.redirect(`/memberManagement?projectId=${projectId}`);
+//     } catch (error) {
+//       console.error("Failed to update members permissions:", error);
+//       res.status(500).render('errorPage', { errorMessage: "Failed to update member permissions." });
+//     }
+//   });
 
   //remove member form a project
   app.delete('/removeMember', sessionValidation, async (req, res) => {
