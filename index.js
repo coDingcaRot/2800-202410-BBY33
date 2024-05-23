@@ -25,7 +25,6 @@ const node_session_secret = process.env.NODE_SESSION_SECRET;
 app.use(express.json()) //parsing json bodies
 app.use(express.urlencoded({ extended: true })); // complex parsing set true: used for json formatting
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico'))); 
-app.use(express.static(path.join(__dirname, 'public')));
 app.set("view engine", "ejs"); // ejs engine setup
 
 
@@ -426,14 +425,13 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
-app.use(express.static(__dirname + '/public'));
-
 app.get('*', (req, res) => {
     res.status(404);
     res.render('404error');
 });
 
 /**** END OF PAGES ****/
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.listen(port, () => {
     console.log(`SyncPro node application listening on port ${port}`);

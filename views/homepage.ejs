@@ -1,4 +1,4 @@
-<%- include("templates/headerAfter", {page: "/homepage"}) %>
+<%- include("templates/headerAfter", {page: "/homepage", dropdown: false}) %>
     <br><br><br>
     <nav class="navbar navbar-expand-lg border-bottom">
         <div class="d-flex justify-content-between">
@@ -8,4 +8,4 @@
     </nav>
     <br>
     <div class="d-flex justify-content-center" id="">No projects created</div> <!-- Gets replaced one a project is created -->
-<%- include("templates/footerAfter") %>
+<%- include("templates/footerAfter", {footer: false, dropdown: false}) %> 
