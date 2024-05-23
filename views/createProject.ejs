@@ -1,4 +1,4 @@
-<%- include("templates/header") %> <!-- Deleted , { currentURL: '/projectSetting', navLinks: navLinks }-->
+<%- include("templates/headerAfter", {page: "/createProject", dropdown: false, backlink: "/homepage"}) %> <!-- Deleted , { currentURL: '/projectSetting', navLinks: navLinks }-->
 
 <style>
 .input-group-text {
@@ -33,7 +33,7 @@
     <div class="modal-content rounded-4 shadow">
       <div class="modal-header border-bottom-0">
         <h1 class="modal-title fs-5">Create New Project</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
       </div>
       <div class="modal-body py-0">
         <form action="/createProject" method="POST">
@@ -42,10 +42,10 @@
                 <input type="text" class="form-control" id="projectName" name="projectName" required>
             </div>
 
-            <div class="mb-3">
+            <!-- <div class="mb-3">
                 <label for="description" class="form-label">Description</label>
                 <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
-            </div>
+            </div> -->
 
             <input type="hidden" id="hiddenMembersInput" name="members">
 
@@ -55,18 +55,16 @@
                     <div class="input-group mb-3">
                       <div class="input-group mb-3">
                         <input type="email" class="form-control" placeholder="Member Email" id="member-email-input">
-                        <button type="button" class="btn btn-primary" onclick="addMember()">Add Member</button>
+                        <button type="button" class="btn btn-primary" onclick="">Add Member</button>
                     </div>
-                    
                     <!-- Members List -->
                     <ul id="members-list" class="list-group"></ul>
-
                 </div>
             </div>
 
             <div class="modal-footer flex-column align-items-stretch w-100 gap-2 pb-3 border-top-0">
-              <button type="submit" class="btn btn-lg btn-primary" onclick="showNotification()">Create</button>
-              <button type="button" class="btn btn-lg btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-lg btn-primary" onclick="">Create</button>
+              <!-- <button type="button" class="btn btn-lg btn-secondary" data-bs-dismiss="modal">Close</button> -->
             </div>
 
         </form>
@@ -120,6 +118,6 @@
   }
   </script>
 
-<%- include("templates/footer") %>
+<%- include("templates/footerAfter", {footer: false, dropdown: false}) %>
 
 

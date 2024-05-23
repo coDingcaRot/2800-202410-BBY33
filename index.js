@@ -72,7 +72,8 @@ mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_ho
  * */ 
 
 // Mongodb schema fetching
-const User = require('./modules/user.js');
+const User = require('./modules/user.js'); 
+const Project = require('./modules/project.js'); 
 
 // const projectCollection = database.db(mongodb_database).collection('projects');
 // const projectMemberCollection = database.db(mongodb_database).collection('projectMembers');
@@ -161,11 +162,6 @@ app.get('/initializeTimezone', (req, res) => {
 app.post('/initializeTimezoneSubmit', (req, res) => {
 });
 
-/***** HOMEPAGE *****/
-app.get('/homepage', ensureAuth, (req, res) => {
-    res.render("homepage");
-});
-
 /***** LOGIN ROUTES *****/
 app.get('/login', (req, res) => {
     res.render('login');
@@ -230,6 +226,18 @@ app.post('/forgotPass', async (req, res) => {
 //         res.render('members', {user: req.session.username});   
 //     }
 // });
+
+/*****AUTHENTICATED PAGES *****/
+
+//creating, storing project
+app.get('/createProject', (req, res) => {
+    res.render("createProject");
+})
+
+/***** HOMEPAGE *****/
+app.get('/homepage', ensureAuth, (req, res) => {
+    res.render("homepage");
+});
 
 /***** PROFILE ROUTES *****/
 app.get('/profile', ensureAuth, async(req, res) => {

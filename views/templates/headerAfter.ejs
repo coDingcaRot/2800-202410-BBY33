@@ -13,6 +13,7 @@
         crossorigin="anonymous"></script>
 </head>
 <body>
+
     <% if(page == "/homepage" || page == "/"){ %> <!-- Define if its the homepage or pages that require burger -->
         <nav class="navbar navbar-expand-lg bg-body-tertiary rounded" aria-label="Eleventh navbar example">
             <div class="container-fluid">
@@ -27,9 +28,10 @@
                   <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
                 
+                <!-- hidden drop down below profile -->
                 <div class="dropdown">
-                  <a href="#" class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <img src="https://github.com/mdo.png" alt="" width="32" height="32" class="rounded-circle me-2">
+                  <a href="/profile" class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="" alt="" width="32" height="32" class="rounded-circle me-2">
                     <strong>mdo</strong>
                   </a>
                   <ul class="dropdown-menu text-small shadow">
@@ -43,18 +45,21 @@
         
                 <hr>
                 <div class="offcanvas-body">
-                  <!-- side bar contents-->
-                  <ul class="navbar-nav flex-column">
-                    <li class="nav-item">
-                      <a class="nav-link active" aria-current="page" href="#">Workspace</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="#">Link</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link disabled" aria-disabled="true">Disabled</a>
-                    </li>
-                  </ul>
+                    <!-- side bar contents-->
+                    <ul class="navbar-nav flex-column">
+                        <li class="nav-item">
+                          <a class="nav-link active" aria-current="page" href="#">Workspace</a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link" href="#">Link</a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link" href="/logout">Log out</a>
+                        </li>
+                    </ul>
                 </div>
               </div>
           
