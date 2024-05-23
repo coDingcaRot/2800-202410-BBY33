@@ -1,234 +1,11 @@
-
 body{
-    margin-top:20px;
     background:#f7f8fa
  }
- 
- .avatar-xxl {
-     height: 7rem;
-     width: 7rem;
- }
- 
- .card {
-     margin-bottom: 20px;
-     -webkit-box-shadow: 0 2px 3px #eaedf2;
-     box-shadow: 0 2px 3px #eaedf2;
- }
- 
- .font-size-16 {
-     font-size: 16px!important;
- }
- .avatar-title {
-     -webkit-box-align: center;
-     -ms-flex-align: center;
-     align-items: center;
-     background-color: #038edc;
-     color: #fff;
-     display: -webkit-box;
-     display: -ms-flexbox;
-     display: flex;
-     font-weight: 500;
-     height: 100%;
-     -webkit-box-pack: center;
-     -ms-flex-pack: center;
-     justify-content: center;
-     width: 100%;
- }
- 
- .bg-soft-primary {
-     background-color: rgba(3,142,220,.15)!important;
- }
- .rounded-circle {
-     border-radius: 50%!important;
- }
- 
- .nav-tabs-custom .nav-item .nav-link.active {
-     color: #038edc;
- }
- .nav-tabs-custom .nav-item .nav-link {
-     border: none;
- }
- .nav-tabs-custom .nav-item .nav-link.active {
-     color: #038edc;
- }
- 
- .avatar-group {
-     display: -webkit-box;
-     display: -ms-flexbox;
-     display: flex;
-     -ms-flex-wrap: wrap;
-     flex-wrap: wrap;
-     padding-left: 12px;
- }
- 
- .border-end {
-     border-right: 1px solid #eff0f2 !important;
- }
- 
- .d-inline-block {
-     display: inline-block!important;
- }
- 
- .badge-soft-danger {
-     color: #f34e4e;
-     background-color: rgba(243,78,78,.1);
- }
- 
- .badge-soft-warning {
-     color: #f7cc53;
-     background-color: rgba(247,204,83,.1);
- }
- 
- .badge-soft-success {
-     color: #51d28c;
-     background-color: rgba(81,210,140,.1);
- }
- 
- .avatar-group .avatar-group-item {
-     margin-left: -14px;
-     border: 2px solid #fff;
-     border-radius: 50%;
-     -webkit-transition: all .2s;
-     transition: all .2s;
- }
- 
- .avatar-sm {
-     height: 2rem;
-     width: 2rem;
- }
- 
- .nav-tabs-custom .nav-item {
-     position: relative;
-     color: #343a40;
- }
- 
- .nav-tabs-custom .nav-item .nav-link.active:after {
-     -webkit-transform: scale(1);
-     transform: scale(1);
- }
- 
- .nav-tabs-custom .nav-item .nav-link::after {
-     content: "";
-     background: #038edc;
-     height: 2px;
-     position: absolute;
-     width: 100%;
-     left: 0;
-     bottom: -2px;
-     -webkit-transition: all 250ms ease 0s;
-     transition: all 250ms ease 0s;
-     -webkit-transform: scale(0);
-     transform: scale(0);
- }
- 
- .badge-soft-secondary {
-     color: #74788d;
-     background-color: rgba(116,120,141,.1);
- }
- 
- .badge-soft-secondary {
-     color: #74788d;
- }
- 
- .work-activity {
-     position: relative;
-     color: #74788d;
-     padding-left: 5.5rem
- }
- 
- .work-activity::before {
-     content: "";
-     position: absolute;
-     height: 100%;
-     top: 0;
-     left: 66px;
-     border-left: 1px solid rgba(3,142,220,.25)
- }
- 
- .work-activity .work-item {
-     position: relative;
-     border-bottom: 2px dashed #eff0f2;
-     margin-bottom: 14px
- }
- 
- .work-activity .work-item:last-of-type {
-     padding-bottom: 0;
-     margin-bottom: 0;
-     border: none
- }
- 
- .work-activity .work-item::after,.work-activity .work-item::before {
-     position: absolute;
-     display: block
- }
- 
- .work-activity .work-item::before {
-     content: attr(data-date);
-     left: -157px;
-     top: -3px;
-     text-align: right;
-     font-weight: 500;
-     color: #74788d;
-     font-size: 12px;
-     min-width: 120px
- }
- 
- .work-activity .work-item::after {
-     content: "";
-     width: 10px;
-     height: 10px;
-     border-radius: 50%;
-     left: -26px;
-     top: 3px;
-     background-color: #fff;
-     border: 2px solid #038edc
- }
 
-.checklist {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
-.task-info {
-    display: flex;
-    align-items: center;
-    flex-grow: 1; 
-    overflow: hidden; 
-}
-
-.task-info > input {
-    margin-right: 5px;
-}
-
-.task-title {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.due-date-time {
-    flex-shrink: 0; 
-    width: 90px; 
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.due-date-time > span {
-    font-size: small;
-    color: #74788d;
-}
-
-.due-time {
-    margin-top: 5px;
-}
 
 .add-task {
     position: absolute; 
-    bottom: 100px; 
+    bottom: 80px; 
     right: 20px; 
 }
 
@@ -241,19 +18,19 @@ body{
 
 .welcome {
     position: absolute; 
-    top: 70px; 
+    top: 75px; 
     left: 20px; 
 }
 
-
-
-
-.wrapper {
-    max-width: 405px;
+/* task wrapper for tab style */
+.task-wrapper {
+    position: absolute;
+    margin-top: 70px;
+    margin-right: 20px;
+    width: 90%;
+    max-height: 640px;
     background: #fff;
-    margin: 137px auto;
     border-radius: 7px;
-    padding: 28px 0 30px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
@@ -289,126 +66,26 @@ li {
     margin-top: 20px;
     margin-right: 5px;
     padding: 0 20px 10px 25px;
-}
-
-.task-box.overflow {
+    max-height: 560px;
     overflow-y: auto;
-    max-height: 300px;
 }
 
-.task-box::-webkit-scrollbar {
+.task-card-container::-webkit-scrollbar {
     width: 5px;
 }
 
-.task-box::-webkit-scrollbar-track {
-    background: #f12711;
-    border-radius: 25px;
-}
-
-.task-box::-webkit-scrollbar-thumb {
-    background: #e6e6e6;
-    border-radius: 25px;
-}
-
-.task-box .task {
-    list-style: none;
-    font-size: 17px;
-    margin-bottom: 18px;
-    padding-bottom: 16px;
-    align-items: flex-start;
-    border-bottom: 1px solid #ccc;
-}
-
-.task-box .task:last-child {
-    margin-bottom: 0;
-    border-bottom: 0;
-    padding-bottom: 0;
-}
-
-.task-box .task label {
-    display: flex;
-    align-items: flex-start;
-}
-
-.task label input {
-    margin-top: 7px;
-    accent-color: #f12711;
-}
-
-.task-info label {
-    user-select: none;
-    margin-left: 10px;
-    word-wrap: break-word;
-}
-
-.task-info label.checked {
-    text-decoration: line-through;
-}
-
-.task-box .settings {
-    position: relative;
-}
-
-.settings :where(i, li) {
-    cursor: pointer;
-}
-
-.settings .task-menu {
-    position: absolute;
-    right: -5px;
-    bottom: -65px;
-    padding: 5px 0;
-    background: #fff;
+.task-card-container::-webkit-scrollbar-thumb {
+    background-color: #c5c5c5;
     border-radius: 4px;
-    transform: scale(0);
-    transform-origin: top right;
-    box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
-    transition: transform 0.2s ease;
-    z-index: 10;
 }
 
-.task-box .task:last-child .task-menu {
-    bottom: 0;
-    transform-origin: bottom right;
-}
-
-.task-box .task:first-child .task-menu {
-    bottom: -65px;
-    transform-origin: top right;
-}
-
-.task-menu.show {
-    transform: scale(1);
-}
-
-.task-menu li {
-    height: 25px;
-    font-size: 16px;
-    margin-bottom: 2px;
-    padding: 17px 15px;
-    cursor: pointer;
-    justify-content: flex-start;
-}
-
-.task-menu li:last-child {
-    margin-bottom: 0;
-}
-
-.settings li:hover {
-    background: #f5f5f5;
-}
-
-.settings li i {
-    padding-right: 8px;
+.task-card-container::-webkit-scrollbar-thumb:hover {
+    background-color: #8f8f8f;
 }
 
 @media (max-width: 400px) {
     body {
         padding: 0 10px;
-    }
-
-    .wrapper {
-        padding: 20px 0;
     }
 
     .filters span {
@@ -433,4 +110,331 @@ li {
         margin-top: 4px;
     }
 }
+
+
+
+  /* task card body in task page style */
+  .task-card {
+    width: 100%;
+    height: 120px;
+    border-radius: 10px;
+    border: 1px solid #3F3F40;
+    margin-bottom: 10px;
+  }
+  
+  .task-card-body {
+    margin-top: 5%;
+  }
+
+  .task-card-member-wrapper {
+    display: flex;
+    align-items: center;
+    margin-inline-start: 30px;
+    margin-top: 10px;
+  }
+
+  .task-card-member {
+    margin-right: 10px; 
+  }
+
+  .member-complete {
+    display: flex;
+    align-items: center;
+    margin-left: auto; 
+  }
+
+  .member-complete svg {
+    margin-right: 5px; 
+  }
+
+  hr {
+    border: none; 
+    height: 1px; 
+    background-color: #000; 
+    margin-top: 5px; 
+    margin-bottom: 5px;
+}
+
+.due-date, .due-time {
+    font-size: small;
+    color: #74788d;
+}
+
+  /* task card checkbox wrapper in task page style */
+  .checkbox-wrapper .cbx {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+  .checkbox-wrapper .cbx span {
+    display: inline-block;
+    vertical-align: middle;
+    transform: translate3d(0, 0, 0);
+  }
+  .checkbox-wrapper .cbx span:first-child {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    transform: scale(1);
+    vertical-align: middle;
+    border: 1px solid #b9b8c3;
+    transition: all 0.2s ease;
+  }
+  .checkbox-wrapper .cbx span:first-child svg {
+    position: absolute;
+    z-index: 1;
+    top: 8px;
+    left: 6px;
+    fill: none;
+    stroke: white;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 16px;
+    stroke-dashoffset: 16px;
+    transition: all 0.3s ease;
+    transition-delay: 0.1s;
+    transform: translate3d(0, 0, 0);
+  }
+  .checkbox-wrapper .cbx span:first-child:before {
+    content: "";
+    width: 100%;
+    height: 100%;
+    background: #506eec;
+    display: block;
+    transform: scale(0);
+    opacity: 1;
+    border-radius: 50%;
+    transition-delay: 0.2s;
+  }
+  .checkbox-wrapper .cbx span:last-child {
+    margin-left: 8px;
+  }
+  .checkbox-wrapper .cbx span:last-child:after {
+    content: "";
+    position: absolute;
+    top: 13px;
+    left: 0;
+    height: 1px;
+    width: 100%;
+    background: #b9b8c3;
+    transform-origin: 0 0;
+    transform: scaleX(0);
+  }
+  .checkbox-wrapper .cbx:hover span:first-child {
+    border-color: #3c53c7;
+  }
+  
+  .checkbox-wrapper .inp-cbx:checked + .cbx span:first-child {
+    border-color: #3c53c7;
+    background: #3c53c7;
+    animation: check-15 0.6s ease;
+  }
+  .checkbox-wrapper .inp-cbx:checked + .cbx span:first-child svg {
+    stroke-dashoffset: 0;
+  }
+  .checkbox-wrapper .inp-cbx:checked + .cbx span:first-child:before {
+    transform: scale(2.2);
+    opacity: 0;
+    transition: all 0.6s ease;
+  }
+  .checkbox-wrapper .inp-cbx:checked + .cbx span:last-child {
+    color: #b9b8c3;
+    transition: all 0.3s ease;
+  }
+  .checkbox-wrapper .inp-cbx:checked + .cbx span:last-child:after {
+    transform: scaleX(1);
+    transition: all 0.3s ease;
+  }
+  
+  @keyframes check-15 {
+    50% {
+      transform: scale(1.2);
+    }
+  }
+
+  
+/* task-card  */
+.task-card-member {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.task-card-member > div {
+  margin-left: 5px;
+}
+
+.task-card-img {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  color: #ffffff; 
+  background-color: #a8a8a8; 
+  width: 24px;
+  height: 24px;
+  border-radius: 50%; 
+}
+
+
+
+/* CSS for the sliding up Task Form */
+.task-form {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #ffffff;
+    padding: 20px;
+    border-top: 1px solid #dee2e6;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+    transform: translateY(100%);
+    height: 93%;
+    /* overflow-y: auto;  */
+    border-radius: 15px;
+}
+.task-form.show {
+    display: block;
+    transform: translateY(0);
+}
+
+.taskform-header{
+    position: relative;
+}
+
+#taskform-close-btn {
+    position: absolute;
+    top: 0;
+    right: 0; 
+}
+
+/* adjust reminder switch style */
+.form-switch-lg .form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+}
+.form-switch-lg .form-check-input:checked {
+    background-color: #0d6efd;
+}
+.form-switch-lg .form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+.form-switch-lg .form-check-input:checked:before {
+    transform: translateX(1em);
+}
+.form-switch-lg .form-check-label {
+    margin-left: 0.75em;
+    font-size: 1.25rem;
+}
+
+/* switch toggle style in task form*/
+/* The switch - the box around the slider */
+.switch-container {
+    width: 41px;
+    height: 23px;
+    position: relative;
+    margin-right: 10px;
+}
+  
+/* Hide default HTML checkbox */
+.checkbox {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+ }
+  
+.switch {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background-color: #e9e9eb;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+}
+  
+/* The slider */
+.slider {
+    width: 21px;
+    height: 21px;
+    position: absolute;
+    left: calc(50% - 21px/2 - 10px);
+    top: calc(50% - 21px/2);
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.15), 0px 3px 1px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease-out;
+    cursor: pointer;
+}
+  
+  .checkbox:checked + .switch {
+    background-color: #34C759;
+  }
+  
+  .checkbox:checked + .switch .slider {
+    left: calc(50% - 21px/2 + 10px);
+    top: calc(50% - 21px/2);
+  }
+  
+/* add member modal style */
+#add-member-modal {
+    position: absolute;
+    top: 20%;
+    right: 50%;
+}
+
+/* search bar inside add member modal style*/
+.member-search {
+    display: flex;
+    line-height: 28px;
+    align-items: center;
+    position: relative;
+    max-width: 250px;
+  }
+  
+.member-search .input {
+    width: 100%;
+    height: 40px;
+    line-height: 28px;
+    padding: 0 1rem;
+    padding-left: 2.5rem;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    outline: none;
+    background-color: #f3f3f4;
+    color: #0d0c22;
+    transition: 0.3s ease;
+  }
+  
+.member-search .input::placeholder {
+    color: #9e9ea7;
+  }
+  
+.member-search .input:focus,
+.member-search input:hover {
+    outline: none;
+    border-color: rgba(234, 226, 183, 0.4);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgb(234 226 183 / 10%);
+  }
+  
+.member-search .icon {
+    position: absolute;
+    left: 1rem;
+    fill: #9e9ea7;
+    width: 1rem;
+    height: 1rem;
+  }
+
+  /* member list in add member modal style */
+  .member-list-wrap {
+    width: 90%;
+    max-height: 200px; 
+    overflow-y: auto;
+  }
 
