@@ -38,6 +38,12 @@
             });
             calendar.render();
 
+            //For removing tasks/events
+            $('#calendar').on('click', '.fc-event', function () {
+                calendar.getEventById($(this).data('id')).remove();
+            });
+
+            //For adding new tasks/events
             $('#submitEvent').on('click', function (e) {
                 e.preventDefault();
                 submit();
