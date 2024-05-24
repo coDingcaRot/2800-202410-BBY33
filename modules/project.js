@@ -4,7 +4,7 @@ const projectSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true, // Assuming project name should be required
-        unique: true
+        unique: false
     },
     projectOwner: {
         type: mongoose.Schema.Types.ObjectId,
