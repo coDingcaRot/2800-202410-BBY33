@@ -1,0 +1,20 @@
+<div class="list-group">
+    <% members.forEach(function(member) { %>
+    <div class="list-group-item d-flex justify-content-between align-items-center">
+        <span>
+            <%= member.memberName %> - <%= member.memberEmail %>
+        </span>
+        <span>
+            <label class="form-check-label me-2">
+                View
+                <input class="form-check-input" type="checkbox" <%= member.view ? 'checked' : '' %> name="members[<%= member.memberEmail %>][view]">
+            </label>
+            <label class="form-check-label me-2">
+                Edit
+                <input class="form-check-input" type="checkbox" <%= member.edit ? 'checked' : '' %> name="members[<%= member.memberEmail %>][edit]">
+            </label>
+            <a href="#" class="btn btn-link p-0" onclick="removeMember('<%= member.projectId %>', '<%= member.memberEmail %>')">Remove</a>
+        </span>
+    </div>
+    <% }); %>
+</div>

@@ -1,0 +1,42 @@
+<style>
+  .notification-modal {
+    display: flex;
+  }
+  .notification-content h4 {
+    text-align: center; /* Centers all text inside the notification-content div */
+}
+</style>
+<div class="modal modal-sheet position-static d-block bg-body-secondary p-4 py-md-5" tabindex="-1" role="dialog" id="modalChoice">
+  <div id="notificationModal" class="notification-modal">
+    <div class="notification-content rounded-3 shadow" style="width: 50%">
+      <div class="modal-body p-4 text-center">
+        <h5 class="mb-0"><%= message %></h5>
+        <p class="mb-0"></p>
+      </div>
+      <div class="modal-footer flex-nowrap p-0">
+        <button type="button" class="btn btn-lg btn-link fs-6 text-decoration-none col-6 py-3 m-0 rounded-0 border-end" onclick="closeNotification()"><strong>Close</strong></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.onload = function() {
+    showNotification();
+};
+ 
+
+
+// Function to show the notification modal
+function showNotification() {
+    var notificationModal = document.getElementById("notificationModal");
+    notificationModal.style.display = "flex"; /* Use flex to center content */
+  }
+
+// Close the modal when the user clicks on (x)
+function closeNotification() {
+  notificationModal.style.display = "none";
+}
+
+
+</script>

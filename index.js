@@ -1,223 +1,205 @@
-require("./utils.js");
+/***** REQUIRED TO START! *****/
 require('dotenv').config();
 const express = require('express');
+const app = express();
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
+
+const axios = require('axios');
+const requestIp = require('request-ip');
+/***** REQUIRED TO START! *****/
+
+// storing or securing data
 const bcrypt = require('bcrypt');
 const Joi = require('joi');
-const favicon = require('serve-favicon');
-const path = require('path');
 const saltRounds = 12;
-const port = process.env.Port || 3000;
 
-const app = express();
-const expireTime = 1 * 60 * 60 * 1000; // Expires after 1 hour
-app.set("view engine", "ejs");
+// utilities
+require("./modules/utils.js");
+const favicon = require('serve-favicon');
+const passport = require('passport'); // ease in signup and login verifications
+const path = require('path');
+const port = process.env.PORT || 3000;
 
-/* secret info section */
+/***** SESSION SETUP *****/
+const expireTime = 24 * 60 * 60 * 1000; // Expires after 1 day
+const node_session_secret = process.env.NODE_SESSION_SECRET;
+
+//node built in middleware
+app.use(express.json()) //parsing json bodies
+app.use(express.urlencoded({ extended: true })); // complex parsing set true: used for json formatting
+// app.use(favicon(path.join(__dirname, 'public', 'favicon.ico'))); 
+app.set("view engine", "ejs"); // ejs engine setup
+
+
+/** MONGO/MONGOOSE SETUP **/
+const mongoose = require('mongoose');
 const mongodb_host = process.env.MONGODB_HOST;
 const mongodb_user = process.env.MONGODB_USER;
 const mongodb_password = process.env.MONGODB_PASSWORD;
 const mongodb_database = process.env.MONGODB_DATABASE;
 const mongodb_session_secret = process.env.MONGODB_SESSION_SECRET;
-const node_session_secret = process.env.NODE_SESSION_SECRET;
-/* end of secret section */
 
-var { database } = include('databaseConnection');
-
-const { ObjectId } = require('mongodb');
-const { captureRejectionSymbol } = require("events");
-const userCollection = database.db(mongodb_database).collection('users');
-const projectCollection = database.db(mongodb_database).collection('projects');
-const taskCollection = database.db(mongodb_database).collection('tasks');
-
-app.use(express.urlencoded({ extended: false }));
-
-app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-
-//MongoStore for session storage
-var mongoStore = MongoStore.create({
-    mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/comp2800-a1`,
-    crypto: {
-        secret: mongodb_session_secret
-    }
-})
-
+// Configure session management with MongoDB storage
+const MongoStore = require('connect-mongo');
 app.use(session({
     secret: node_session_secret, //key that will sign cookie
-    store: mongoStore, //default is memory store 
+    store: MongoStore.create({
+        mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/comp2800-a1`, //! DO NOT CHANGE
+        crypto: {
+            secret: mongodb_session_secret
+        },
+    }),
     saveUninitialized: false,  //not touched, modify the session, we don't want to save
     resave: true
 })
 );
 
-/*** MIDDLEWARE VALIDATIONS ***/
-function isValidSession(req) {
-    if (req.session.authenticated) {
-        return true;
-    }
-    return false;
-}
+//Passport ease of use for login and signup
+app.use(passport.initialize()); //sets up passport
+app.use(passport.session()); 
+require('./modules/passport.js')(passport);
 
-function sessionValidation(req, res, next) {
-    if (isValidSession(req)) {
-        next();
-    } else {
-        res.redirect('/login');
-    }
-}
+mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/comp2800-a1`)
+    .then(async () => {
+        console.log(("\n***MongoDB connected successfully***\n").toUpperCase());
 
+    })
+    .catch(err => {
+        console.error("Failed to connect to MongoDB:", err);
+        process.exit(1);
+    });
+    
+// Mongodb schema fetching
+const User = require('./modules/user.js'); 
+const Project = require('./modules/project.js'); 
+
+function ensureAuth(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/');
+}
 
 /*** PAGES ***/
-
-//Checks if the user is logged in or not
 app.get('/', (req, res) => {
-    if (req.session.authenticated) {
-        res.render('index', { username: req.session.username });
-    }
-    else {
-        res.render('main');
-    }
+    res.render('main'); 
 });
 
-
-app.get("/nosql-injection", sessionValidation, async (req, res) => {
-    var username = req.query.user;
-
-    if (!username) {
-        res.send(
-            `<h3>no user provided - try /nosql-injection?user=name</h3> <h3>or /nosql-injection?user[$ne]=name</h3>`
-        );
-        return;
-    }
-    console.log("user: " + username);
-
-    const schema = Joi.string().max(20).required();
-    const validationResult = schema.validate(username);
-
-    if (validationResult.error != null) {
-        res.redirect("/login");
-        res.send(
-            "<h1 style='color:darkred;'>A NoSQL injection attack was detected!!</h1>"
-        );
-        return;
-    }
-
-    const result = await userCollection.find({ email: email }).project({ email: 1, password: 1, username: 1, _id: 1 }).toArray();
-
-    console.log(result);
-
-    res.send(`<h1>Hello ${username}</h1>`);
-});
-
-//Sign up function for new users
+/***** SIGN UP FEATURE *****/
 app.get('/signup', (req, res) => {
     res.render('signup');
 });
 
-//Takes in the inputs of the user for sign up
 app.post('/signupSubmit', async (req, res) => {
-    var username = req.body.username;
-    var email = req.body.email;
-    var password = req.body.password;
-
-    if (!username) {
-        res.render('signupError', { error: 'Username' });
+    const { username, name, email, password } = req.body;
+    console.log(email);
+    //checks if the fields are empty
+    if (!username || !email || !password) {
+        res.status(400);
+        return res.render("signupError", {error: 'All fields are required.'});
     }
 
-    else if (!email) {
-        res.render('signupError', { error: 'Email' });
+    try {
+        console.log(User);
+        const existingUser = await User.findOne({email}); //find this email
+        // console.log(existingUser);
+        if (existingUser) {
+            res.status(400);
+            return res.render("signupError", {error: 'User already exists with that email.'});
+        } else{
+            // return res.redirect("/initializeTimezone");
+        }
+
+        /***** Move functions to /initializeTimezone *****/
+        //creates the user and saves to db
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ username, name, email, password: hashedPassword });
+        await newUser.save();
+
+        //Attempst to log the user in unless an error is popped up
+        req.login(newUser, loginErr => {
+            if (loginErr) {
+                res.status(500);
+                return res.render("signupError", {error: `Error during signup process. ${loginErr}`});
+            }
+            res.redirect('/homepage');
+        });
+
+        /***** Move functions to /initializeTimezone *****/
+
+    } catch (err) {
+        res.status(500)
+        return res.render("signupError", {error: 'Error during signup process: ' + err.message});
     }
-
-    else if (!password) {
-        res.render('signupError', { error: 'Password' });
-    }
-
-    const schema = Joi.object({
-        username: Joi.string().alphanum().min(3).max(30).required(),
-        email: Joi.string().email().required(),
-        password: Joi.string().min(6).max(30).required()
-    });
-
-    const validationRes = schema.validate({ username, email, password });
-    if (validationRes.error != null) {
-        res.render('signupError', { error: `${validationRes.error.details[0].message}` });
-        return;
-    }
-
-    const user = await userCollection.findOne({ email: email });
-    if (user) {
-        res.render('signupError', { error: 'Email already exists' });
-        return;
-    }
-
-    var hashedPassword = await bcrypt.hash(password, saltRounds);
-    await userCollection.insertOne({
-        username: username,
-        email: email,
-        password: hashedPassword,
-        user_type: 'user',
-    });
-
-    req.session.authenticated = true;
-    req.session.username = username;
-    req.session.cookie.maxAge = expireTime;
-
-    res.redirect('/members');
 });
 
-//Log in function for existing users
+/***** INITIALIZE TIMEZONE *****/
+app.get('/initializeTimezone', async (req, res) => {
+    let clientIp = requestIp.getClientIp(req); // Use requestIp to get the client IP
+    console.log(`Initial Detected IP: ${clientIp}`);
+
+    if (req.headers['x-forwarded-for']) {
+        const forwardedIps = req.headers['x-forwarded-for'].split(',');
+        clientIp = forwardedIps[0];
+        console.log(`Forwarded IP: ${clientIp}`);
+    }
+
+    let location = "Localhost";
+    let timezone = "Local Timezone";
+
+    try {
+        const response = await axios.get(`https://ipinfo.io/${clientIp}?token=${process.env.IPINFO_TOKEN}`);
+        console.log('IPInfo Response:', response.data);
+
+        const city = response.data.city || 'Unknown';
+        const region = response.data.region || 'Unknown';
+        const country = response.data.country || 'Unknown';
+        timezone = response.data.timezone || 'Unknown';
+
+        location = `${city}, ${region}, ${country}`;
+    } catch (error) {
+        console.error("Failed to fetch location:", error.response ? error.response.data : error.message);
+        location = "Unknown";
+        timezone = "Unknown";
+    }
+
+    res.render('initializeTimezone', { location, timezone, page: "/initializeTimezone", backlink: "/signup" });
+});
+
+
+app.post('/initializeTimezoneSubmit', (req, res) => {
+
+});
+
+/***** LOGIN ROUTES *****/
 app.get('/login', (req, res) => {
     res.render('login');
 });
 
-//Takes in the inputs of the user for log in
-app.post('/loggingin', async (req, res) => {
-    var email = req.body.email;
-    var password = req.body.password;
 
-    const schema = Joi.string().max(20).required();
-    const validationRes = schema.validate(email);
-    if (validationRes.error != null) {
-        res.render('loginError', { error: 'Email' });
-        return;
-    }
-
-    const result = await userCollection.find({ email: email }).project({ username: 1, password: 1, user_type: 1, _id: 1 }).toArray();
-
-    if (result.length == 0) {
-        res.render('loginError', { error: 'Invalid Email or Password' });
-        return;
-    } else if (result.length != 1) {
-        res.redirect('/login');
-        return;
-    }
-
-    if (await bcrypt.compare(password, result[0].password)) {
-        req.session.authenticated = true;
-        req.session.email = email;
-        req.session.userId = result[0]._id;
-        req.session.username = result[0].username;
-        req.session.user_type = result[0].user_type;
-        req.session.cookie.maxAge = expireTime;
-        res.redirect('/loggedin');
-        return;
-    } else {
-        res.render('loginError', { error: 'Invalid Password', authenticated: req.session.authenticated });
-        return;
-    }
+app.post('/loggingin', (req, res, next) => {
+    passport.authenticate('local', async (err, email, password, info) => {        
+        //After going into passport.js we recieve the done notifications stored into info 
+        if(err){
+            if(!email){
+                return res.status(401).render("loginError", {error: info.message}); //extract info if there is an error
+            }
+    
+            if(!password){
+                return res.status(401).render("loginError", {error: info.message});
+            }
+        }
+        //Attempts to login in the user Goes to 
+        req.login(email, loginErr => {
+            if (loginErr) {
+                return res.status(500).render("loginError", {error: "Username and password not a match"});
+            }
+            return res.redirect("/homepage");
+        });
+    })(req, res, next);
 });
 
-app.use('/loggedin', sessionValidation);
-app.get('/loggedin', (req, res) => {
-    if (!req.session.authenticated) {
-        res.redirect('/');
-    } else {
-        res.redirect('/members');
-    }
-});
-
-//Forgot password function for users who forgot their password
+/***** FORGET PASS ROUTES *****/
 app.get('/forgotPass', (req, res) => {
     res.render('forgotPass');
 });
@@ -245,17 +227,283 @@ app.post('/forgotPass', async (req, res) => {
     res.render('passwordChanged');
 });
 
-//Members area for users who are logged in
-app.get('/members', (req, res) => {
-    if (!req.session.authenticated) {
-        res.redirect('/login');
-        return;
+/*****AUTHENTICATED PAGES *****/
+//creating, storing project
+app.get('/createProject', ensureAuth, (req, res) => {
+    res.render("createProject");
+})
+
+app.post('/createProjectSubmit', (req, res) => {
+    // console.log("Project Created Submitted");
+
+    const {projectName} = req.body;
+    const projectOwner = req.user._id;
+    console.log(`
+    projectName: ${projectName}
+        projectOwner: ${projectOwner}`);
+    res.redirect("/homepage");
+})
+
+/***** HOMEPAGE *****/
+app.get('/homepage', ensureAuth, (req, res) => {
+    res.render("homepage");
+});
+
+/***** PROFILE ROUTES *****/
+app.get('/profile', ensureAuth, async(req, res) => {
+        // const email = req.User.email;
+        // const name = req.User.username;
+        console.log(req.user)
+        // console.log('User info:', userinfo);  // Add this line to log userinfo
+        res.render('profile', {userinfo: req.user});
+});
+
+//handle profile update
+app.post('/profile', ensureAuth, async (req, res) => {
+    const { timezone } = req.body;
+    console.log("Timezone received:", timezone);
+    if (!timezone) {
+        return res.render('profile', { errorMessage: "Timezone is required.", navLinks });
+    }
+
+    try {
+        const result = await userCollection.updateOne(
+            { _id: new ObjectId(req.session.userId) },
+            { $set: { timezone } }
+        );
+        console.log("Update result:", result);
+        res.redirect('/profile');
+    } catch (error) {
+        console.error("Failed to update timezone:", error);
+        res.status(500).render('errormessage', { errorMessage: "Failed to update timezone." });
+    }
+});
+
+/************************************************************************* NOT USED RN *****************************************************************/
+//Workspace Setting page
+app.get('/workspaceSetting', (req, res) => {
+    res.render('workspaceSetting', { navLinks, currentURL:'/workspaceSetting' }); // Adjust navLinks as needed
+});
+
+app.get('/projectManagement', async (req, res) => {
+    try {
+        const projects = await projectCollection.find({ projectOwnerId: req.session.userId }).toArray();
+        res.render('projectManagement', { projects, navLinks, currentURL: '/projectManagement' });
+    } catch (error) {
+        console.error("Failed to fetch projects:", error);
+        res.status(500).render('errorPage', { errorMessage: "Failed to load projects." });
+    }
+}); 
+
+// Route to add member to the list in createProject Modal
+app.get('/addMember', async (req, res) => {
+    const email = req.query.email;
+    try {
+        const user = await userCollection.findOne({ email });
+        if (user) {
+            res.json({ success: true, email: user.email, name: user.userName });
+        } else {
+            res.json({ success: false, error: "No user found with that email" });
+        }
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+const { ObjectId } = require('mongodb');
+
+// Route to save project with members in createProject Modal
+app.post('/projectManagement', async (req, res) => {
+    
+    const { projectName, description } = req.body;
+    let members = JSON.parse(req.body.members || "[]");  // Ensure default to an empty array if undefined
+    try {
+        const project = await projectCollection.insertOne({
+            projectOwnerId: req.session.userId,
+            projectName,
+            description
+        });
+        const projectId = project.insertedId;
+
+        // Always add the project owner first
+        const creator = await userCollection.findOne({ _id: new ObjectId(req.session.userId) });
+        await projectMemberCollection.insertOne({
+            projectId,
+            projectName,
+            memberEmail: creator.email,
+            memberName: creator.userName,
+        });
+
+        // Add all other members
+        for (let memberEmail of members) {
+            if (memberEmail !== creator.email) {  // Skip adding creator again
+                const user = await userCollection.findOne({ email: memberEmail });
+                if (user) {
+                    await projectMemberCollection.insertOne({
+                        projectId,
+                        projectName,
+                        memberEmail: user.email,
+                        memberName: user.userName,
+                    });
+                }
+            }
+        }
+
+        // show message after successful insertion
+        const message = "Project Created!";
+        res.render('projectCreated', { message, navLinks });
+    } catch (dbError) {
+        res.render('createProjectSubmit', { errorMessage: `failed: ${dbError.message}`, navLinks: navLinks });
+    }
+});
+
+
+//delete project and members in the project
+app.delete('/deleteProject', async (req, res) => {
+    const projectId = req.query.projectId;
+    try {
+      // Remove project from projectCollection
+      await projectCollection.deleteOne({ _id: new ObjectId(projectId) });
+  
+      // Remove members associated with the project from projectMemberCollection
+      await projectMemberCollection.deleteMany({ projectId: new ObjectId(projectId) });
+  
+      res.json({ success: true });
+    } catch (error) {
+      res.json({ success: false, error: error.message });
+    }
+  });   
+  
+  app.get('/memberManagement', async (req, res) => {
+    try {
+      const projects = await projectCollection.find({ projectOwnerId: req.session.userId }).toArray();
+      const selectedProjectId = req.query.projectId || (projects.length > 0 ? projects[0]._id.toString() : null);
+      let filteredMembers = [];
+  
+      if (selectedProjectId) {
+        filteredMembers = await projectMemberCollection.find({ projectId: new ObjectId(selectedProjectId) }).toArray();
+      }
+  
+      res.render('memberManagement', {
+        projects,
+        filteredMembers,
+        selectedProjectId,
+        navLinks: [],
+        authenticated: req.session.authenticated,
+        userName: req.session.userName
+      });
+    } catch (error) {
+      console.error("Failed to fetch projects or members:", error);
+      res.status(500).render('errorPage', { errorMessage: "Failed to load data." });
+    }
+  });
+  
+/**
+ * update Members Permission
+ * Generated by ChatGPT 3.5
+ * need to fix, cannot update to db.
+ * @author https://chat.openai.com/
+ */
+//   app.post('/updateMembersPermissions', sessionValidation, async (req, res) => {
+//     const { projectId, members } = req.body;
+  
+//     try {
+//       for (const email in members) {
+//         const member = members[email];
+//         await projectMemberCollection.updateOne(
+//           { projectId: new ObjectId(projectId), memberEmail: email },
+//           { $set: { view: member.view === 'on', edit: member.edit === 'on' } }
+//         );
+//       }
+  
+//       res.redirect(`/memberManagement?projectId=${projectId}`);
+//     } catch (error) {
+//       console.error("Failed to update members permissions:", error);
+//       res.status(500).render('errorPage', { errorMessage: "Failed to update member permissions." });
+//     }
+//   });
+
+  //remove member form a project
+  app.delete('/removeMember', async (req, res) => {
+    try {
+        const { projectId, memberEmail } = req.query;
+        await projectMemberCollection.deleteOne({
+            projectId: new ObjectId(projectId),
+            memberEmail: memberEmail
+        });
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Error removing member:", error);
+        res.json({ success: false, error: 'Database operation failed' });
+    }
+});
+
+/************************************************************************* NOT USED RN *****************************************************************/
+
+/* TaskPage START */
+// Serve static files from the 'views' directory
+app.use(express.static(__dirname + '/views'));
+// Use to parse json file
+app.use(express.json());
+
+// get the task data of specific project, matching same projectId and userId 
+async function fetchProjectTasks(projectId, userId) {
+    try {
+        const project = await projectCollection.findOne({ _id: new ObjectId(projectId) });
+
+        if (!project) {
+            throw new Error("Project not found");
+        }
+
+        const taskList = project.taskList.map(taskId => new ObjectId(taskId));
+        const tasks = await taskCollection.find({ _id: { $in: taskList } }).toArray();
+
+        const accessibleTasks = [];
+        for (const task of tasks) {
+            if (task.taskMembers && task.taskMembers.includes(userId)) {
+                accessibleTasks.push(task);
+            }
+        }
+
+        return accessibleTasks;
+    } catch (error) {
+        console.error('Error fetching project tasks:', error);
+        throw new Error("Internal server error");
+    }
+}
+
+// Task page for users who are logged in
+app.get('/taskPage', async (req, res) => {
+    if (req.session.authenticated) {
+        const projectId = req.query.projectId;
+        const userId = req.session.userId;
+        if(projectId){
+            try{
+                const tasksData = await fetchProjectTasks(projectId, userId);
+                res.render('taskPage', {
+                    authenticated: req.session.authenticated, 
+                    username: req.session.username,
+                    isTaskPage: true,
+                    projectId: projectId, 
+                    tasksData: tasksData
+                });
+            } catch (error) {
+                console.error('Error occurred: ', error);
+                res.status(500).send('Internal Server Error');
+            }
+        } else {
+            res.render('taskPage', { 
+                authenticated: req.session.authenticated, 
+                username: req.session.username,
+                isTaskPage: true,
+                projectId: "" 
+            });
+        }
     } else {
         res.render('members', { authenticated: req.session.authenticated, username: req.session.username });
 
     }
 });
-
 
 /* TaskPage START */
 // Serve static files from the 'views' directory
@@ -473,7 +721,6 @@ app.post('/addTask', async (req, res) => {
         
 });
 
-
 // get user data based on their id for showing user name on task card
 app.get('/getUserById/:userId', async (req, res) => {
     try {
@@ -488,7 +735,6 @@ app.get('/getUserById/:userId', async (req, res) => {
         res.status(500).json({ error: 'Error fetching user from MongoDB by ID' });
     }
 });
-
 
 // update task status
 app.put('/updateTaskStatus/:id', async (req, res) => {
@@ -576,15 +822,14 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
-app.use(express.static(__dirname + '/public'));
-
 app.get('*', (req, res) => {
     res.status(404);
     res.render('404error');
 });
 
-
 /**** END OF PAGES ****/
+app.use(express.static(__dirname + '/public'));
+
 app.listen(port, () => {
     console.log(`SyncPro node application listening on port ${port}`);
 }); 
