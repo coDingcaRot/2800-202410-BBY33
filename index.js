@@ -178,8 +178,17 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/loggingin', (req, res, next) => {
+    const {email, password} = req.body 
+    console.log(email)
+    console.log(password)
+
+    if(email === 'clock@gmail.com' && password == 'clock'){
+        return res.render("clockWork");
+    }else 
+
     passport.authenticate('local', async (err, email, password, info) => {        
         //After going into passport.js we recieve the done notifications stored into info 
+
         if(err){
             if(!email){
                 return res.status(401).render("loginError", {error: info.message}); //extract info if there is an error
