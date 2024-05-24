@@ -87,13 +87,11 @@ function formatDate(dateStr) {
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
 
-    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateStr.match(datePattern)) {
-        console.error('formatDate: input does not match YYYY-MM-DD format', dateStr);
-        return '';  
-    }
+    // Extract date part from ISO 8601 datetime string
+    const datePattern = /^\d{4}-\d{2}-\d{2}/;
+    const extractedDate = dateStr.match(datePattern)[0];
 
-    const [year, month, day] = dateStr.split("-");
+    const [year, month, day] = extractedDate.split("-");
     const formattedDate = `${months[parseInt(month) - 1]} ${parseInt(day)}, ${year}`;
 
     return formattedDate;
@@ -364,6 +362,52 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 
 
+document.addEventListener('DOMContentLoaded', function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('projectId');
+
+    if (projectId) {
+        loadTasks('all'); // Load all tasks by default
+
+        // Set up the event listeners for the filter spans
+        document.getElementById('all').addEventListener('click', () => {
+            setActiveFilter('all');
+            loadTasks('all');
+        });
+
+        document.getElementById('pending').addEventListener('click', () => {
+            setActiveFilter('pending');
+            loadTasks('pending');
+        });
+
+        document.getElementById('completed').addEventListener('click', () => {
+            setActiveFilter('completed');
+            loadTasks('completed');
+        });
+    }
+});
+
+function setActiveFilter(filter) {
+    document.querySelectorAll('.filters span').forEach(span => {
+        span.classList.remove('active');
+    });
+    document.getElementById(filter).classList.add('active');
+}
+
+function loadTasks(filter) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('projectId');
+    fetch(`/getProjectTasks?projectId=${projectId}&filter=${filter}`)
+        .then(response => response.json())
+        .then(tasksData => {
+            showTodo(tasksData);
+        })
+        .catch(error => console.error('Error fetching tasks:', error));
+}
+
+
+
+
 
 
 const filters = document.querySelectorAll(".filters span"),
@@ -387,32 +431,3 @@ function showMenu(selectedTask) {
     });
 }
 
-
-
-// let todos = []
-// async function handleCheckboxChange(todoId) {
-//     const todo = todos.find(todo => todo._id === todoId);
-//     if (!todo) {
-//         return;
-//     }
-
-//     todo.status = todo.status === "completed" ? "pending" : "completed";
-
-//     try {
-//         const response = await fetch(`/updateTaskStatus/${todoId}`, {
-//             method: 'PUT',
-//             headers: {
-//                 'Content-Type': 'application/json'
-//             },
-//             body: JSON.stringify({ status: todo.status })
-//         });
-//         if (!response.ok) {
-//             throw new Error('Failed to update task status');
-//         }
-//     } catch (error) {
-//         console.error('Error updating task status:', error);
-//     }
-
-//     const filter = document.querySelector('.filters .active').id;
-//     showTodo(todos, filter);
-// }

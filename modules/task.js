@@ -1,3 +1,4 @@
+const { string } = require("joi");
 const mongoose = require("mongoose");
 
 const taskSchema = new mongoose.Schema({
@@ -10,24 +11,37 @@ const taskSchema = new mongoose.Schema({
         required: false
     },
     startDate: {
-        type: date,
+        type: Date,
         required: true
     },
     startTime: {
-        type: time,
+        type: String,
         required: true
     }, 
     dueDate: {
-        type: date,
+        type: Date,
         required: true
     }, 
     dueTime: {
-        type: time,
+        type: String,
         required: true
     },
     taskMembers: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Task', // references the Task model
+        type: [mongoose.Schema.Types.ObjectId], 
+        ref: 'User'
+    }, 
+    reminder: {
+        type: String, 
+        require: false
+    }, 
+    status: {
+        type: String,
+        default: "pending"
+    }, 
+    completedMembers: {
+        type: [mongoose.Schema.Types.ObjectId], 
+        ref: 'User',
+        default: [] 
     }
 });
 
@@ -37,6 +51,6 @@ const taskSchema = new mongoose.Schema({
  * 
  * 'Users' is pluralized and then lowercased by mongoose
  */
-const Task = mongoose.model('Project', taskSchema); 
+const Task = mongoose.model('Task', taskSchema); 
 
 module.exports = Task; // passes the values for usage in index.js

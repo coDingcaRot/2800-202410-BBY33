@@ -1,4 +1,5 @@
-const User = require("/modules/user.js")
+<<<<<<< HEAD
+// const User = require("/modules/user.js")
 
 async function addUserToProject(){
     try{
@@ -49,3 +50,5 @@ function deleteUser(member, memberList){
     memberList.remove(member)
     // Some other code to delete from appended div
 }
+=======
+>>>>>>> 619109d9de47fa19d35bda41a04d395315269c5d

@@ -16,10 +16,8 @@ const userSchema = new mongoose.Schema({
         required: [true, '\npassword is required'], 
     },
     projectList: {
-        type: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Project' // references projects mongodb
-        }],
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Project', // references projects mongodb
         default: []  // Default value to ensure the list starts as empty
     },
     // resetPassword: {type: String, unique: false, required: false},
