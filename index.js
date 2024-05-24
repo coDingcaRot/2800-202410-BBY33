@@ -75,7 +75,8 @@ mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_ho
     
 // Mongodb schema fetching
 const User = require('./modules/user.js'); 
-const Project = require('./modules/project.js'); 
+const Project = require('./modules/project.js');
+const Task = require('./modules/task.js'); 
 
 function ensureAuth(req, res, next) {
     if (req.isAuthenticated()) {
@@ -500,22 +501,17 @@ app.delete('/deleteProject', async (req, res) => {
 // get the task data of specific project, matching same projectId and userId 
 async function fetchProjectTasks(projectId, userId) {
     try {
-        const project = await projectCollection.findOne({ _id: new ObjectId(projectId) });
+        const project = await Project.findById(projectId);
 
         if (!project) {
             throw new Error("Project not found");
         }
 
-        const taskList = project.taskList.map(taskId => new ObjectId(taskId));
-        const tasks = await taskCollection.find({ _id: { $in: taskList } }).toArray();
+        const taskList = project.taskList;
 
-        const accessibleTasks = [];
-        for (const task of tasks) {
-            if (task.taskMembers && task.taskMembers.includes(userId)) {
-                accessibleTasks.push(task);
-            }
-        }
-
+        // find all the tasks that meet the same taskId get from project.taskList and the userId get from passin parameter
+        const accessibleTasks = await Task.find({ _id: { $in: taskList }, taskMembers: userId });
+        
         return accessibleTasks;
     } catch (error) {
         console.error('Error fetching project tasks:', error);
@@ -527,7 +523,8 @@ async function fetchProjectTasks(projectId, userId) {
 app.get('/taskPage', async (req, res) => {
     if (req.isAuthenticated()) {
         const projectId = req.query.projectId;
-        const userId = req.user.userId;
+        const userId = req.user._id;
+
         if(projectId){
             try{
                 const tasksData = await fetchProjectTasks(projectId, userId);
@@ -555,16 +552,16 @@ app.get('/taskPage', async (req, res) => {
     }
 });
 
-
 // Get a list of project names of users to put into navbar
 app.get('/getUserProjectList', async (req, res) => {
     try {
-        const userId = req.session.userId;
+        const userId = req.user._id;
+
         if (!userId) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
 
-        const user = await userCollection.findOne({ _id: typeof userId === 'string' ? new ObjectId(userId) : userId });
+        const user = await User.findOne({ _id: userId });
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -576,12 +573,12 @@ app.get('/getUserProjectList', async (req, res) => {
             return res.json([]);
         }
 
-        const projects = await projectCollection.find({
-            _id: { $in: projectList.map(id => new ObjectId(id)) }
-        }).toArray();
+        const projects = await Project.find({
+            _id: { $in: projectList }
+        }).select('_id name');
 
-        const projectNames = projects.map(project => ({ id: project._id, name: project.projectName }));
-        // console.log(projectNames);
+        const projectNames = projects.map(project => ({ id: project._id.toString(), name: project.name }));
+
         res.json(projectNames);
     } catch (error) {
         console.error('Error fetching user projects:', error);
@@ -593,9 +590,9 @@ app.get('/getUserProjectList', async (req, res) => {
 app.get('/getProjectName', async (req, res) => {
     try {
         const projectId = req.query.projectId;
-        const project = await projectCollection.findOne({ _id: new ObjectId(projectId) }, { projection: { projectName: 1 } });
+        const project = await Project.findById(projectId).select('name');
         if (project) {
-            res.json({ projectName: project.projectName });
+            res.json({ projectName: project.name });
         } else {
             res.status(404).json({ message: "Project not found" });
         }
@@ -609,22 +606,16 @@ app.get('/getProjectName', async (req, res) => {
 app.get('/getProjectTasks', async (req, res) => {
     try {
         const projectId = req.query.projectId;
-        const userId = req.session.userId;
+        const userId = req.user._id;
 
-        const project = await projectCollection.findOne({ _id: new ObjectId(projectId) });
+        const project = await Project.findById(projectId);
 
         if (project) {
-            const taskList = project.taskList.map(taskId => new ObjectId(taskId));
+            const taskList = project.taskList;
 
-            const tasks = await taskCollection.find({ _id: { $in: taskList } }).toArray();
+            const tasks = await Task.find({ _id: { $in: taskList } });
 
-            const accessibleTasks = [];
-            for (const task of tasks) {
-                // checking if the user is in task members
-                if (task.taskMembers && task.taskMembers.includes(userId)) {
-                    accessibleTasks.push(task);
-                }
-            }
+            const accessibleTasks = tasks.filter(task => task.taskMembers.includes(userId));
 
             res.json(accessibleTasks);
         } else {
@@ -640,18 +631,20 @@ app.get('/getProjectMembers', async (req, res) => {
     try {
         const projectId = req.query.projectId;
 
-        const project = await projectCollection.findOne({ _id: new ObjectId(projectId) });
+        const project = await Project.findById(projectId);
 
         if (!project) {
             return res.status(404).json({ message: 'Project not found' });
         }
 
-        const memberIds = project.projectMembers.map(memberId => new ObjectId(memberId));
+        // const memberIds = project.projectMembers.map(member => member._id);
+        const memberEmails = project.projectMembers.map(member => member.email);
 
-        const users = await userCollection.find({ _id: { $in: memberIds } }).toArray();
+        // const users = await User.find({ _id: { $in: memberIds } });
+        const users = await User.find({ email: { $in: memberEmails } });
 
         const userData = users.map(user => ({
-            _id: user._id.toString(),
+            _id: user._id.toString(), // return as string type
             username: user.username,
             email: user.email
         }));
@@ -676,7 +669,7 @@ app.post('/addTask', async (req, res) => {
         const taskMembers = JSON.parse(selectedTaskMembers);
 
         // Create a new document object with the extracted data
-        const newTask = {
+        const newTask = new Task({
             title,
             description,
             startDate,
@@ -684,18 +677,18 @@ app.post('/addTask', async (req, res) => {
             dueDate,
             dueTime,
             reminder,
-            taskMembers,
-            status: "pending"
+            taskMembers
             // Add other fields as needed
-        };
+        });
 
         // Insert the new document into the MongoDB tasks collection
-        const result = await taskCollection.insertOne(newTask);
-        // Insert the task id with string type
-        const taskId = result.insertedId.toString();
+        const savedTask = await newTask.save();
 
-        await projectCollection.updateOne(
-            { _id: new ObjectId(projectId) },
+        // Insert the task id with string type
+        const taskId = savedTask._id.toString();
+
+        await Project.findByIdAndUpdate(
+            projectId,
             { $push: { taskList: taskId } }
         );
 
@@ -711,7 +704,7 @@ app.post('/addTask', async (req, res) => {
 app.get('/getUserById/:userId', async (req, res) => {
     try {
         const userId = req.params.userId;
-        const user = await userCollection.findOne({ _id: new ObjectId(userId) });
+        const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -727,8 +720,18 @@ app.put('/updateTaskStatus/:id', async (req, res) => {
     try {
         const taskId = req.params.id;
         const { status } = req.body;
-        await taskCollection.updateOne({ _id: new ObjectId(taskId) }, { $set: { status } });
-        res.json({ message: 'Task status updated' });
+
+        const task = await Task.findByIdAndUpdate(
+            taskId, 
+            { status }, 
+            { new: true } 
+        );
+
+        if (!task) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+
+        res.json({ message: 'Task status updated', task });
     } catch (error) {
         console.error('Error updating task status:', error);
         res.status(500).json({ error: 'Error updating task status' });
@@ -738,37 +741,29 @@ app.put('/updateTaskStatus/:id', async (req, res) => {
 // update the completed members of the specific task - add user to completedMembers array when checked
 app.post('/updateCompletedMembers/:taskId', async (req, res) => {
     const taskId = req.params.taskId;
-    const userId = req.session.userId;
+    const userId = req.user._id;
 
     try {
-        const user = await userCollection.findOne({ _id: new ObjectId(userId) });
+        const user = await User.findById(userId);
         if (!user) {
             throw new Error('User not found');
         }
 
-        const task = await taskCollection.findOne({ _id: new ObjectId(taskId) });
+        const task = await Task.findById(taskId);
         if (!task) {
             throw new Error('Task not found');
         }
 
         // Check if user is already in completedMembers array
-        if (user.user_type === 'user' && task.completedMembers && task.completedMembers.includes(userId)) {
+        if (task.completedMembers.includes(userId)) {
             // If user is already in completedMembers array, do nothing
-            res.sendStatus(200);
-            return;
+            return res.json({ message: 'User already marked as completed' });
         }
 
-        if (!task.completedMembers) {
-            await taskCollection.updateOne({ _id: new ObjectId(taskId) }, { $set: { completedMembers: [] } });
-        }
+        task.completedMembers.push(userId);
+        await task.save();
 
-        if (user.user_type === 'user') {
-            await taskCollection.updateOne({ _id: new ObjectId(taskId) }, { $push: { completedMembers: userId } });
-        } else if (user.user_type === 'admin') {
-            await taskCollection.updateOne({ _id: new ObjectId(taskId) }, { $set: { status: 'completed' } });
-        }
-
-        res.sendStatus(200);
+        res.json({ message: 'User marked as completed', task });
     } catch (error) {
         console.error('Error updating completed members:', error);
         res.status(500).send('Internal Server Error');
@@ -779,10 +774,10 @@ app.post('/updateCompletedMembers/:taskId', async (req, res) => {
 // update the completed members of the specific task - remove user to completedMembers array when unchecked
 app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
     const taskId = req.params.taskId;
-    const userId = req.session.userId;
+    const userId = req.user._id;
 
     try {
-        const task = await taskCollection.findOne({ _id: new ObjectId(taskId) });
+        const task = await Task.findById(taskId);
         if (!task) {
             throw new Error('Task not found');
         }
@@ -791,7 +786,7 @@ app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
         if (userIndex !== -1) {
             task.completedMembers.splice(userIndex, 1);
 
-            await taskCollection.updateOne({ _id: new ObjectId(taskId) }, { $set: { completedMembers: task.completedMembers } });
+            await task.save();
         }
 
         res.sendStatus(200);
