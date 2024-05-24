@@ -267,7 +267,7 @@ app.post('/createProjectSubmit', async (req, res) => {
 });
 
 //delete project funx
-app.post('/deleteProject', async (req, res) => {
+app.post('/deleteProject', ensureAuth, async (req, res) => {
     const { projectId } = req.body;
 
     const project = await Project.findOne({_id: new ObjectId(projectId)});
@@ -433,7 +433,7 @@ async function fetchProjectTasks(projectId, userId) {
 }
 
 // Task page for users who are logged in
-app.get('/taskPage', async (req, res) => {
+app.get('/taskPage', ensureAuth, async (req, res) => {
     if (req.isAuthenticated()) {
         const projectId = req.query.projectId;
         const userId = req.user._id;
@@ -466,7 +466,7 @@ app.get('/taskPage', async (req, res) => {
 });
 
 // Get a list of project names of users to put into navbar
-app.get('/getUserProjectList', async (req, res) => {
+app.get('/getUserProjectList', ensureAuth,  async (req, res) => {
     try {
         const userId = req.user._id;
 
@@ -500,7 +500,7 @@ app.get('/getUserProjectList', async (req, res) => {
 });
 
 // get project name based on projectId in URL query
-app.get('/getProjectName', async (req, res) => {
+app.get('/getProjectName', ensureAuth, async (req, res) => {
     try {
         const projectId = req.query.projectId;
         const project = await Project.findById(projectId).select('name');
@@ -516,7 +516,7 @@ app.get('/getProjectName', async (req, res) => {
 });
 
 // Get user task for specific project from mongoDB
-app.get('/getProjectTasks', async (req, res) => {
+app.get('/getProjectTasks', ensureAuth, async (req, res) => {
     try {
         const projectId = req.query.projectId;
         const userId = req.user._id;
@@ -540,7 +540,7 @@ app.get('/getProjectTasks', async (req, res) => {
     }
 });
 
-app.get('/getProjectMembers', async (req, res) => {
+app.get('/getProjectMembers', ensureAuth,  async (req, res) => {
     try {
         const projectId = req.query.projectId;
 
@@ -615,7 +615,7 @@ app.post('/addTask', async (req, res) => {
 });
 
 // get user data based on their id for showing user name on task card
-app.get('/getUserById/:userId', async (req, res) => {
+app.get('/getUserById/:userId', ensureAuth, async (req, res) => {
     try {
         const userId = req.params.userId;
         const user = await User.findById(userId);
@@ -630,7 +630,7 @@ app.get('/getUserById/:userId', async (req, res) => {
 });
 
 // update task status
-app.put('/updateTaskStatus/:id', async (req, res) => {
+app.put('/updateTaskStatus/:id', ensureAuth, async (req, res) => {
     try {
         const taskId = req.params.id;
         const { status } = req.body;
@@ -712,14 +712,23 @@ app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
 /* TaskPage END */
 
 /* Easter Egg START */
-app.get('/easterEgg', (req, res) => {
+app.get('/easterEgg', ensureAuth, (req, res) => {
     res.render('easterEgg');
 });
 /* Easter Egg END */
 
 app.get('/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/');
+    req.logout((err) => {
+        if (err) {
+            return next(err);
+        }
+        req.session.destroy((err) => {
+            if (err) {
+                return next(err);
+            }
+            res.redirect('/');
+        });
+    });
 });
 
 app.get('*', (req, res) => {
