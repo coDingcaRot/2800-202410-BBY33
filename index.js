@@ -57,7 +57,7 @@ app.use(session({
 
 //Passport ease of use for login and signup
 app.use(passport.initialize()); //sets up passport
-app.use(passport.session()); 
+app.use(passport.session());
 require('./modules/passport.js')(passport);
 
 mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/comp2800-a1`)
@@ -69,10 +69,10 @@ mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_ho
         console.error("Failed to connect to MongoDB:", err);
         process.exit(1);
     });
-    
+
 // Mongodb schema fetching
-const User = require('./modules/user.js'); 
-const Project = require('./modules/project.js'); 
+const User = require('./modules/user.js');
+const Project = require('./modules/project.js');
 
 function ensureAuth(req, res, next) {
     if (req.isAuthenticated()) {
@@ -83,7 +83,7 @@ function ensureAuth(req, res, next) {
 
 /*** PAGES ***/
 app.get('/', (req, res) => {
-    res.render('main'); 
+    res.render('main');
 });
 
 /***** SIGN UP FEATURE *****/
@@ -97,17 +97,17 @@ app.post('/signupSubmit', async (req, res) => {
     //checks if the fields are empty
     if (!username || !email || !password) {
         res.status(400);
-        return res.render("signupError", {error: 'All fields are required.'});
+        return res.render("signupError", { error: 'All fields are required.' });
     }
 
     try {
         console.log(User);
-        const existingUser = await User.findOne({email}); //find this email
+        const existingUser = await User.findOne({ email }); //find this email
         // console.log(existingUser);
         if (existingUser) {
             res.status(400);
-            return res.render("signupError", {error: 'User already exists with that email.'});
-        } else{
+            return res.render("signupError", { error: 'User already exists with that email.' });
+        } else {
             // return res.redirect("/initializeTimezone");
         }
 
@@ -121,7 +121,7 @@ app.post('/signupSubmit', async (req, res) => {
         req.login(newUser, loginErr => {
             if (loginErr) {
                 res.status(500);
-                return res.render("signupError", {error: `Error during signup process. ${loginErr}`});
+                return res.render("signupError", { error: `Error during signup process. ${loginErr}` });
             }
             res.redirect('/homepage');
         });
@@ -130,7 +130,7 @@ app.post('/signupSubmit', async (req, res) => {
 
     } catch (err) {
         res.status(500)
-        return res.render("signupError", {error: 'Error during signup process: ' + err.message});
+        return res.render("signupError", { error: 'Error during signup process: ' + err.message });
     }
 });
 
@@ -179,21 +179,21 @@ app.get('/login', (req, res) => {
 
 
 app.post('/loggingin', (req, res, next) => {
-    passport.authenticate('local', async (err, email, password, info) => {        
+    passport.authenticate('local', async (err, email, password, info) => {
         //After going into passport.js we recieve the done notifications stored into info 
-        if(err){
-            if(!email){
-                return res.status(401).render("loginError", {error: info.message}); //extract info if there is an error
+        if (err) {
+            if (!email) {
+                return res.status(401).render("loginError", { error: info.message }); //extract info if there is an error
             }
-    
-            if(!password){
-                return res.status(401).render("loginError", {error: info.message});
+
+            if (!password) {
+                return res.status(401).render("loginError", { error: info.message });
             }
         }
         //Attempts to login in the user Goes to 
         req.login(email, loginErr => {
             if (loginErr) {
-                return res.status(500).render("loginError", {error: "Username and password not a match"});
+                return res.status(500).render("loginError", { error: "Username and password not a match" });
             }
             return res.redirect("/homepage");
         });
@@ -231,6 +231,7 @@ app.post('/forgotPass', async (req, res) => {
 //Calendar page
 app.get('/calendar', (req, res) => {
     res.render('calendar');
+});
 
 /*****AUTHENTICATED PAGES *****/
 //creating, storing project
@@ -241,7 +242,7 @@ app.get('/createProject', ensureAuth, (req, res) => {
 app.post('/createProjectSubmit', (req, res) => {
     // console.log("Project Created Submitted");
 
-    const {projectName} = req.body;
+    const { projectName } = req.body;
     const projectOwner = req.user._id;
     console.log(`
     projectName: ${projectName}
@@ -255,12 +256,12 @@ app.get('/homepage', ensureAuth, (req, res) => {
 });
 
 /***** PROFILE ROUTES *****/
-app.get('/profile', ensureAuth, async(req, res) => {
-        // const email = req.User.email;
-        // const name = req.User.username;
-        console.log(req.user)
-        // console.log('User info:', userinfo);  // Add this line to log userinfo
-        res.render('profile', {userinfo: req.user});
+app.get('/profile', ensureAuth, async (req, res) => {
+    // const email = req.User.email;
+    // const name = req.User.username;
+    console.log(req.user)
+    // console.log('User info:', userinfo);  // Add this line to log userinfo
+    res.render('profile', { userinfo: req.user });
 });
 
 //handle profile update
@@ -287,7 +288,7 @@ app.post('/profile', ensureAuth, async (req, res) => {
 /************************************************************************* NOT USED RN *****************************************************************/
 //Workspace Setting page
 app.get('/workspaceSetting', (req, res) => {
-    res.render('workspaceSetting', { navLinks, currentURL:'/workspaceSetting' }); // Adjust navLinks as needed
+    res.render('workspaceSetting', { navLinks, currentURL: '/workspaceSetting' }); // Adjust navLinks as needed
 });
 
 app.get('/projectManagement', async (req, res) => {
@@ -298,7 +299,7 @@ app.get('/projectManagement', async (req, res) => {
         console.error("Failed to fetch projects:", error);
         res.status(500).render('errorPage', { errorMessage: "Failed to load projects." });
     }
-}); 
+});
 
 // Route to add member to the list in createProject Modal
 app.get('/addMember', async (req, res) => {
@@ -319,7 +320,7 @@ const { ObjectId } = require('mongodb');
 
 // Route to save project with members in createProject Modal
 app.post('/projectManagement', async (req, res) => {
-    
+
     const { projectName, description } = req.body;
     let members = JSON.parse(req.body.members || "[]");  // Ensure default to an empty array if undefined
     try {
@@ -367,42 +368,42 @@ app.post('/projectManagement', async (req, res) => {
 app.delete('/deleteProject', async (req, res) => {
     const projectId = req.query.projectId;
     try {
-      // Remove project from projectCollection
-      await projectCollection.deleteOne({ _id: new ObjectId(projectId) });
-  
-      // Remove members associated with the project from projectMemberCollection
-      await projectMemberCollection.deleteMany({ projectId: new ObjectId(projectId) });
-  
-      res.json({ success: true });
+        // Remove project from projectCollection
+        await projectCollection.deleteOne({ _id: new ObjectId(projectId) });
+
+        // Remove members associated with the project from projectMemberCollection
+        await projectMemberCollection.deleteMany({ projectId: new ObjectId(projectId) });
+
+        res.json({ success: true });
     } catch (error) {
-      res.json({ success: false, error: error.message });
+        res.json({ success: false, error: error.message });
     }
-  });   
-  
-  app.get('/memberManagement', async (req, res) => {
+});
+
+app.get('/memberManagement', async (req, res) => {
     try {
-      const projects = await projectCollection.find({ projectOwnerId: req.session.userId }).toArray();
-      const selectedProjectId = req.query.projectId || (projects.length > 0 ? projects[0]._id.toString() : null);
-      let filteredMembers = [];
-  
-      if (selectedProjectId) {
-        filteredMembers = await projectMemberCollection.find({ projectId: new ObjectId(selectedProjectId) }).toArray();
-      }
-  
-      res.render('memberManagement', {
-        projects,
-        filteredMembers,
-        selectedProjectId,
-        navLinks: [],
-        authenticated: req.session.authenticated,
-        userName: req.session.userName
-      });
+        const projects = await projectCollection.find({ projectOwnerId: req.session.userId }).toArray();
+        const selectedProjectId = req.query.projectId || (projects.length > 0 ? projects[0]._id.toString() : null);
+        let filteredMembers = [];
+
+        if (selectedProjectId) {
+            filteredMembers = await projectMemberCollection.find({ projectId: new ObjectId(selectedProjectId) }).toArray();
+        }
+
+        res.render('memberManagement', {
+            projects,
+            filteredMembers,
+            selectedProjectId,
+            navLinks: [],
+            authenticated: req.session.authenticated,
+            userName: req.session.userName
+        });
     } catch (error) {
-      console.error("Failed to fetch projects or members:", error);
-      res.status(500).render('errorPage', { errorMessage: "Failed to load data." });
+        console.error("Failed to fetch projects or members:", error);
+        res.status(500).render('errorPage', { errorMessage: "Failed to load data." });
     }
-  });
-  
+});
+
 /**
  * update Members Permission
  * Generated by ChatGPT 3.5
@@ -411,7 +412,7 @@ app.delete('/deleteProject', async (req, res) => {
  */
 //   app.post('/updateMembersPermissions', sessionValidation, async (req, res) => {
 //     const { projectId, members } = req.body;
-  
+
 //     try {
 //       for (const email in members) {
 //         const member = members[email];
@@ -420,7 +421,7 @@ app.delete('/deleteProject', async (req, res) => {
 //           { $set: { view: member.view === 'on', edit: member.edit === 'on' } }
 //         );
 //       }
-  
+
 //       res.redirect(`/memberManagement?projectId=${projectId}`);
 //     } catch (error) {
 //       console.error("Failed to update members permissions:", error);
@@ -428,8 +429,8 @@ app.delete('/deleteProject', async (req, res) => {
 //     }
 //   });
 
-  //remove member form a project
-  app.delete('/removeMember', async (req, res) => {
+//remove member form a project
+app.delete('/removeMember', async (req, res) => {
     try {
         const { projectId, memberEmail } = req.query;
         await projectMemberCollection.deleteOne({
@@ -482,14 +483,14 @@ app.get('/taskPage', async (req, res) => {
     if (req.session.authenticated) {
         const projectId = req.query.projectId;
         const userId = req.session.userId;
-        if(projectId){
-            try{
+        if (projectId) {
+            try {
                 const tasksData = await fetchProjectTasks(projectId, userId);
                 res.render('taskPage', {
-                    authenticated: req.session.authenticated, 
+                    authenticated: req.session.authenticated,
                     username: req.session.username,
                     isTaskPage: true,
-                    projectId: projectId, 
+                    projectId: projectId,
                     tasksData: tasksData
                 });
             } catch (error) {
@@ -497,11 +498,11 @@ app.get('/taskPage', async (req, res) => {
                 res.status(500).send('Internal Server Error');
             }
         } else {
-            res.render('taskPage', { 
-                authenticated: req.session.authenticated, 
+            res.render('taskPage', {
+                authenticated: req.session.authenticated,
                 username: req.session.username,
                 isTaskPage: true,
-                projectId: "" 
+                projectId: ""
             });
         }
     } else {
@@ -619,10 +620,10 @@ app.get('/getProjectMembers', async (req, res) => {
 
 // Add tasks, get data from users and insert to mongoDB
 app.post('/addTask', async (req, res) => {
-    try{
+    try {
         // Extract data from the request body
         const { title, description, startDate, startTime, dueDate, dueTime, reminderDatetime, selectedTaskMembers, projectId } = req.body;
-        
+
         // Determine the value of the reminder field based on the value of reminderDatetime
         const reminder = reminderDatetime ? reminderDatetime : 'none';
 
@@ -654,11 +655,11 @@ app.post('/addTask', async (req, res) => {
         );
 
         res.redirect(`/taskPage?projectId=${projectId}`);
-    } catch(err){
+    } catch (err) {
         console.error('Error adding task: ', err);
         res.status(500).send('Error adding task')
     }
-        
+
 });
 
 // get user data based on their id for showing user name on task card
