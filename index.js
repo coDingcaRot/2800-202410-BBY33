@@ -28,7 +28,7 @@ const node_session_secret = process.env.NODE_SESSION_SECRET;
 //node built in middleware
 app.use(express.json()) //parsing json bodies
 app.use(express.urlencoded({ extended: true })); // complex parsing set true: used for json formatting
-app.use(favicon(path.join(__dirname, 'public', 'favicon.ico'))); 
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.set("view engine", "ejs"); // ejs engine setup
 app.use(express.static(__dirname + '/public'));
 app.use(express.static(__dirname + '/views')); // Serve static files from the 'views' directory
@@ -485,7 +485,7 @@ app.get('/taskPage', async (req, res) => {
             try {
                 const tasksData = await fetchProjectTasks(projectId, userId);
                 res.render('taskPage', {
-                    authenticated: req.isAuthenticated(), 
+                    authenticated: req.isAuthenticated(),
                     username: req.user.username,
                     isTaskPage: true,
                     projectId: projectId,
@@ -496,8 +496,8 @@ app.get('/taskPage', async (req, res) => {
                 res.status(500).send('Internal Server Error');
             }
         } else {
-            res.render('taskPage', { 
-                authenticated: req.isAuthenticated(), 
+            res.render('taskPage', {
+                authenticated: req.isAuthenticated(),
                 username: req.user.username,
                 isTaskPage: true,
                 projectId: ""

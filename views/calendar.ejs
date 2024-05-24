@@ -1,12 +1,14 @@
-<%- include("templates/header") %>
+<%- include("templates/headerAfter", {page: "/calendar" , dropdown: false, isTaskPage: false, backlink: "/homepage" })
+    %>
 
     <style>
         #calendar {
-            max-width: 1000px;
+            min-width: 50%;
+            max-width: 900px;
             margin: 40px auto;
         }
     </style>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
     <script>
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -15,36 +17,19 @@
                 initialView: 'dayGridMonth',
                 editable: true,
                 headerToolbar: { // buttons for switching between views
-                    left: 'dayGridMonth,timeGridWeek, addEventButton',
+                    left: 'dayGridMonth,timeGridWeek',
                     center: 'title',
                     right: 'today prev,next'
                 },
                 views: {
                     dayGridMonth: { // name of view
-                        titleFormat: { year: 'numeric', month: '2-digit', day: '2-digit' }
+                        titleFormat: { year: 'numeric', month: 'long' }
                         // other view-specific options here
                     }
                 },
 
-                customButtons: {
-                    addEventButton: {
-                        text: 'Add Event...',
-                        click: function () {
-                            var dateStr = prompt('Enter a date in YYYY-MM-DD format');
-                            var date = new Date(dateStr + 'T00:00:00'); // will be in local time
-
-                            if (!isNaN(date.valueOf())) { // valid?
-                                calendar.addEvent({
-                                    title: 'dynamic event',
-                                    start: date,
-                                    allDay: true
-                                });
-                                //To be added onto database
-                            } else {
-                                alert('Invalid date.');
-                            }
-                        }
-                    }
+                select: function (start, end, jsEvent, view) {
+                    console.log('select', start, end, jsEvent, view);
                 },
 
                 dateClick: function (info) {
@@ -52,14 +37,69 @@
                 }
             });
             calendar.render();
+
+            $('#submitEvent').on('click', function (e) {
+                e.preventDefault();
+                submit();
+            });
+
+            function submit() {
+                alert("Task Added");
+                var endDate = moment($('#endDate').val()).add(1, 'days').format('YYYY-MM-DDTHH:mm');
+                console.log($('#startDate').val());
+                console.log($('#endDate').val());
+                console.log(endDate);
+                calendar.addEvent({
+                    title: $('#taskName').val(),
+                    start: $('#startDate').val(),
+                    end: endDate,
+                    allDay: false
+                })
+            }
+
         });
-
-
 
     </script>
 
     <div id="calendar">
-
     </div>
 
-    <%- include("templates/footer") %>
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNewEvent">
+        Add Task
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="addNewEvent" tabindex="-1" aria-labelledby="addEvent" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="addEvent">Modal title</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Task Name  -->
+                    <div class="mb-3">
+                        <label for="task-name" class="form-label">Task Name</label>
+                        <input type="text" class="form-control" id="taskName" name="taskName" required>
+                    </div>
+                    <!-- Start Time  -->
+                    <div class="mb-3">
+                        <label for="start-date" class="form-label">Start Date</label>
+                        <input type="datetime-local" class="form-control" id="startDate" name="startDate" required>
+                    </div>
+                    <!-- End Time  -->
+                    <div class="mb-3">
+                        <label for="end-date" class="form-label">End Date</label>
+                        <input type="datetime-local" class="form-control" id="endDate" name="endDate" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" id="submitEvent" data-bs-dismiss="modal">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include("templates/footerAfter", {footer: false, dropdown: false, isTaskPage: false}) %>
