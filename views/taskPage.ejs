@@ -1,0 +1,36 @@
+<%- include("templates/headerNav", { isTaskPage: isTaskPage }) %>
+
+<div class="container">
+    <div class="welcome"><h2><%= username.charAt(0).toUpperCase() + username.slice(1) %>'s Task</h2></div>
+
+    <div class="task-wrapper">
+
+        <div class="controls">
+            <div class="filters">
+                <span class="active" id="all">All</span>
+                <span id="pending">Process</span>
+                <span id="completed">Completed</span>
+            </div>
+        </div>
+
+        <div class="row task-card-container" id="task-card-container">
+            <!-- The dynamically created task cards will be inserted here -->
+        </div>
+
+    </div>
+
+
+    <div class="add-task">
+        <button class="add-btn" id="add-task-btn">+</button>
+    </div>
+</div>
+
+
+
+<!-- Hidden form -->
+<div class="task-form" id="task-form">
+    <%- include("taskForm") %>
+</div>
+
+
+<%- include("templates/footerNav", { isTaskPage: isTaskPage }) %>
