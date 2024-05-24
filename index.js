@@ -1,5 +1,6 @@
 require("./utils.js");
 require('dotenv').config();
+const moment = require('moment');
 const express = require('express');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
@@ -238,6 +239,11 @@ app.post('/forgotPass', async (req, res) => {
     await userCollection.updateOne({ email: email }, { $set: { password: hashedPassword } });
 
     res.render('passwordChanged');
+});
+
+//Calendar page
+app.get('/calendar', (req, res) => {
+    res.render('calendar');
 });
 
 //Members area for users who are logged in
