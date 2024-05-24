@@ -178,14 +178,6 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/loggingin', (req, res, next) => {
-    const {email, password} = req.body 
-    console.log(email)
-    console.log(password)
-
-    if(email === 'clock@gmail.com' && password == 'clock'){
-        return res.render("clockWork");
-    }else 
-
     passport.authenticate('local', async (err, email, password, info) => {        
         //After going into passport.js we recieve the done notifications stored into info 
 
@@ -265,8 +257,7 @@ app.post('/createProjectSubmit', async (req, res) => {
         const newProject = new Project({ projectOwner: req.user._id, name: projectName, projectMembers: [req.user.email]});
         await newProject.save();
         
-        await user.updateOne({projectList: newProject._id});
-
+        await User.updateOne({ _id: user._id }, { $push: { projectList: newProject._id } });
 
         const message = "Project Created!";
         res.render('projectCreated', { message: message });
@@ -279,8 +270,17 @@ app.post('/createProjectSubmit', async (req, res) => {
 app.post('/deleteProject', async (req, res) => {
     const { projectId } = req.body;
 
+    const project = await Project.findOne({_id: new ObjectId(projectId)});
+
+    project.projectMembers.forEach(async member => {
+        await User.updateOne(
+            {email: member},
+            {$pull: {projectList: projectId}}
+        );
+    });
+
     //finds and deletes the project with given id
-    const deletedProject = await Project.findOneAndDelete(_id = new ObjectId(projectId));
+    const deletedProject = await Project.findOneAndDelete({_id: new ObjectId(projectId)});
 
     //Success or error message
     if (deletedProject) {
@@ -349,7 +349,12 @@ app.post('/deleteMember', async (req, res) => {
             { $pull: { projectMembers: memberEmail } }
         );
 
-        if (result.modifiedCount === 1) {
+        const memberResult = await User.updateOne(
+            {email: memberEmail},
+            {$pull: {projectList: projectId}}
+        )
+
+        if (result.modifiedCount === 1 && memberResult.modifiedCount === 1) {
             res.render("successMessage", { success: "Member deleted successfully", backlink: `/addMembersPage?projectId=${projectId}` });
         } else {
             res.render("errorMessage", { error: "Member not found in the project", backlink: `/addMembersPage?projectId=${projectId}` });
@@ -367,6 +372,7 @@ app.get('/homepage', ensureAuth, async (req, res) => {
     const pList = await Promise.all(projectPromises);
 
     console.log(pList)
+    console.log(`pList.length: ${pList.length}`)
     res.render("homepage", {projects: pList});
 });
 
@@ -402,115 +408,6 @@ app.post('/profile', ensureAuth, async (req, res) => {
 
 
 /************************************************* AUTHENTICATED PAGES *************************************************/
-
-
-
-/************************************************************************* NOT USED RN *****************************************************************/
-//Workspace Setting page
-app.get('/workspaceSetting', (req, res) => {
-    res.render('workspaceSetting', { navLinks, currentURL:'/workspaceSetting' }); // Adjust navLinks as needed
-});
-
-app.get('/projectManagement', async (req, res) => {
-    try {
-        const projects = await projectCollection.find({ projectOwnerId: req.session.userId }).toArray();
-        res.render('projectManagement', { projects, navLinks, currentURL: '/projectManagement' });
-    } catch (error) {
-        console.error("Failed to fetch projects:", error);
-        res.status(500).render('errorPage', { errorMessage: "Failed to load projects." });
-    }
-}); 
-
-// MembersList = [];
-// // Route to add member to the list in createProject Modal
-// app.post('/addMembers', async (req, res) => {
-//     const {memberEmail} = req.body
-
-//     try {
-//         const user = await User.findOne({ email: memberEmail });
-//         if (user) {
-//             res.render("errorMessage", {error: `User doesn't exist ${user}`});
-//         } else {
-//             MembersList.push(user);
-//             console.log(`Added ${user} to membersList`);
-//             console.log(`membersList memners: ${MembersList}`);
-//         }
-//     } catch (err) {
-//         res.render("errorMessage", {error: "Interal server error"});
-//     }
-// });
-
-    // let members = JSON.parse(req.body.members || "[]");  // Ensure default to an empty array if undefined
-//adding members
-        // // Always add the project owner first
-        // const creator = await User.findOne({ _id: req.user._id});
-        // await projectMemberCollection.insertOne({
-        //     projectId,
-        //     projectName,
-        //     memberEmail: creator.email,
-        //     memberName: creator.userName,
-        // });
-
-        // // Add all other members
-        // for (let memberEmail of members) {
-        //     if (memberEmail !== creator.email) {  // Skip adding creator again
-        //         const user = await userCollection.findOne({ email: memberEmail });
-        //         if (user) {
-        //             await projectMemberCollection.insertOne({
-        //                 projectId,
-        //                 projectName,
-        //                 memberEmail: user.email,
-        //                 memberName: user.userName,
-        //             });
-        //         }
-        //     }
-        // }
-
-        // show message after successful insertion
-
-
-
-//delete project and members in the project
-app.delete('/deleteProject', async (req, res) => {
-    const projectId = req.query.projectId;
-    try {
-      // Remove project from projectCollection
-      await projectCollection.deleteOne({ _id: new ObjectId(projectId) });
-  
-      // Remove members associated with the project from projectMemberCollection
-      await projectMemberCollection.deleteMany({ projectId: new ObjectId(projectId) });
-  
-      res.json({ success: true });
-    } catch (error) {
-      res.json({ success: false, error: error.message });
-    }
-  });   
-  
-  app.get('/memberManagement', async (req, res) => {
-    try {
-      const projects = await projectCollection.find({ projectOwnerId: req.session.userId }).toArray();
-      const selectedProjectId = req.query.projectId || (projects.length > 0 ? projects[0]._id.toString() : null);
-      let filteredMembers = [];
-  
-      if (selectedProjectId) {
-        filteredMembers = await projectMemberCollection.find({ projectId: new ObjectId(selectedProjectId) }).toArray();
-      }
-  
-      res.render('memberManagement', {
-        projects,
-        filteredMembers,
-        selectedProjectId,
-        navLinks: [],
-        authenticated: req.session.authenticated,
-        userName: req.session.userName
-      });
-    } catch (error) {
-      console.error("Failed to fetch projects or members:", error);
-      res.status(500).render('errorPage', { errorMessage: "Failed to load data." });
-    }
-  });
-  
-/************************************************************************* NOT USED RN *****************************************************************/
 
 /* TaskPage START */
 
