@@ -1,0 +1,43 @@
+<%- include("templates/headerAfter", {page: "/profile", dropdown: false, backlink: "/homepage"}) %>  <!-- Deleted , { currentURL: '/profile' , navLinks: navLinks }-->
+    <div class="container my-5">
+        <div class="p-5 text-center bg-body-tertiary rounded-3">
+            <form>
+                <div class="container mt-5">
+                    <h2>User Profile</h2>
+                    <form action="/profile" method="post">
+                        <div class="row g-3" style="justify-content: center; max-width: 450px; margin: auto;">
+                            <div class="col-12 text-start">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="usename" value="<%= userinfo.username %>" readonly>
+                            </div>
+            
+                            <div class="col-12 text-start">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" value="<%= userinfo.email %>" readonly>
+                            </div>
+            
+                            <!-- <div class="col-12 text-start">
+                                <label for="timezone" class="form-label">Timezone</label>
+                                <select class="form-select" id="timezone" name="timezone" required>
+                                    <option value="">Choose...</option>
+                                    <%# timezones.forEach(function(timezone) { %>
+                                        <option value="<%#= timezone %>" <%#= userinfo.timezone === timezone ? 'selected' : '' %>><%#= timezone %></option>
+                                    <%# }) %>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select a valid timezone.
+                                </div>
+                            </div> -->
+                        </div>
+            
+                        <hr class="my-4">
+            
+                        <button class="btn btn-primary" type="submit">Save</button>
+                        <a href="/homepage" class="btn btn-secondary ms-5">Back</a>
+                    </form>
+                </div>
+            </form>
+
+        </div>
+    </div>
+    <%- include("templates/footerAfter", {footer: false, dropdown: false}) %>

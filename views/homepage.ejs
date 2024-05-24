@@ -1,0 +1,13 @@
+<%- include("templates/headerAfter", {page: "/homepage", dropdown: false}) %>
+    <br><br><br>
+    <nav class="navbar navbar-expand-lg border-bottom">
+        <div class="container d-flex justify-content-between">
+            <span class="navbar-brand">Projects</span>
+            <form action="/createProject" method="get">
+                <button class="navbar" style="text-decoration: none; size: 5em;">+</button>
+            </form>
+        </div>
+    </nav>
+    <br>
+    <div class="d-flex justify-content-center" id="">No projects created</div> <!-- Gets replaced one a project is created -->
+<%- include("templates/footerAfter", {footer: false, dropdown: false}) %> 

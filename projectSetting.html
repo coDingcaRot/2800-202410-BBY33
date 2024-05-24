@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Project</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="form-container">
+        <form action="/submit-form" method="POST">
+            <label for="project-name">Project Name</label>
+            <input type="text" id="project-name" name="projectName" required>
+
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="4" required></textarea>
+
+            <label for="team">Team</label>
+            <div id="team" class="team-inputs">
+                <button type="button" onclick="addTeamMember()">+</button>
+            </div>
+
+            <button type="submit">Create</button>
+        </form>
+    </div>
+    <script src="/js/script.js"></script>
+</body>
+</html>
