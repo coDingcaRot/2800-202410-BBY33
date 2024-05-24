@@ -127,13 +127,6 @@ async function showTodo(tasksData) {
                                         <div class="task-card-member">
                                             ${memberAvatarsHTML}
                                         </div>
-                                        <div class="member-complete">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16">
-                                                <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0"/>
-                                                <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/>
-                                            </svg>
-                                            <span id="member-complete-count">3/7</span>
-                                        </div>
                                     </div>
                                     <hr>
                                     <div class="task-card-due-wrapper">
@@ -189,23 +182,7 @@ async function getUserById(userId) {
     }
 }
 
-// async function handleCheckboxChange(taskId) {
-//     try {
-//         const response = await fetch(`/updateCompletedMembers/${taskId}`, {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json'
-//             }
-//         });
 
-//         if (!response.ok) {
-//             throw new Error('Failed to update completed members');
-//         }
-
-//     } catch (error) {
-//         console.error('Error updating completed members:', error);
-//     }
-// }
 function handleCheckboxChange(taskId) {
     const checkbox = document.getElementById(taskId);
     const isChecked = checkbox.checked;
