@@ -652,11 +652,12 @@ app.get('/getProjectMembers', async (req, res) => {
         if (!project) {
             return res.status(404).json({ message: 'Project not found' });
         }
+        console.log(project);
 
         // const memberIds = project.projectMembers.map(member => member._id);
-        const memberEmails = project.projectMembers.map(member => member.email);
-
         // const users = await User.find({ _id: { $in: memberIds } });
+        
+        const memberEmails = project.projectMembers;
         const users = await User.find({ email: { $in: memberEmails } });
 
         const userData = users.map(user => ({
