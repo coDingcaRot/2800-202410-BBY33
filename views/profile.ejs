@@ -1,4 +1,4 @@
-<%- include("templates/headerAfter", {page: "/profile", dropdown: false, backlink: "/homepage"}) %>  <!-- Deleted , { currentURL: '/profile' , navLinks: navLinks }-->
+<%- include("templates/headerAfter", {page: "/profile", dropdown: false, backlink: "/homepage", isTaskPage: false}) %>  <!-- Deleted , { currentURL: '/profile' , navLinks: navLinks }-->
     <div class="container my-5">
         <div class="p-5 text-center bg-body-tertiary rounded-3">
             <form>
@@ -40,4 +40,4 @@
 
         </div>
     </div>
-    <%- include("templates/footerAfter", {footer: false, dropdown: false}) %>
+    <%- include("templates/footerAfter", {footer: false, dropdown: false, isTaskPage: false}) %>

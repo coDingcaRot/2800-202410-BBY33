@@ -1,4 +1,4 @@
-<%- include("templates/headerAfter", {dropdown: true, page: "/", isTaskPage: isTaskPage }) %>
+<%- include("templates/headerAfter", {dropdown: true, page: "/", isTaskPage: isTaskPage,  }) %>
 
 <div class="container">
     <div class="welcome"><h2><%= username.charAt(0).toUpperCase() + username.slice(1) %>'s Task</h2></div>
@@ -31,6 +31,4 @@
 <div class="task-form" id="task-form">
     <%- include("taskForm") %>
 </div>
-
-
 <%- include("templates/footerAfter", {dropdown: true, footer: true, isTaskPage: isTaskPage }) %>

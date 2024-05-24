@@ -28,8 +28,10 @@ const node_session_secret = process.env.NODE_SESSION_SECRET;
 //node built in middleware
 app.use(express.json()) //parsing json bodies
 app.use(express.urlencoded({ extended: true })); // complex parsing set true: used for json formatting
-// app.use(favicon(path.join(__dirname, 'public', 'favicon.ico'))); 
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico'))); 
 app.set("view engine", "ejs"); // ejs engine setup
+app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/views')); // Serve static files from the 'views' directory
 
 
 /** MONGO/MONGOOSE SETUP **/
@@ -447,10 +449,6 @@ app.delete('/removeMember', async (req, res) => {
 /************************************************************************* NOT USED RN *****************************************************************/
 
 /* TaskPage START */
-// Serve static files from the 'views' directory
-app.use(express.static(__dirname + '/views'));
-// Use to parse json file
-app.use(express.json());
 
 // get the task data of specific project, matching same projectId and userId 
 async function fetchProjectTasks(projectId, userId) {
@@ -480,15 +478,15 @@ async function fetchProjectTasks(projectId, userId) {
 
 // Task page for users who are logged in
 app.get('/taskPage', async (req, res) => {
-    if (req.session.authenticated) {
+    if (req.isAuthenticated()) {
         const projectId = req.query.projectId;
-        const userId = req.session.userId;
+        const userId = req.user.userId;
         if (projectId) {
             try {
                 const tasksData = await fetchProjectTasks(projectId, userId);
                 res.render('taskPage', {
-                    authenticated: req.session.authenticated,
-                    username: req.session.username,
+                    authenticated: req.isAuthenticated(), 
+                    username: req.user.username,
                     isTaskPage: true,
                     projectId: projectId,
                     tasksData: tasksData
@@ -498,15 +496,15 @@ app.get('/taskPage', async (req, res) => {
                 res.status(500).send('Internal Server Error');
             }
         } else {
-            res.render('taskPage', {
-                authenticated: req.session.authenticated,
-                username: req.session.username,
+            res.render('taskPage', { 
+                authenticated: req.isAuthenticated(), 
+                username: req.user.username,
                 isTaskPage: true,
                 projectId: ""
             });
         }
     } else {
-        res.redirect('/');
+        res.redirect('/homepage');
     }
 });
 
@@ -769,8 +767,6 @@ app.get('*', (req, res) => {
 });
 
 /**** END OF PAGES ****/
-app.use(express.static(__dirname + '/public'));
-
 app.listen(port, () => {
     console.log(`SyncPro node application listening on port ${port}`);
 }); 
