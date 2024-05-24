@@ -12,27 +12,11 @@ const projectSchema = new mongoose.Schema({
         required: true // Assuming project must have an owner
     },
     projectMembers: {
-        type: [{
-            userId: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'User', // references the User model
-                required: true
-            },
-            email: {
-                type: String,
-                required: true
-            }
-        }],
+        type: [String],
         default: []  // Default value to ensure the list starts as empty
     },
     taskList: {
-        type: [{
-            taskId: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Task', // references the Task model
-                required: true
-            },
-        }],
+        type: [mongoose.Schema.Types.ObjectId],
         default: [] // Default value to ensure the list starts as empty
     }
 });

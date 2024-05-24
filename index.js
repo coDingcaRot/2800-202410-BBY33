@@ -234,10 +234,12 @@ app.post('/forgotPass', async (req, res) => {
 /************************************************* AUTHENTICATED PAGES *************************************************/
 
 /***** PROJECT CREATION *****/
+//create project page
 app.get('/createProject', ensureAuth, (req, res) => {
     res.render("createProject");
 })
 
+//create project funx
 app.post('/createProjectSubmit', async (req, res) => {
     const { projectName } = req.body;
 
@@ -263,18 +265,91 @@ app.post('/createProjectSubmit', async (req, res) => {
     }
 });
 
+//delete project funx
+app.post('/deleteProject', async (req, res) => {
+    const { projectId } = req.body;
+
+    //finds and deletes the project with given id
+    const deletedProject = await Project.findOneAndDelete(_id = new ObjectId(projectId));
+
+    //Success or error message
+    if (deletedProject) {
+        res.render("successMessage", {success: "Project Deleted", backlink: "/homepage"});
+    } else {
+        console.log('Project not found');
+        res.render("errorMessage", {error: "Project could not be deleted", backlink: "/homepage"});
+    }
+})
+
 /***** MEMBER ADDITION  *****/
-app.get('/addMembersPage', async (req, res) => {
+app.get('/addMembersPage', ensureAuth, async (req, res) => {
     const projectId = req.query.projectId;
     const project = await Project.findOne({_id: new ObjectId(projectId)});
-    console.log(`projectId: ${project.name}`)
 
-    res.render("addMembersPage", { projectName: project.name });
+    res.render("addMembersPage", { project: project });
 });
+
+//adding member function
+app.post('/addMembersPageSubmit', async (req, res) => {
+    const {memberEmail, projectId} = req.body;
+    try {
+        const projectID = new ObjectId(projectId)
+        const project = await Project.findById({_id: projectID});
+        //Checks if project exists
+        if (!project) {
+            return res.render("errorMessage", { error: "Project not found", backlink: "/homepage" });
+        }
+
+        //Checks if member exists
+        const member = await User.findOne({ email: memberEmail });
+        if (!member) {
+            return res.render("errorMessage", { error: "Member does not exist", backlink: "/homepage" });
+        }   
+
+        //checks if member added already
+        if(project.projectMembers.includes(member.email)){
+            return res.render("errorMessage", { error: "Member already added", backlink: "/homepage" });
+        }
+
+        //adds user
+        project.projectMembers.push(
+            member.email
+        );
+
+        // Save the project back to the database
+        await project.save();
+
+
+        res.render("successMessage", { success: "Member added successfully", backlink: "/homepage" });
+    } catch (error) {
+        // console.error("Error adding member to project:", error);
+        res.render("errorMessage", { error: error, backlink: "/homepage" });
+    }
+});
+
+//deletes a member
+app.post('/deleteMember', async (req, res) => {
+    const { projectId, memberEmail } = req.body;
+    try {
+        // Find the project by ID and pull the member's email from the projectMembers array
+        const result = await Project.updateOne(
+            { _id: projectId },
+            { $pull: { projectMembers: memberEmail } }
+        );
+
+        if (result.modifiedCount === 1) {
+            res.render("successMessage", { success: "Member deleted successfully", backlink: "/homepage" });
+        } else {
+            res.render("errorMessage", { error: "Member not found in the project", backlink: "/homepage" });
+        }
+    } catch (error) {
+        res.render("errorMessage", { error: "An error occurred while deleting the member", backlink: "/homepage" });
+    }
+})
 
 /***** HOMEPAGE *****/
 app.get('/homepage', ensureAuth, async (req, res) => {
-    const projects = await Project.find({ projectOwner: req.user._id }) || "no projects";
+    const projects = await Project.find({ projectOwner: req.user._id });
     res.render("homepage", {projects: projects});
 });
 
