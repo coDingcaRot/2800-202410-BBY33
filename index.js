@@ -373,7 +373,7 @@ app.get('/homepage', ensureAuth, async (req, res) => {
 
     console.log(pList)
     console.log(`pList.length: ${pList.length}`)
-    res.render("homepage", {projects: pList});
+    res.render("homepage", {projects: pList, username: req.user.username});
 });
 
 /***** PROFILE ROUTES *****/
