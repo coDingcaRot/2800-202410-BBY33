@@ -7,8 +7,26 @@
             max-width: 900px;
             margin: 40px auto;
         }
+
+        #addButton {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        @media screen and (max-width: 768px) {
+            #calendar {
+                margin-top: 0;
+            }
+
+            .fc-toolbar.fc-header-toolbar {
+                font-size: 99%;
+            }
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.13/index.global.min.js'></script>
     <script>
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -39,8 +57,14 @@
             calendar.render();
 
             //For removing tasks/events
-            $('#calendar').on('click', '.fc-event', function () {
-                calendar.getEventById($(this).data('id')).remove();
+            calendar.on('eventClick', function (info) {
+                var event = calendar.getEventById(info.event.id);
+                var myModal = new bootstrap.Modal(document.getElementById("deleteDivEvent"));
+                myModal.show();
+                $('#confirmDeleteEvent').on('click', function (e) {
+                    e.preventDefault();
+                    event.remove();
+                });
             });
 
             //For adding new tasks/events
@@ -50,8 +74,7 @@
             });
 
             function submit() {
-                alert("Task Added");
-                var endDate = moment($('#endDate').val()).add(1, 'days').format('YYYY-MM-DDTHH:mm');
+                var endDate = moment($('#endDate').val()).format('YYYY-MM-DDTHH:mm');
                 console.log($('#startDate').val());
                 console.log($('#endDate').val());
                 console.log(endDate);
@@ -71,7 +94,7 @@
     </div>
 
     <!-- Button trigger modal -->
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNewEvent">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNewEvent" id="addButton">
         Add Task
     </button>
 
@@ -80,7 +103,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="addEvent">Modal title</h1>
+                    <h1 class="modal-title fs-5" id="addEvent">Add New Event</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -103,6 +126,23 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary" id="submitEvent" data-bs-dismiss="modal">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteDivEvent" tabindex="-1" aria-labelledby="deleteEvent" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="deleteEvent">Delete Event?</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="confirmDeleteEvent"
+                        data-bs-dismiss="modal">Delete</button>
                 </div>
             </div>
         </div>

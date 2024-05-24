@@ -74,9 +74,9 @@ mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_ho
     });
 
 // Mongodb schema fetching
-const User = require('./modules/user.js'); 
+const User = require('./modules/user.js');
 const Project = require('./modules/project.js');
-const Task = require('./modules/task.js'); 
+const Task = require('./modules/task.js');
 
 function ensureAuth(req, res, next) {
     if (req.isAuthenticated()) {
@@ -182,9 +182,9 @@ app.post('/loggingin', (req, res, next) => {
     passport.authenticate('local', async (err, email, password, info) => {
         //After going into passport.js we recieve the done notifications stored into info 
 
-        if(err){
-            if(!email){
-                return res.status(401).render("loginError", {error: info.message}); //extract info if there is an error
+        if (err) {
+            if (!email) {
+                return res.status(401).render("loginError", { error: info.message }); //extract info if there is an error
             }
 
             if (!password) {
@@ -207,7 +207,7 @@ app.get('/forgotPass', (req, res) => {
 });
 
 app.post('/forgotPass', async (req, res) => {
-    const {email, password} = req.body
+    const { email, password } = req.body
 
 
     const user = await User.findOne({ email: email });
@@ -233,6 +233,7 @@ app.post('/forgotPass', async (req, res) => {
 app.get('/calendar', (req, res) => {
     res.render('calendar');
 });
+
 /************************************************* AUTHENTICATED PAGES *************************************************/
 
 /***** PROJECT CREATION *****/
@@ -245,29 +246,31 @@ app.get('/createProject', ensureAuth, (req, res) => {
 app.post('/createProjectSubmit', async (req, res) => {
     const { projectName } = req.body;
 
-    if(!projectName){
-        res.render(`errorMessage`, {error: "All fields need to be filled", backlink: "/homepage"});
+    if (!projectName) {
+        res.render(`errorMessage`, { error: "All fields need to be filled", backlink: "/homepage" });
     }
 
     try {
-        const existingProjectName = await Project.findOne({name: projectName});
-        const user = await User.findOne({email: req.user.email});
-        if(existingProjectName){
+        const existingProjectName = await Project.findOne({ name: projectName });
+        const user = await User.findOne({ email: req.user.email });
+        if (existingProjectName) {
             res.status(400)
-            return res.render("errorMessage", 
-                {error: `Project exists with name ${projectName}`, 
-                backlink: "/homepage"});
+            return res.render("errorMessage",
+                {
+                    error: `Project exists with name ${projectName}`,
+                    backlink: "/homepage"
+                });
         }
 
-        const newProject = new Project({ projectOwner: req.user._id, name: projectName, projectMembers: [req.user.email]});
+        const newProject = new Project({ projectOwner: req.user._id, name: projectName, projectMembers: [req.user.email] });
         await newProject.save();
-        
+
         await User.updateOne({ _id: user._id }, { $push: { projectList: newProject._id } });
 
         const message = "Project Created!";
         res.render('projectCreated', { message: message });
     } catch (dbError) {
-        res.render('errorMessage', { error: `This error is: ${dbError.message}`, backlink: "/homepage"});
+        res.render('errorMessage', { error: `This error is: ${dbError.message}`, backlink: "/homepage" });
     }
 });
 
@@ -275,41 +278,41 @@ app.post('/createProjectSubmit', async (req, res) => {
 app.post('/deleteProject', ensureAuth, async (req, res) => {
     const { projectId } = req.body;
 
-    const project = await Project.findOne({_id: new ObjectId(projectId)});
+    const project = await Project.findOne({ _id: new ObjectId(projectId) });
 
     project.projectMembers.forEach(async member => {
         await User.updateOne(
-            {email: member},
-            {$pull: {projectList: projectId}}
+            { email: member },
+            { $pull: { projectList: projectId } }
         );
     });
 
     //finds and deletes the project with given id
-    const deletedProject = await Project.findOneAndDelete({_id: new ObjectId(projectId)});
+    const deletedProject = await Project.findOneAndDelete({ _id: new ObjectId(projectId) });
 
     //Success or error message
     if (deletedProject) {
-        res.render("successMessage", {success: "Project Deleted", backlink: "/homepage"});
+        res.render("successMessage", { success: "Project Deleted", backlink: "/homepage" });
     } else {
         console.log('Project not found');
-        res.render("errorMessage", {error: "Project could not be deleted", backlink: "/homepage"});
+        res.render("errorMessage", { error: "Project could not be deleted", backlink: "/homepage" });
     }
 })
 
 /***** MEMBER ADDITION  *****/
 app.get('/addMembersPage', ensureAuth, async (req, res) => {
     const projectId = req.query.projectId;
-    const project = await Project.findOne({_id: new ObjectId(projectId)});
+    const project = await Project.findOne({ _id: new ObjectId(projectId) });
 
     res.render("addMembersPage", { project: project });
 });
 
 //adding member function
 app.post('/addMembersPageSubmit', async (req, res) => {
-    const {memberEmail, projectId} = req.body;
+    const { memberEmail, projectId } = req.body;
     try {
         const projectID = new ObjectId(projectId)
-        const project = await Project.findById({_id: projectID});
+        const project = await Project.findById({ _id: projectID });
         //Checks if project exists
         if (!project) {
             return res.render("errorMessage", { error: "Project not found", backlink: "/homepage" });
@@ -319,10 +322,10 @@ app.post('/addMembersPageSubmit', async (req, res) => {
         const member = await User.findOne({ email: memberEmail });
         if (!member) {
             return res.render("errorMessage", { error: "Member does not exist", backlink: "/homepage" });
-        }   
+        }
 
         //checks if member added already
-        if(project.projectMembers.includes(member.email)){
+        if (project.projectMembers.includes(member.email)) {
             return res.render("errorMessage", { error: "Member already added", backlink: "/homepage" });
         }
 
@@ -333,7 +336,7 @@ app.post('/addMembersPageSubmit', async (req, res) => {
         await project.save();
 
         //adding the project id to members list
-        await member.updateOne({projectList: projectID});
+        await member.updateOne({ projectList: projectID });
 
 
         res.render("successMessage", { success: "Member added successfully", backlink: "/homepage" });
@@ -355,8 +358,8 @@ app.post('/deleteMember', async (req, res) => {
         );
 
         const memberResult = await User.updateOne(
-            {email: memberEmail},
-            {$pull: {projectList: projectId}}
+            { email: memberEmail },
+            { $pull: { projectList: projectId } }
         )
 
         if (result.modifiedCount === 1 && memberResult.modifiedCount === 1) {
@@ -378,7 +381,7 @@ app.get('/homepage', ensureAuth, async (req, res) => {
 
     console.log(pList)
     console.log(`pList.length: ${pList.length}`)
-    res.render("homepage", {projects: pList, username: req.user.username});
+    res.render("homepage", { projects: pList, username: req.user.username });
 });
 
 /***** PROFILE ROUTES *****/
@@ -429,7 +432,7 @@ async function fetchProjectTasks(projectId, userId) {
 
         // find all the tasks that meet the same taskId get from project.taskList and the userId get from passin parameter
         const accessibleTasks = await Task.find({ _id: { $in: taskList }, taskMembers: userId });
-        
+
         return accessibleTasks;
     } catch (error) {
         console.error('Error fetching project tasks:', error);
@@ -471,7 +474,7 @@ app.get('/taskPage', ensureAuth, async (req, res) => {
 });
 
 // Get a list of project names of users to put into navbar
-app.get('/getUserProjectList', ensureAuth,  async (req, res) => {
+app.get('/getUserProjectList', ensureAuth, async (req, res) => {
     try {
         const userId = req.user._id;
 
@@ -545,7 +548,7 @@ app.get('/getProjectTasks', ensureAuth, async (req, res) => {
     }
 });
 
-app.get('/getProjectMembers', ensureAuth,  async (req, res) => {
+app.get('/getProjectMembers', ensureAuth, async (req, res) => {
     try {
         const projectId = req.query.projectId;
 
@@ -558,7 +561,7 @@ app.get('/getProjectMembers', ensureAuth,  async (req, res) => {
 
         // const memberIds = project.projectMembers.map(member => member._id);
         // const users = await User.find({ _id: { $in: memberIds } });
-        
+
         const memberEmails = project.projectMembers;
         const users = await User.find({ email: { $in: memberEmails } });
 
@@ -641,9 +644,9 @@ app.put('/updateTaskStatus/:id', ensureAuth, async (req, res) => {
         const { status } = req.body;
 
         const task = await Task.findByIdAndUpdate(
-            taskId, 
-            { status }, 
-            { new: true } 
+            taskId,
+            { status },
+            { new: true }
         );
 
         if (!task) {
