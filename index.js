@@ -814,6 +814,11 @@ app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
 });
 /* TaskPage END */
 
+/* Easter Egg START */
+app.get('/easterEgg', (req, res) => {
+    res.render('easterEgg');
+});
+/* Easter Egg END */
 
 app.get('/logout', (req, res) => {
     req.session.destroy();
