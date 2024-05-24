@@ -65,8 +65,7 @@ require('./modules/passport.js')(passport);
 
 mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/comp2800-a1`)
     .then(async () => {
-        console.log(("\n***MongoDB connected successfully***\n").toUpperCase());
-
+        console.log(("\n***MongoDB connected successfully***\n").toUpperCase()); // indicate we are connected to db
     })
     .catch(err => {
         console.error("Failed to connect to MongoDB:", err);
@@ -97,7 +96,6 @@ app.get('/signup', (req, res) => {
 
 app.post('/signupSubmit', async (req, res) => {
     const { username, name, email, password } = req.body;
-    console.log(email);
     //checks if the fields are empty
     if (!username || !email || !password) {
         res.status(400);
@@ -105,7 +103,6 @@ app.post('/signupSubmit', async (req, res) => {
     }
 
     try {
-        console.log(User);
         const existingUser = await User.findOne({email}); //find this email
         // console.log(existingUser);
         if (existingUser) {
@@ -171,7 +168,6 @@ app.get('/initializeTimezone', async (req, res) => {
     res.render('initializeTimezone', { location, timezone, page: "/initializeTimezone", backlink: "/signup" });
 });
 
-
 app.post('/initializeTimezoneSubmit', (req, res) => {
 
 });
@@ -180,7 +176,6 @@ app.post('/initializeTimezoneSubmit', (req, res) => {
 app.get('/login', (req, res) => {
     res.render('login');
 });
-
 
 app.post('/loggingin', (req, res, next) => {
     passport.authenticate('local', async (err, email, password, info) => {        
@@ -250,14 +245,19 @@ app.post('/createProjectSubmit', async (req, res) => {
 
     try {
         const existingProjectName = await Project.findOne({name: projectName});
+        const user = await User.findOne({email: req.user.email});
         if(existingProjectName){
             res.status(400)
             return res.render("errorMessage", 
                 {error: `Project exists with name ${projectName}`, 
                 backlink: "/homepage"});
         }
-        const newProject = new Project({ projectOwner: req.user._id, name: projectName});
+
+        const newProject = new Project({ projectOwner: req.user._id, name: projectName, projectMembers: [req.user.email]});
         await newProject.save();
+        
+        await user.updateOne({projectList: newProject._id});
+
 
         const message = "Project Created!";
         res.render('projectCreated', { message: message });
@@ -312,16 +312,18 @@ app.post('/addMembersPageSubmit', async (req, res) => {
             return res.render("errorMessage", { error: "Member already added", backlink: "/homepage" });
         }
 
-        //adds user
+        //adds user to project members list and saves it 
         project.projectMembers.push(
             member.email
         );
-
-        // Save the project back to the database
         await project.save();
+
+        //adding the project id to members list
+        await member.updateOne({projectList: projectID});
 
 
         res.render("successMessage", { success: "Member added successfully", backlink: "/homepage" });
+
     } catch (error) {
         // console.error("Error adding member to project:", error);
         res.render("errorMessage", { error: error, backlink: "/homepage" });
@@ -339,19 +341,24 @@ app.post('/deleteMember', async (req, res) => {
         );
 
         if (result.modifiedCount === 1) {
-            res.render("successMessage", { success: "Member deleted successfully", backlink: "/homepage" });
+            res.render("successMessage", { success: "Member deleted successfully", backlink: `/addMembersPage?projectId=${projectId}` });
         } else {
-            res.render("errorMessage", { error: "Member not found in the project", backlink: "/homepage" });
+            res.render("errorMessage", { error: "Member not found in the project", backlink: `/addMembersPage?projectId=${projectId}` });
         }
     } catch (error) {
-        res.render("errorMessage", { error: "An error occurred while deleting the member", backlink: "/homepage" });
+        res.render("errorMessage", { error: "An error occurred while deleting the member", backlink: `/addMembersPage?projectId=${projectId}` });
     }
 })
 
 /***** HOMEPAGE *****/
 app.get('/homepage', ensureAuth, async (req, res) => {
-    const projects = await Project.find({ projectOwner: req.user._id });
-    res.render("homepage", {projects: projects});
+    const user = await User.findOne({ email: req.user.email });
+    // Fetch all projects in the projectList
+    const projectPromises = user.projectList.map(projectId => Project.findById(projectId));
+    const pList = await Promise.all(projectPromises);
+
+    console.log(pList)
+    res.render("homepage", {projects: pList});
 });
 
 /***** PROFILE ROUTES *****/

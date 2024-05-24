@@ -17,7 +17,7 @@
                         <% project.projectMembers.forEach(member => { %>
                             <div class="container d-flex justify-content-betwee">
                                 <div class="container d-flex justify-content-between align-item-center">
-                                    <p><%= member%></p>
+                                    <p><%= member %></p>
                                 </div>
                                 <form action="/deleteMember" method="POST">
                                     <input type="hidden" id="projectId" name="projectId" data-project-id="<%= project._id%>" value="<%= project._id%>">
