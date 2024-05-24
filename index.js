@@ -256,6 +256,8 @@ app.get('/members', (req, res) => {
     }
 });
 
+
+/* TaskPage START */
 // Serve static files from the 'views' directory
 app.use(express.static(__dirname + '/views'));
 // Use to parse json file
@@ -566,7 +568,7 @@ app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-
+/* TaskPage END */
 
 
 app.get('/logout', (req, res) => {
