@@ -2,13 +2,21 @@ const mongoose = require("mongoose");
 
 const projectSchema = new mongoose.Schema({
     name: {
-        type: String
+        type: String,
+        required: true, // Assuming project name should be required
+        unique: true
+    },
+    projectOwner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // references the User model
+        required: true // Assuming project must have an owner
     },
     projectMembers: {
         type: [{
             userId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'User' // references the User model
+                ref: 'User', // references the User model
+                required: true
             },
             email: {
                 type: String,
@@ -16,8 +24,17 @@ const projectSchema = new mongoose.Schema({
             }
         }],
         default: []  // Default value to ensure the list starts as empty
+    },
+    taskList: {
+        type: [{
+            taskId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Task', // references the Task model
+                required: true
+            },
+        }],
+        default: [] // Default value to ensure the list starts as empty
     }
-
 });
 
 /**

@@ -24,7 +24,7 @@ const node_session_secret = process.env.NODE_SESSION_SECRET;
 //node built in middleware
 app.use(express.json()) //parsing json bodies
 app.use(express.urlencoded({ extended: true })); // complex parsing set true: used for json formatting
-app.use(favicon(path.join(__dirname, 'public', 'favicon.ico'))); 
+// app.use(favicon(path.join(__dirname, 'public', 'favicon.ico'))); 
 app.set("view engine", "ejs"); // ejs engine setup
 
 
@@ -65,34 +65,10 @@ mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_ho
         console.error("Failed to connect to MongoDB:", err);
         process.exit(1);
     });
-
-/**
- *  mongoStart().catch(console.error); <--- Original way of starting doesnt work. 
- *  Since we are using mongoose we need to use mongoose to connect and to use its features
- * */ 
-
+    
 // Mongodb schema fetching
 const User = require('./modules/user.js'); 
 const Project = require('./modules/project.js'); 
-
-// const projectCollection = database.db(mongodb_database).collection('projects');
-// const projectMemberCollection = database.db(mongodb_database).collection('projectMembers');
-
-/*** MIDDLEWARE FUNCTIONS  ***/
-function isValidSession(req) {
-    if (req.session.authenticated) {
-        return true;
-    }
-    return false;
-}
-
-function sessionValidation(req, res, next) {
-    if (isValidSession(req)) {
-        next();
-    } else {
-        res.redirect('/login');
-    }
-}
 
 function ensureAuth(req, res, next) {
     if (req.isAuthenticated()) {
@@ -218,20 +194,21 @@ app.post('/forgotPass', async (req, res) => {
     res.render('passwordChanged');
 });
 
-// Members only page
-// app.get('/members', (req, res) => {
-//     if (!req.session.authenticated) {
-//         return res.redirect('/login');
-//     } else {
-//         res.render('members', {user: req.session.username});   
-//     }
-// });
-
 /*****AUTHENTICATED PAGES *****/
-
 //creating, storing project
-app.get('/createProject', (req, res) => {
+app.get('/createProject', ensureAuth, (req, res) => {
     res.render("createProject");
+})
+
+app.post('/createProjectSubmit', (req, res) => {
+    // console.log("Project Created Submitted");
+
+    const {projectName} = req.body;
+    const projectOwner = req.user._id;
+    console.log(`
+    projectName: ${projectName}
+        projectOwner: ${projectOwner}`);
+    res.redirect("/homepage");
 })
 
 /***** HOMEPAGE *****/
@@ -269,13 +246,13 @@ app.post('/profile', ensureAuth, async (req, res) => {
     }
 });
 
-/***** WORKSPACE SETTING ROUTES *****/
+/************************************************************************* NOT USED RN *****************************************************************/
 //Workspace Setting page
-app.get('/workspaceSetting', sessionValidation, (req, res) => {
+app.get('/workspaceSetting', (req, res) => {
     res.render('workspaceSetting', { navLinks, currentURL:'/workspaceSetting' }); // Adjust navLinks as needed
 });
 
-app.get('/projectManagement', sessionValidation, async (req, res) => {
+app.get('/projectManagement', async (req, res) => {
     try {
         const projects = await projectCollection.find({ projectOwnerId: req.session.userId }).toArray();
         res.render('projectManagement', { projects, navLinks, currentURL: '/projectManagement' });
@@ -303,7 +280,7 @@ app.get('/addMember', async (req, res) => {
 const { ObjectId } = require('mongodb');
 
 // Route to save project with members in createProject Modal
-app.post('/projectManagement', sessionValidation, async (req, res) => {
+app.post('/projectManagement', async (req, res) => {
     
     const { projectName, description } = req.body;
     let members = JSON.parse(req.body.members || "[]");  // Ensure default to an empty array if undefined
@@ -349,7 +326,7 @@ app.post('/projectManagement', sessionValidation, async (req, res) => {
 
 
 //delete project and members in the project
-app.delete('/deleteProject', sessionValidation, async (req, res) => {
+app.delete('/deleteProject', async (req, res) => {
     const projectId = req.query.projectId;
     try {
       // Remove project from projectCollection
@@ -364,7 +341,7 @@ app.delete('/deleteProject', sessionValidation, async (req, res) => {
     }
   });   
   
-  app.get('/memberManagement', sessionValidation, async (req, res) => {
+  app.get('/memberManagement', async (req, res) => {
     try {
       const projects = await projectCollection.find({ projectOwnerId: req.session.userId }).toArray();
       const selectedProjectId = req.query.projectId || (projects.length > 0 ? projects[0]._id.toString() : null);
@@ -394,7 +371,7 @@ app.delete('/deleteProject', sessionValidation, async (req, res) => {
  * need to fix, cannot update to db.
  * @author https://chat.openai.com/
  */
-  app.post('/updateMembersPermissions', sessionValidation, async (req, res) => {
+  app.post('/updateMembersPermissions', async (req, res) => {
     const { projectId, members } = req.body;
   
     try {
@@ -414,7 +391,7 @@ app.delete('/deleteProject', sessionValidation, async (req, res) => {
   });
 
   //remove member form a project
-  app.delete('/removeMember', sessionValidation, async (req, res) => {
+  app.delete('/removeMember', async (req, res) => {
     try {
         const { projectId, memberEmail } = req.query;
         await projectMemberCollection.deleteOne({
@@ -437,9 +414,12 @@ app.get('*', (req, res) => {
     res.status(404);
     res.render('404error');
 });
+/************************************************************************* NOT USED RN *****************************************************************/
+
+
 
 /**** END OF PAGES ****/
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname + '/public'));
 
 app.listen(port, () => {
     console.log(`SyncPro node application listening on port ${port}`);
