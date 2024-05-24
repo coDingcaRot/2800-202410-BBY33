@@ -30,11 +30,13 @@ app.use(express.urlencoded({ extended: true })); // complex parsing set true: us
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico'))); 
 app.set("view engine", "ejs"); // ejs engine setup
 app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/modules'));
 app.use(express.static(__dirname + '/views')); // Serve static files from the 'views' directory
 
 
 /** MONGO/MONGOOSE SETUP **/
 const mongoose = require('mongoose');
+const { ObjectId } = require('mongodb');
 const mongodb_host = process.env.MONGODB_HOST;
 const mongodb_user = process.env.MONGODB_USER;
 const mongodb_password = process.env.MONGODB_PASSWORD;
@@ -144,7 +146,7 @@ app.get('/initializeTimezone', async (req, res) => {
     if (req.headers['x-forwarded-for']) {
         const forwardedIps = req.headers['x-forwarded-for'].split(',');
         clientIp = forwardedIps[0];
-        console.log(`Forwarded IP: ${clientIp}`);
+        // console.log(`Forwarded IP: ${clientIp}`);
     }
 
     let location = "Localhost";
@@ -152,7 +154,7 @@ app.get('/initializeTimezone', async (req, res) => {
 
     try {
         const response = await axios.get(`https://ipinfo.io/${clientIp}?token=${process.env.IPINFO_TOKEN}`);
-        console.log('IPInfo Response:', response.data);
+        // console.log('IPInfo Response:', response.data);
 
         const city = response.data.city || 'Unknown';
         const region = response.data.region || 'Unknown';
@@ -208,10 +210,10 @@ app.get('/forgotPass', (req, res) => {
 });
 
 app.post('/forgotPass', async (req, res) => {
-    var email = req.body.email;
-    var password = req.body.password;
+    const {email, password} = req.body
 
-    const user = await userCollection.findOne({ email: email });
+
+    const user = await User.findOne({ email: email });
     if (!user) {
         res.render('forgotPassError', { error: 'Email ' });
         return;
@@ -230,26 +232,51 @@ app.post('/forgotPass', async (req, res) => {
     res.render('passwordChanged');
 });
 
-/*****AUTHENTICATED PAGES *****/
-//creating, storing project
+/************************************************* AUTHENTICATED PAGES *************************************************/
+
+/***** PROJECT CREATION *****/
 app.get('/createProject', ensureAuth, (req, res) => {
     res.render("createProject");
 })
 
-app.post('/createProjectSubmit', (req, res) => {
-    // console.log("Project Created Submitted");
+app.post('/createProjectSubmit', async (req, res) => {
+    const { projectName } = req.body;
 
-    const {projectName} = req.body;
-    const projectOwner = req.user._id;
-    console.log(`
-    projectName: ${projectName}
-        projectOwner: ${projectOwner}`);
-    res.redirect("/homepage");
-})
+    if(!projectName){
+        res.render(`errorMessage`, {error: "All fields need to be filled", backlink: "/homepage"});
+    }
+
+    try {
+        const existingProjectName = await Project.findOne({name: projectName});
+        if(existingProjectName){
+            res.status(400)
+            return res.render("errorMessage", 
+                {error: `Project exists with name ${projectName}`, 
+                backlink: "/homepage"});
+        }
+        const newProject = new Project({ projectOwner: req.user._id, name: projectName});
+        await newProject.save();
+
+        const message = "Project Created!";
+        res.render('projectCreated', { message: message });
+    } catch (dbError) {
+        res.render('errorMessage', { error: `This error is: ${dbError.message}`, backlink: "/homepage"});
+    }
+});
+
+/***** MEMBER ADDITION  *****/
+app.get('/addMembersPage', async (req, res) => {
+    const projectId = req.query.projectId;
+    const project = await Project.findOne({_id: new ObjectId(projectId)});
+    console.log(`projectId: ${project.name}`)
+
+    res.render("addMembersPage", { projectName: project.name });
+});
 
 /***** HOMEPAGE *****/
-app.get('/homepage', ensureAuth, (req, res) => {
-    res.render("homepage");
+app.get('/homepage', ensureAuth, async (req, res) => {
+    const projects = await Project.find({ projectOwner: req.user._id }) || "no projects";
+    res.render("homepage", {projects: projects});
 });
 
 /***** PROFILE ROUTES *****/
@@ -282,6 +309,11 @@ app.post('/profile', ensureAuth, async (req, res) => {
     }
 });
 
+
+/************************************************* AUTHENTICATED PAGES *************************************************/
+
+
+
 /************************************************************************* NOT USED RN *****************************************************************/
 //Workspace Setting page
 app.get('/workspaceSetting', (req, res) => {
@@ -298,67 +330,53 @@ app.get('/projectManagement', async (req, res) => {
     }
 }); 
 
-// Route to add member to the list in createProject Modal
-app.get('/addMember', async (req, res) => {
-    const email = req.query.email;
-    try {
-        const user = await userCollection.findOne({ email });
-        if (user) {
-            res.json({ success: true, email: user.email, name: user.userName });
-        } else {
-            res.json({ success: false, error: "No user found with that email" });
-        }
-    } catch (err) {
-        res.json({ success: false, error: err.message });
-    }
-});
+// MembersList = [];
+// // Route to add member to the list in createProject Modal
+// app.post('/addMembers', async (req, res) => {
+//     const {memberEmail} = req.body
 
-const { ObjectId } = require('mongodb');
+//     try {
+//         const user = await User.findOne({ email: memberEmail });
+//         if (user) {
+//             res.render("errorMessage", {error: `User doesn't exist ${user}`});
+//         } else {
+//             MembersList.push(user);
+//             console.log(`Added ${user} to membersList`);
+//             console.log(`membersList memners: ${MembersList}`);
+//         }
+//     } catch (err) {
+//         res.render("errorMessage", {error: "Interal server error"});
+//     }
+// });
 
-// Route to save project with members in createProject Modal
-app.post('/projectManagement', async (req, res) => {
-    
-    const { projectName, description } = req.body;
-    let members = JSON.parse(req.body.members || "[]");  // Ensure default to an empty array if undefined
-    try {
-        const project = await projectCollection.insertOne({
-            projectOwnerId: req.session.userId,
-            projectName,
-            description
-        });
-        const projectId = project.insertedId;
+    // let members = JSON.parse(req.body.members || "[]");  // Ensure default to an empty array if undefined
+//adding members
+        // // Always add the project owner first
+        // const creator = await User.findOne({ _id: req.user._id});
+        // await projectMemberCollection.insertOne({
+        //     projectId,
+        //     projectName,
+        //     memberEmail: creator.email,
+        //     memberName: creator.userName,
+        // });
 
-        // Always add the project owner first
-        const creator = await userCollection.findOne({ _id: new ObjectId(req.session.userId) });
-        await projectMemberCollection.insertOne({
-            projectId,
-            projectName,
-            memberEmail: creator.email,
-            memberName: creator.userName,
-        });
-
-        // Add all other members
-        for (let memberEmail of members) {
-            if (memberEmail !== creator.email) {  // Skip adding creator again
-                const user = await userCollection.findOne({ email: memberEmail });
-                if (user) {
-                    await projectMemberCollection.insertOne({
-                        projectId,
-                        projectName,
-                        memberEmail: user.email,
-                        memberName: user.userName,
-                    });
-                }
-            }
-        }
+        // // Add all other members
+        // for (let memberEmail of members) {
+        //     if (memberEmail !== creator.email) {  // Skip adding creator again
+        //         const user = await userCollection.findOne({ email: memberEmail });
+        //         if (user) {
+        //             await projectMemberCollection.insertOne({
+        //                 projectId,
+        //                 projectName,
+        //                 memberEmail: user.email,
+        //                 memberName: user.userName,
+        //             });
+        //         }
+        //     }
+        // }
 
         // show message after successful insertion
-        const message = "Project Created!";
-        res.render('projectCreated', { message, navLinks });
-    } catch (dbError) {
-        res.render('createProjectSubmit', { errorMessage: `failed: ${dbError.message}`, navLinks: navLinks });
-    }
-});
+
 
 
 //delete project and members in the project
@@ -401,46 +419,6 @@ app.delete('/deleteProject', async (req, res) => {
     }
   });
   
-/**
- * update Members Permission
- * Generated by ChatGPT 3.5
- * need to fix, cannot update to db.
- * @author https://chat.openai.com/
- */
-//   app.post('/updateMembersPermissions', sessionValidation, async (req, res) => {
-//     const { projectId, members } = req.body;
-  
-//     try {
-//       for (const email in members) {
-//         const member = members[email];
-//         await projectMemberCollection.updateOne(
-//           { projectId: new ObjectId(projectId), memberEmail: email },
-//           { $set: { view: member.view === 'on', edit: member.edit === 'on' } }
-//         );
-//       }
-  
-//       res.redirect(`/memberManagement?projectId=${projectId}`);
-//     } catch (error) {
-//       console.error("Failed to update members permissions:", error);
-//       res.status(500).render('errorPage', { errorMessage: "Failed to update member permissions." });
-//     }
-//   });
-
-  //remove member form a project
-  app.delete('/removeMember', async (req, res) => {
-    try {
-        const { projectId, memberEmail } = req.query;
-        await projectMemberCollection.deleteOne({
-            projectId: new ObjectId(projectId),
-            memberEmail: memberEmail
-        });
-        res.json({ success: true });
-    } catch (error) {
-        console.error("Error removing member:", error);
-        res.json({ success: false, error: 'Database operation failed' });
-    }
-});
-
 /************************************************************************* NOT USED RN *****************************************************************/
 
 /* TaskPage START */

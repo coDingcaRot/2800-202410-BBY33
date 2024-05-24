@@ -1,4 +1,4 @@
-<%- include("templates/header", { currentURL: '/projectManagement', navLinks: navLinks }) %>
-<%- include("templates/notification", {message}) %>
-<%- include("templates/footer") %>
+<%- include("templates/headerAfter", {page: "/projectCreatedMessage", dropdown: false, backlink: "/homepage", isTaskPage: false}) %>
+    <%= message %>
+<%- include("templates/footerAfter", {footer: false, dropdown: false, isTaskPage: false}) %>
 
