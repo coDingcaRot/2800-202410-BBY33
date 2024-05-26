@@ -1,21 +1,25 @@
 // when reloading the page, show data on screen according to the URL query
+function fetchAndShowTasksData(projectId) {
+    Promise.all([
+        fetch(`/getProjectTasks?projectId=${projectId}`).then(response => response.json()),
+        fetch(`/getProjectName?projectId=${projectId}`).then(response => response.json())
+    ])
+    .then(([tasksData, project]) => {
+        showTodo(tasksData, 'all'); // Default to 'all' tab when loading tasks
+        const navbarBrand = document.getElementById('navbarDropdown');
+        if (project && project.projectName) {
+            navbarBrand.textContent = project.projectName;
+        }
+    })
+    .catch(error => console.error('Error fetching project data:', error));
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const urlParams = new URLSearchParams(window.location.search);
     const projectId = urlParams.get('projectId');
 
     if (projectId) {
-        Promise.all([
-            fetch(`/getProjectTasks?projectId=${projectId}`).then(response => response.json()),
-            fetch(`/getProjectName?projectId=${projectId}`).then(response => response.json())
-        ])
-        .then(([tasksData, project]) => {
-            showTodo(tasksData);
-            const navbarBrand = document.getElementById('navbarDropdown');
-            if (project && project.projectName) {
-                navbarBrand.textContent = project.projectName;
-            }
-        })
-        .catch(error => console.error('Error fetching project data:', error));
+        fetchAndShowTasksData(projectId);
     }
 });
 
@@ -26,23 +30,9 @@ projectListDiv.addEventListener('change', function(event) {
         const url = new URL(window.location.href);
         url.searchParams.set('projectId', selectedProjectId);
         history.pushState(null, '', url);
-
-        Promise.all([
-            fetch(`/getProjectTasks?projectId=${selectedProjectId}`).then(response => response.json()),
-            fetch(`/getProjectName?projectId=${selectedProjectId}`).then(response => response.json())
-        ])
-        .then(([tasksData, project]) => {
-            showTodo(tasksData);
-            const navbarBrand = document.getElementById('navbarDropdown');
-            if (project && project.projectName) {
-                navbarBrand.textContent = project.projectName;
-            }
-        })
-        .catch(error => console.error('Error fetching project data:', error));
-
+        fetchAndShowTasksData(selectedProjectId); 
     }
 });
-
 
 
 // format time got from mongodb
@@ -98,48 +88,54 @@ function formatDate(dateStr) {
 }
 
 
-async function showTodo(tasksData) {
+async function showTodo(tasksData, tabType) {
     let taskTag = "";
     if (tasksData && tasksData.length > 0) {
         for (const todo of tasksData) {
-            let formatdate = formatDate(todo.dueDate);
-            let formattime = formatTime(todo.dueTime);
-            let taskstatus = todo.status;
-            try {
-                const memberAvatarsHTML = await generateMemberAvatars(todo.taskMembers);
-                const isChecked = localStorage.getItem(todo._id) === "true"; // Check local storage for checkbox state
-                taskTag += `<div class="task-card" id="task-item-${todo._id}">
-                                <div class="task-card-body">
-                                    <div class="checkbox-wrapper">
-                                    <input style="display: none;" type="checkbox" class="inp-cbx" id="${todo._id}" onchange="handleCheckboxChange('${todo._id}')" ${isChecked ? "checked" : ""}/>
-                                        <label for="${todo._id}" class="cbx">
-                                        <span>
-                                            <svg viewBox="0 0 12 9" height="9px" width="12px">
-                                            <polyline points="1 5 4 8 11 1"></polyline>
+            const isChecked = localStorage.getItem(todo._id) === "true";
+            if (
+                (tabType === "all") || 
+                (tabType === "pending" && !isChecked) || 
+                (tabType === "completed" && isChecked)
+            ) {
+                let formatdate = formatDate(todo.dueDate);
+                let formattime = formatTime(todo.dueTime);
+                let taskstatus = todo.status;
+                try {
+                    const memberAvatarsHTML = await generateMemberAvatars(todo.taskMembers);
+                    taskTag += `<div class="task-card" id="task-item-${todo._id}">
+                                    <div class="task-card-body">
+                                        <div class="checkbox-wrapper">
+                                        <input style="display: none;" type="checkbox" class="inp-cbx" id="${todo._id}" onchange="handleCheckboxChange('${todo._id}')" ${isChecked ? "checked" : ""}/>
+                                            <label for="${todo._id}" class="cbx">
+                                            <span>
+                                                <svg viewBox="0 0 12 9" height="9px" width="12px">
+                                                <polyline points="1 5 4 8 11 1"></polyline>
+                                                </svg>
+                                            </span>
+                                            <span>${todo.title}</span>
+                                            </label>
+                                        </div>
+                                        <div class="task-card-member-wrapper">
+                                            <div class="task-card-member">
+                                                ${memberAvatarsHTML}
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="task-card-due-wrapper">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">
+                                            <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/>
+                                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/>
                                             </svg>
-                                        </span>
-                                        <span>${todo.title}</span>
-                                        </label>
-                                    </div>
-                                    <div class="task-card-member-wrapper">
-                                        <div class="task-card-member">
-                                            ${memberAvatarsHTML}
+                                            <span class="due-date">${formatdate}</span>
+                                            <span class="due-time">${formattime}</span>
+                                            <span class="task-status">${taskstatus}</span>
                                         </div>
                                     </div>
-                                    <hr>
-                                    <div class="task-card-due-wrapper">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">
-                                        <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/>
-                                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/>
-                                        </svg>
-                                        <span class="due-date">${formatdate}</span>
-                                        <span class="due-time">${formattime}</span>
-                                        <span class="task-status">${taskstatus}</span>
-                                    </div>
-                                </div>
-                            </div>`;
-            } catch (error) {
-                console.error('Error generating member avatars:', error);
+                                </div>`;
+                } catch (error) {
+                    console.error('Error generating member avatars:', error);
+                }
             }
         }
     }
@@ -149,6 +145,25 @@ async function showTodo(tasksData) {
         ? taskBox.classList.add("overflow")
         : taskBox.classList.remove("overflow");
 }
+
+document.addEventListener('DOMContentLoaded', function () {   
+    const filters = document.querySelectorAll(".filters span");
+
+    filters.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            document.querySelector("span.active").classList.remove("active");
+            btn.classList.add("active");
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectId = urlParams.get('projectId'); 
+            const tabType = btn.textContent.trim().toLowerCase();
+            fetch(`/getProjectTasks?projectId=${projectId}`)
+                .then(response => response.json())
+                .then(tasksData => showTodo(tasksData, tabType))
+                .catch(error => console.error('Error fetching project tasks:', error));
+        });
+    });
+});
+
 
 // get user's profile picture 
 async function generateMemberAvatars(members) {
@@ -265,48 +280,83 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-
-// pop up add-member-modal after clicking plus button 
+// pop up add-member-modal after clicking plus button, adding selected members to taskform 
 document.addEventListener('DOMContentLoaded', async function() {
+    // to open the assign-to-members modal
     const addMemberBtn = document.getElementById('add-member-btn');
     const addMemberModal = document.getElementById('add-member-modal');
+    // search bar inside assign-to-members modal 
+    const searchBar = document.getElementById('member-search-filter');
     const memberListWrap = document.querySelector('.member-list-wrap');
+    // get the project-id from the taskform
     const projectIdInput = document.getElementById('taskform-project-id');
+    // after selecting members-to-assign add button
     const modalAddMemberButton = document.getElementById('modal-add-member-btn');
+    // the div that insert the selected members in taskform
     const memberListDiv = document.getElementById('taskform-member-list');
-
-    let selectedMembers = [];
 
     addMemberBtn.addEventListener('click', async function() {
         addMemberModal.classList.add('show');
         addMemberModal.style.display = 'block';
-    
-        const projectId = projectIdInput.value.trim(); // Get the project ID from the hidden input field
-    
-        // Send a request to the server to get the list of project members
+    });
+
+    searchBar.addEventListener('click', async function(event) {
+        // get all the members under specific project group
         try {
+            const projectId = projectIdInput.value.trim(); 
             const response = await fetch(`/getProjectMembers?projectId=${projectId}`);
             if (response.ok) {
-                const userData = await response.json();
-                // Clear existing member list
-                memberListWrap.innerHTML = '';
-                // Add each username and email to the member list
-                userData.forEach(data => {
-                    const listItem = document.createElement('li');
-                    listItem.classList.add('member-list-group-item');
-                    listItem.innerHTML = `
-                        <input class="form-check-input me-1" type="checkbox" value="${data._id}" id="checkbox-${data._id}">
-                        <label class="form-check-label" for="checkbox-${data._id}">${data.username} (${data.email})</label>
-                    `;
-                    memberListWrap.appendChild(listItem);
-                });
+                const memberData = await response.json(); 
+
+                renderMemberList(memberData);
             } else {
-                console.error('Failed to fetch project members');
+                console.error('Failed to fetch member data');
             }
         } catch (error) {
-            console.error('Error fetching project members:', error);
+            console.error('Error fetching member data:', error);
         }
     });
+
+    searchBar.addEventListener('input', async function(event) {
+        // get the value from input of search bar convert to lower case
+        const searchTerm = event.target.value.trim().toLowerCase(); 
+    
+        try {
+            const projectId = projectIdInput.value.trim(); 
+            const response = await fetch(`/getProjectMembers?projectId=${projectId}`);
+            if (response.ok) {
+                const memberData = await response.json(); 
+    
+                // filter matching members of list from the input
+                const filteredMembers = memberData.filter(member => {
+                    return member.username.toLowerCase().includes(searchTerm); // 假設成員數據中有一個 username 屬性
+                });
+    
+                // filter rendered member list
+                renderMemberList(filteredMembers);
+            } else {
+                console.error('Failed to fetch member data');
+            }
+        } catch (error) {
+            console.error('Error fetching member data:', error);
+        }
+    });
+
+    // render members into list
+    function renderMemberList(memberData) {
+        memberListWrap.innerHTML = ''; 
+
+        // iterate through user list and put data into list li
+        memberData.forEach(data => {
+            const listItem = document.createElement('li');
+            listItem.classList.add('member-list-group-item');
+            listItem.innerHTML = `
+                <label class="form-check-label" for="checkbox-${data._id}">${data.username} <span style="font-size: small">(${data.email})</span></label>
+                <input class="form-check-input me-1" type="checkbox" value="${data._id}" id="checkbox-${data._id}">
+            `;
+            memberListWrap.appendChild(listItem);
+        });
+    }
 
     const closeButton = addMemberModal.querySelector('.btn-close');
     closeButton.addEventListener('click', function() {
@@ -320,7 +370,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Clear existing member avatars
         memberListDiv.innerHTML = '';
         // Clear the selected members array
-        selectedMembers = [];
+        let selectedMembers = [];
         // Get all checked checkboxes
         const checkboxes = document.querySelectorAll('.form-check-input:checked');
         checkboxes.forEach(checkbox => {
@@ -357,9 +407,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.error('Error fetching user by ID:', error);
         }
     }
- 
-});
 
+});
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -404,30 +453,3 @@ function loadTasks(filter) {
         })
         .catch(error => console.error('Error fetching tasks:', error));
 }
-
-
-
-
-
-
-const filters = document.querySelectorAll(".filters span"),
-taskBox = document.querySelector(".task-card-container");
-
-filters.forEach((btn) => {
-    btn.addEventListener("click", () => {
-        document.querySelector("span.active").classList.remove("active");
-        btn.classList.add("active");
-        showTodo(btn.id);
-    });
-});
-
-function showMenu(selectedTask) {
-    let menuDiv = selectedTask.parentElement.lastElementChild;
-    menuDiv.classList.add("show");
-    document.addEventListener("click", (e) => {
-        if (e.target.tagName != "I" || e.target != selectedTask) {
-            menuDiv.classList.remove("show");
-        }
-    });
-}
-
