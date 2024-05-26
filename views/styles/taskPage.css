@@ -129,7 +129,7 @@ li {
   .task-card-member-wrapper {
     display: flex;
     align-items: center;
-    margin-inline-start: 30px;
+    margin-inline-start: 20px;
     margin-top: 10px;
   }
 
@@ -433,8 +433,17 @@ li {
 
   /* member list in add member modal style */
   .member-list-wrap {
-    width: 90%;
+    max-width: 240px; 
+    width: 100%; 
     max-height: 200px; 
     overflow-y: auto;
-  }
+}
 
+.member-list-wrap li {
+  font-size: medium;
+}
+
+/* new-task form profile image style */
+#taskform-member-list .task-card-img {
+  margin-right: 10px; 
+}
