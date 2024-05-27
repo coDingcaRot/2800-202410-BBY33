@@ -95,55 +95,79 @@ app.get('/signup', (req, res) => {
 });
 
 app.post('/signupSubmit', async (req, res) => {
-    const { username, name, email, password } = req.body;
-    //checks if the fields are empty
-    if (!username || !email || !password) {
+    const { username, email, password, location, timezone } = req.body;
+    // checks if the fields are empty
+    if (!username || !email || !password || !location || !timezone) {
         res.status(400);
-        return res.render("signupError", {error: 'All fields are required.'});
+        return res.render("signupError", { error: 'All fields are required.' });
     }
 
     try {
-        const existingUser = await User.findOne({email}); //find this email
-        // console.log(existingUser);
+        const existingUser = await User.findOne({ email });
         if (existingUser) {
             res.status(400);
-            return res.render("signupError", {error: 'User already exists with that email.'});
-        } else{
-            // return res.redirect("/initializeTimezone");
+            return res.render("signupError", { error: 'User already exists with that email.' });
         }
 
-        /***** Move functions to /initializeTimezone *****/
-        //creates the user and saves to db
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, name, email, password: hashedPassword });
+        const newUser = new User({ username, email, password: hashedPassword, location, timezone });
         await newUser.save();
 
-        //Attempst to log the user in unless an error is popped up
         req.login(newUser, loginErr => {
             if (loginErr) {
                 res.status(500);
-                return res.render("signupError", {error: `Error during signup process. ${loginErr}`});
+                return res.render("signupError", { error: `Error during signup process. ${loginErr}` });
             }
             res.redirect('/homepage');
         });
 
-        /***** Move functions to /initializeTimezone *****/
-
     } catch (err) {
-        res.status(500)
-        return res.render("signupError", {error: 'Error during signup process: ' + err.message});
+        res.status(500);
+        return res.render("signupError", { error: 'Error during signup process: ' + err.message });
     }
 });
 
+
 /***** INITIALIZE TIMEZONE *****/
-app.get('/initializeTimezone', async (req, res) => {
-    let clientIp = requestIp.getClientIp(req); // Use requestIp to get the client IP
+// app.get('/initializeTimezone', async (req, res) => {
+//     let clientIp = requestIp.getClientIp(req); // Use requestIp to get the client IP
+//     console.log(`Initial Detected IP: ${clientIp}`);
+
+//     if (req.headers['x-forwarded-for']) {
+//         const forwardedIps = req.headers['x-forwarded-for'].split(',');
+//         clientIp = forwardedIps[0];
+//         // console.log(`Forwarded IP: ${clientIp}`);
+//     }
+
+//     let location = "Localhost";
+//     let timezone = "Local Timezone";
+
+//     try {
+//         const response = await axios.get(`https://ipinfo.io/${clientIp}?token=${process.env.IPINFO_TOKEN}`);
+//         // console.log('IPInfo Response:', response.data);
+
+//         const city = response.data.city || 'Unknown';
+//         const region = response.data.region || 'Unknown';
+//         const country = response.data.country || 'Unknown';
+//         timezone = response.data.timezone || 'Unknown';
+
+//         location = `${city}, ${region}, ${country}`;
+//     } catch (error) {
+//         console.error("Failed to fetch location:", error.response ? error.response.data : error.message);
+//         location = "Unknown";
+//         timezone = "Unknown";
+//     }
+
+//     res.render('initializeTimezone', { location, timezone, page: "/initializeTimezone", backlink: "/signup" });
+// });
+
+app.post('/initializeTimezone', async (req, res) => {
+    let clientIp = requestIp.getClientIp(req);
     console.log(`Initial Detected IP: ${clientIp}`);
 
     if (req.headers['x-forwarded-for']) {
         const forwardedIps = req.headers['x-forwarded-for'].split(',');
         clientIp = forwardedIps[0];
-        // console.log(`Forwarded IP: ${clientIp}`);
     }
 
     let location = "Localhost";
@@ -151,8 +175,6 @@ app.get('/initializeTimezone', async (req, res) => {
 
     try {
         const response = await axios.get(`https://ipinfo.io/${clientIp}?token=${process.env.IPINFO_TOKEN}`);
-        // console.log('IPInfo Response:', response.data);
-
         const city = response.data.city || 'Unknown';
         const region = response.data.region || 'Unknown';
         const country = response.data.country || 'Unknown';
@@ -165,12 +187,11 @@ app.get('/initializeTimezone', async (req, res) => {
         timezone = "Unknown";
     }
 
-    res.render('initializeTimezone', { location, timezone, page: "/initializeTimezone", backlink: "/signup" });
+    const { username, email, password } = req.body;
+    res.render('initializeTimezone', { location, timezone, username, email, password, page: "/initializeTimezone", backlink: "/signup" });
 });
 
-app.post('/initializeTimezoneSubmit', (req, res) => {
 
-});
 
 /***** LOGIN ROUTES *****/
 app.get('/login', (req, res) => {
