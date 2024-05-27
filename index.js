@@ -593,6 +593,7 @@ app.get('/getProjectMembers', ensureAuth,  async (req, res) => {
 
 // Add tasks, get data from users and insert to mongoDB
 app.post('/addTask', async (req, res) => {
+    const userId = req.user._id;
     try{
         // Extract data from the request body
         const { title, description, startDate, startTime, dueDate, dueTime, reminderDatetime, selectedTaskMembers, projectId } = req.body;
@@ -612,6 +613,7 @@ app.post('/addTask', async (req, res) => {
             dueDate,
             dueTime,
             reminder,
+            taskOwner: userId,
             taskMembers
             // Add other fields as needed
         });
