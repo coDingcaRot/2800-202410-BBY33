@@ -392,8 +392,8 @@ app.get('/homepage', ensureAuth, async (req, res) => {
     const projectPromises = user.projectList.map(projectId => Project.findById(projectId));
     const pList = await Promise.all(projectPromises);
 
-    console.log(pList)
-    console.log(`pList.length: ${pList.length}`)
+    // console.log(pList)
+    // console.log(`pList.length: ${pList.length}`)
     res.render("homepage", {projects: pList, username: req.user.username});
 });
 
@@ -734,6 +734,8 @@ app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
 });
 /* TaskPage END */
 
+
+
 /* TimelinePage START */
 /* functions */
 async function getProjectMembersInfo(projectId) {
@@ -853,11 +855,11 @@ app.get('/timelinePage', ensureAuth, async (req, res) => {
                 res.status(500).send('Internal Server Error');
             }
         } else {
-            res.render('timelinePage', { 
+            res.render('timelinePage', {
                 authenticated: req.isAuthenticated(), 
                 username: req.user.username,
-                isTaskPage: false,
-                projectId: "" 
+                projectId: projectId, 
+                timelineData: timelineData
             });
         }
     } else {
@@ -909,6 +911,20 @@ app.get('/getProjectTaskDetails', async (req, res) => {
 
 
 
+
+/*****CALENDAR ****/
+// Calendar page route
+app.get('/calendarPage', ensureAuth, async (req, res) => {
+    const projectId = req.query.projectId;
+    // Fetch calendar data or other data using projectId
+    // const calendarData = await fetchProjectCalendar(projectId, req.user._id);
+    res.render('calendarPage', {
+        authenticated: req.isAuthenticated(), 
+        username: req.user.username,
+        projectId: projectId
+        // calendarData: calendarData
+    });
+});
 
 
 

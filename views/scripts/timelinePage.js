@@ -178,83 +178,115 @@ fetch(`/getProjectTaskDetails?projectId=${projectId}`)
 
 let DateTime = luxon.DateTime;
 
-
-
-
-
-
 anychart.onDocumentReady(function () {
-    // The data used in this sample can be obtained from the CDN
-    // https://cdn.anychart.com/samples/gantt-charts/activity-oriented-chart/data.js
-    anychart.data.loadJsonFile(
-      'https://cdn.anychart.com/samples/gantt-charts/activity-oriented-chart/data.json',
-      function (data) {
-        // create data tree
-        var treeData = anychart.data.tree(data, 'as-table');
 
-        // create project gantt chart
-        var chart = anychart.ganttProject();
+    // create data
 
-        chart.height(700);
-        // set data for the chart
-        chart.data(treeData);
+    //fill data here. 
+    //format 
 
-        // set start splitter position settings
-        chart.splitterPosition(370);
-
-        // get chart data grid link to set column settings
-        var dataGrid = chart.dataGrid();
-
-        // set first column settings
-        dataGrid
-          .column(0)
-          .title('#')
-          .width(30)
-          .labels({ hAlign: 'center' });
-
-        // set second column settings
-        dataGrid.column(1).labels().hAlign('left').width(180);
-
-        // set third column settings
-        dataGrid
-          .column(2)
-          .title('Start Time')
-          .width(70)
-          .labels()
-          .hAlign('right')
-          .format(function () {
-            var date = new Date(this.actualStart);
-            var month = date.getUTCMonth() + 1;
-            var strMonth = month > 9 ? month : '0' + month;
-            var utcDate = date.getUTCDate();
-            var strDate = utcDate > 9 ? utcDate : '0' + utcDate;
-            return date.getUTCFullYear() + '.' + strMonth + '.' + strDate;
-          });
-
-        // set fourth column settings
-        dataGrid
-          .column(3)
-          .title('End Time')
-          .width(80)
-          .labels()
-          .hAlign('right')
-          .format(function () {
-            var date = new Date(this.actualEnd);
-            var month = date.getUTCMonth() + 1;
-            var strMonth = month > 9 ? month : '0' + month;
-            var utcDate = date.getUTCDate();
-            var strDate = utcDate > 9 ? utcDate : '0' + utcDate;
-            return date.getUTCFullYear() + '.' + strMonth + '.' + strDate;
-          });
-
-        // set container id for the chart
-        chart.container('timeline-container');
-
-        // initiate chart drawing
-        chart.draw();
-
-        // zoom chart to specified date
-        chart.zoomTo(951350400000, 954201600000);
+    // tasks. no child element.
+    var data = [ 
+      {
+        id: "developmenTaskID",
+        name: "Development",
+        actualStart: "2018-01-15",
+        actualEnd: "2018-01-25"
+    //     children: [
+    //       {
+    //         id: "1_1",
+    //         name: "Analysis",
+    //         actualStart: "2018-01-15",
+    //         actualEnd: "2018-01-25"
+    //       },
+    //       {
+    //         id: "1_2",
+    //         name: "Design",
+    //         actualStart: "2018-01-20",
+    //         actualEnd: "2018-02-04"
+    //       },
+    //       {
+    //         id: "1_3",
+    //         name: "Meeting",
+    //         actualStart: "2018-02-05",
+    //         actualEnd: "2018-02-05"
+    //       },
+    //       {
+    //         id: "1_4",
+    //         name: "Implementation",
+    //         actualStart: "2018-02-05",
+    //         actualEnd: "2018-02-24"
+    //       },
+    //       {
+    //         id: "1_5",
+    //         name: "Testing",
+    //         actualStart: "2018-02-25",
+    //         actualEnd: "2018-03-10"
+    //       }
+    //   ]}
+      },
+      {
+        id: "1_5",
+        name: "Testing",
+        actualStart: "2018-02-25",
+        actualEnd: "2018-03-10"
       }
-    );
-  });
+    ];
+    
+    // create a data tree
+    var treeData = anychart.data.tree(data, "as-tree");
+
+    // create a chart
+    var chart = anychart.ganttProject();
+
+    // var timeline = chart.timeline();
+
+    //left side data grid column
+    var dataGrid = chart.dataGrid();
+    column0 = dataGrid.column(0);
+    column1 = dataGrid.column(1);
+
+    column0.width(10); //sets # width
+    column1.width(50); //sets "Tasks" column width
+    column1.title().text("Task");
+
+    //timeline customization scaling timeline
+    // var timeline = chart.getTimeline();
+    // var periodLabels = timeline.periods().labels();
+    // var labels = timeline.labels();
+
+    // console.log(`labels: ${labels}`)
+    // periodLabels.enabled(true);
+    // timeline.scale().zoomLevels([
+    //     {unit: "month", count: 1},
+    //     {unit: "quarter", count: 1}
+    // ]);
+
+    //Event listener for clicks
+    /* listen to the rowClick event and redirect to another page */
+    chart.listen("rowClick", async function (e) {
+        var itemName = await e.item.get("name");  // Assuming the item has a "name" attribute
+        var item_id = await e.item.get("id");
+        console.log(`itemName: ${itemName}`)
+        console.log(`item_id: ${item_id}`)
+
+        var url = "/homepage";  // Construct the URL using the item name
+    
+        window.location.href = url;  // Redirect to the constructed URL
+    });
+        
+    //set the splitter so theres no gaps //only side view though
+    chart.splitterPosition("20%");
+
+    // set the data
+    chart.data(treeData);
+
+    // set the container id
+    chart.container("timeline-container");
+
+    // initiate drawing the chart
+    chart.draw();
+
+    // fit elements to the width of the timeline
+    chart.fitAll();
+});
