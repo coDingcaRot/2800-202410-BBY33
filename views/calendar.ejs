@@ -1,39 +1,74 @@
-<%- include("templates/headerAfter", {page: "/calendar" , dropdown: false, isTaskPage: false, backlink: "/homepage" })
-    %>
+<%- include("templates/headerAfter", {dropdown: true, page: "/" , isTaskPage: false}) %>
 
-    <style>
-        #calendar {
-            min-width: 50%;
-            max-width: 900px;
-            margin: 40px auto;
-        }
-
-        #addButton {
-            position: fixed;
-            left: 0;
-            bottom: 0;
-            width: 100%;
-        }
-
-        @media screen and (max-width: 768px) {
-            #calendar {
-                margin-top: 0;
-            }
-
-            .fc-toolbar.fc-header-toolbar {
-                font-size: 99%;
-            }
-
-            .fc-view-harness.fc-view-harness-active {
-                height: 600px !important;
-            }
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="/styles/Calendar.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.13/index.global.min.js'></script>
     <script>
 
+        // listen to the top navbar dropdown menu and show project name on it
+        const projectListDiv = document.getElementById('projectListDropdown');
+        projectListDiv.addEventListener('change', function (event) {
+            if (event.target.matches('input[name="listGroupRadios"]')) {
+                const selectedProjectId = event.target.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('projectId', selectedProjectId);
+                history.pushState(null, '', url);
+                console.log(url);
+
+                // Fetch project name and update navbar brand
+                fetch(`/getProjectName?projectId=${selectedProjectId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(project => {
+                        const navbarBrand = document.getElementById('navbarDropdown');
+                        if (project && project.projectName) {
+                            navbarBrand.textContent = project.projectName;
+                        } else {
+                            throw new Error('Project data not found');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching project data:', error);
+                    });
+            };
+        });
+
         document.addEventListener('DOMContentLoaded', function () {
+            // task form pop up after clicking the plus button on task page
+            var addTaskButton = document.getElementById('add-task-btn');
+            var taskForm = document.getElementById('task-form');
+            var cancelBtn = document.getElementById('taskform-close-btn');
+            var hiddenProjectIdInput = document.getElementById('taskform-project-id');
+            var addMemberModal = document.getElementById('add-member-modal');
+            var memberListDiv = document.getElementById('taskform-member-list');
+
+            addTaskButton.addEventListener('click', function () {
+                // Show the task form
+                taskForm.classList.add('show');
+
+                // Get the projectId from the URL query parameters
+                var urlParams = new URLSearchParams(window.location.search);
+                var projectId = urlParams.get('projectId');
+
+                // Set the projectId as the value of the hidden input field
+                hiddenProjectIdInput.value = projectId;
+            });
+
+            cancelBtn.addEventListener('click', function () {
+                // Hide the task form
+                taskForm.classList.remove('show');
+                // Hide the add-member-modal
+                addMemberModal.classList.remove('show');
+                addMemberModal.style.display = 'none';
+                // Clear the member list div
+                memberListDiv.innerHTML = '';
+            });
+
+            // Calendar functions
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
@@ -63,29 +98,45 @@
             //For removing tasks/events
             calendar.on('eventClick', function (info) {
                 var event = calendar.getEventById(info.event.id);
-                var myModal = new bootstrap.Modal(document.getElementById("deleteDivEvent"));
+                var myModal = new bootstrap.Modal(document.getElementById("deleteDivTask"));
                 myModal.show();
-                $('#confirmDeleteEvent').on('click', function (e) {
+                console.log(info.event.id);
+                $('#confirmDeleteTask').on('click', function (e) {
                     e.preventDefault();
                     event.remove();
                 });
             });
 
             //For adding new tasks/events
-            $('#submitEvent').on('click', function (e) {
+            $('#submitTask').on('click', function (e) {
                 e.preventDefault();
                 submit();
             });
 
             function submit() {
-                var endDate = moment($('#endDate').val()).format('YYYY-MM-DDTHH:mm');
-                console.log($('#startDate').val());
-                console.log($('#endDate').val());
-                console.log(endDate);
+                //Settings variables of new task
+                startDate = $('#start-date').val()
+                startTime = $('#start-time').val()
+                dueDate = $('#due-date').val()
+                dueTime = $('#due-time').val()
+                title = $('#title').val()
+
+                console.log(startDate);
+                console.log(startTime);
+                console.log(dueDate);
+                console.log(dueTime);
+                console.log(title);
+                //Concating date and time
+                var start = moment(`${startDate}T${startTime}`).format('YYYY-MM-DDTHH:mm');
+                var end = moment(`${dueDate}T${dueTime}`).format('YYYY-MM-DDTHH:mm');
+                console.log(start);
+                console.log(end);
+                //Adding new task/event onto the calendar
                 calendar.addEvent({
-                    title: $('#taskName').val(),
-                    start: $('#startDate').val(),
-                    end: endDate,
+                    id: title,
+                    title: title,
+                    start: start,
+                    end: end,
                     allDay: false
                 })
             }
@@ -98,58 +149,169 @@
     </div>
 
     <!-- Button trigger modal -->
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNewEvent" id="addButton">
+    <!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNewTask" id="addButton">
         Add Task
-    </button>
+    </button> -->
+
+    <div class="add-task">
+        <button class="add-btn" id="add-task-btn">+</button>
+    </div>
+
+    <!-- Hidden form -->
+    <div class="task-form" id="task-form">
+        <%- include("taskForm") %>
+    </div>
 
     <!-- Modal -->
-    <div class="modal fade" id="addNewEvent" tabindex="-1" aria-labelledby="addEvent" aria-hidden="true">
+    <div class="modal fade" id="addNewTask" tabindex="-1" aria-labelledby="addTask" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="addEvent">Add New Event</h1>
+                    <h1 class="modal-title fs-5" id="addTask">Add New Task</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Task Name  -->
-                    <div class="mb-3">
-                        <label for="task-name" class="form-label">Task Name</label>
-                        <input type="text" class="form-control" id="taskName" name="taskName" required>
+                    <div class="taskform-wrapper">
+                        <form name="new-task" class="d-flex flex-column justify-content-between" action="/addTask"
+                            method="post">
+                            <div class="form-group mb-3">
+                                <label for="title">Title</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="description">Description</label>
+                                <input type="text" class="form-control" id="description" name="description">
+                            </div>
+
+                            <!-- start date and start time input -->
+                            <div class="form-group mb-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="start-date">Start Date</label>
+                                        <input type="date" class="form-control" id="start-date" name="startDate">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="start-time">Start Time</label>
+                                        <input type="time" class="form-control" id="start-time" name="startTime">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- due date and start time input -->
+                            <div class="form-group mb-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="due-date">Due Date</label>
+                                        <input type="date" class="form-control" id="due-date" name="dueDate">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="due-time">Due Time</label>
+                                        <input type="time" class="form-control" id="due-time" name="dueTime">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- reminder in new task form -->
+                            <div class="form-group mb-3">
+                                <div class="row">
+                                    <div class="col-md-6 d-flex align-items-center">
+                                        <span style="margin-right: 8px;">Reminder</span>
+                                        <div class="switch-container">
+                                            <input type="checkbox" class="checkbox" id="reminder-checkbox">
+                                            <label class="switch" for="reminder-checkbox">
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
+                                        <input type="datetime-local" id="reminder-datetime" name="reminderDatetime"
+                                            style="display: none;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- add members function in new task form -->
+                            <div class="form-group mb-1">
+                                <span>Members</span>
+                                <button type="button" class="btn btn-light px-2 btn-sm" id="add-member-btn">+</button>
+                            </div>
+
+                            <div class="task-card-member-wrapper" id="taskform-member-list">
+                                <!-- members been selected to specific task will show up here -->
+                            </div>
+
+                            <!-- add member pop up list modal -->
+                            <div class="modal fade" id="add-member-modal">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h4 class="modal-title">Assign to members</h4>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+
+                                        <div class="modal-body d-flex flex-column align-items-center ">
+                                            <!-- Add your content here -->
+                                            <div class="member-search mb-1">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true" class="icon">
+                                                    <g>
+                                                        <path
+                                                            d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z">
+                                                        </path>
+                                                    </g>
+                                                </svg>
+                                                <input class="input" type="search" placeholder="Search"
+                                                    id="member-search-filter" />
+                                            </div>
+
+                                            <div class="member-list-wrap">
+                                                <ul class="member-list-group">
+                                                    <!-- Add more list items dynamically as needed -->
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <div class="modal-footer d-flex justify-content-center">
+                                            <button type="button" class="btn btn-primary" id="modal-add-member-btn">Add
+                                                members</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="taskform-selected-member-list" name="selectedTaskMembers" value="">
+
+                            <!-- for tag the task form to make sure add to the corresponding project document -->
+                            <input type="hidden" id="taskform-project-id" name="projectId" value="">
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <!-- <button type="submit" class="btn btn-primary" id="submitTask"
+                                    data-bs-dismiss="modal">Add Task</button> -->
+                                <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Add Task</button>
+                            </div>
+                        </form>
+
                     </div>
-                    <!-- Start Time  -->
-                    <div class="mb-3">
-                        <label for="start-date" class="form-label">Start Date</label>
-                        <input type="datetime-local" class="form-control" id="startDate" name="startDate" required>
-                    </div>
-                    <!-- End Time  -->
-                    <div class="mb-3">
-                        <label for="end-date" class="form-label">End Date</label>
-                        <input type="datetime-local" class="form-control" id="endDate" name="endDate" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary" id="submitEvent" data-bs-dismiss="modal">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Delete Modal -->
-    <div class="modal fade" id="deleteDivEvent" tabindex="-1" aria-labelledby="deleteEvent" aria-hidden="true">
+    <div class="modal fade" id="deleteDivTask" tabindex="-1" aria-labelledby="deleteTask" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="deleteEvent">Delete Event?</h1>
+                    <h1 class="modal-title fs-5" id="deleteTask">Delete Task?</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="confirmDeleteEvent"
+                    <button type="submit" class="btn btn-primary" id="confirmDeleteTask"
                         data-bs-dismiss="modal">Delete</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <%- include("templates/footerAfter", {footer: false, dropdown: false, isTaskPage: false}) %>
+    <%- include("templates/footerAfter", {footer: true, dropdown: true, isTaskPage: false}) %>

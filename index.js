@@ -252,7 +252,12 @@ app.post('/forgotPass', async (req, res) => {
 
 //Calendar page
 app.get('/calendar', (req, res) => {
-    res.render('calendar');
+    // console.log(selectedProjectId);
+    res.render('calendar', {
+        authenticated: req.isAuthenticated(),
+        username: req.user.username,
+        isTaskPage: true,
+    });
 });
 
 /************************************************* AUTHENTICATED PAGES *************************************************/
@@ -610,7 +615,7 @@ app.post('/addTask', async (req, res) => {
         const reminder = reminderDatetime ? reminderDatetime : 'none';
 
         // Parse the selectedMembers from JSON string to an array
-        const taskMembers = JSON.parse(selectedTaskMembers);
+        // const taskMembers = JSON.parse(selectedTaskMembers);
 
         // Create a new document object with the extracted data
         const newTask = new Task({
@@ -622,7 +627,7 @@ app.post('/addTask', async (req, res) => {
             dueTime,
             reminder,
             taskOwner: userId,
-            taskMembers
+            // taskMembers
             // Add other fields as needed
         });
 
@@ -631,6 +636,10 @@ app.post('/addTask', async (req, res) => {
 
         // Insert the task id with string type
         const taskId = savedTask._id.toString();
+        console.log("TESTS");
+        console.log(req.user._id);
+        console.log(projectId);
+        console.log(taskId);
 
         await Project.findByIdAndUpdate(
             projectId,
@@ -770,4 +779,4 @@ app.get('*', (req, res) => {
 /**** END OF PAGES ****/
 app.listen(port, () => {
     console.log(`SyncPro node application listening on port ${port}`);
-}); 
+});
