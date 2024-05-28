@@ -734,6 +734,119 @@ app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
 });
 /* TaskPage END */
 
+/* TimelinePage START */
+/* functions */
+async function getProjectMembersInfo(projectId) {
+    try {
+        const project = await Project.findById(projectId);
+        if (!project) {
+            throw new Error('Project not found');
+        }
+
+        const memberEmails = project.projectMembers;
+        const users = await User.find({ email: { $in: memberEmails } });
+
+        return users.map(user => ({
+            _id: user._id.toString(), // return as string type
+            username: user.username,
+            email: user.email,
+            location: user.location,
+            timezone: user.timezone
+        }));
+    } catch (error) {
+        throw new Error('Error fetching project members: ' + error.message);
+    }
+}
+
+async function getUserTimeZone(userId) {
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new Error('User not found');
+        }
+        return user.timezone; 
+    } catch (error) {
+        console.error('Error fetching user timezone:', error);
+        return null; 
+    }
+}
+
+
+app.get('/timelinePage', ensureAuth, async (req, res) => {
+    if (req.isAuthenticated()) {
+        const projectId = req.query.projectId;
+        const userId = req.user._id;
+
+        if(projectId){
+            try{
+                // const tasksData = await fetchProjectTasks(projectId, userId);
+                res.render('timelinePage', {
+                    authenticated: req.isAuthenticated(), 
+                    username: req.user.username,
+                    isTaskPage: false,
+                    projectId: projectId
+                    // tasksData: tasksData
+                });
+            } catch (error) {
+                console.error('Error occurred: ', error);
+                res.status(500).send('Internal Server Error');
+            }
+        } else {
+            res.render('timelinePage', { 
+                authenticated: req.isAuthenticated(), 
+                username: req.user.username,
+                isTaskPage: false,
+                projectId: "" 
+            });
+        }
+    } else {
+        res.redirect('/homepage');
+    }
+});
+
+app.get('/getProjectMembersInfo', async (req, res) => {
+    try {
+        const projectId = req.query.projectId;
+        const membersInfo = await getProjectMembersInfo(projectId);
+        res.json(membersInfo);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+
+app.get('/getUserTimezone', ensureAuth, async (req, res) => {
+    if (req.isAuthenticated()) {
+        try {
+            const userId = req.user._id;
+            const userTimeZone = await getUserTimeZone(userId);
+            
+            if (userTimeZone) {
+                res.json({ userTimezone: userTimeZone });
+            } else {
+                res.status(404).json({ message: "Timezone not found" });
+            }
+        } catch (error) {
+            console.error('Error fetching timezone:', error);
+            res.status(500).json({ message: "Internal server error" });
+        }
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+/* TimelinePage END */
+
 /* Easter Egg START */
 app.get('/easterEgg', ensureAuth, (req, res) => {
     res.render('easterEgg');
