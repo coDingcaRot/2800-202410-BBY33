@@ -26,6 +26,11 @@ const taskSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    taskOwner:{
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User', 
+        required: true
+    },
     taskMembers: {
         type: [mongoose.Schema.Types.ObjectId], 
         ref: 'User'

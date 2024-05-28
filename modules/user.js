@@ -9,11 +9,19 @@ const userSchema = new mongoose.Schema({
     email: { 
         type: String, 
         unique: true, 
-        required: [true, '\nemail is required'], 
+        required: [true, 'email is required'], 
     },
     password: { 
         type: String,  
-        required: [true, '\npassword is required'], 
+        required: [true, 'password is required'], 
+    },
+    location: {
+        type: String,
+        required: [true, 'location is required']
+    },
+    timezone: {
+        type: String,
+        required: [true, 'timezone is required']
     },
     projectList: {
         type: [mongoose.Schema.Types.ObjectId],
@@ -32,3 +40,4 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema); 
 
 module.exports = User; // passes the values for usage in index.js
+

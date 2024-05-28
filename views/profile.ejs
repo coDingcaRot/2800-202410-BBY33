@@ -15,19 +15,11 @@
                                 <label for="email" class="form-label">Email</label>
                                 <input type="email" class="form-control" id="email" value="<%= userinfo.email %>" readonly>
                             </div>
+                            <div class="col-12 text-start">
+                                <label for="timezone" class="form-label">Time Zone</label>
+                                <input type="timezone" class="form-control" id="timezone" value="<%= userinfo.email %>" readonly>
+                            </div>
             
-                            <!-- <div class="col-12 text-start">
-                                <label for="timezone" class="form-label">Timezone</label>
-                                <select class="form-select" id="timezone" name="timezone" required>
-                                    <option value="">Choose...</option>
-                                    <%# timezones.forEach(function(timezone) { %>
-                                        <option value="<%#= timezone %>" <%#= userinfo.timezone === timezone ? 'selected' : '' %>><%#= timezone %></option>
-                                    <%# }) %>
-                                </select>
-                                <div class="invalid-feedback">
-                                    Please select a valid timezone.
-                                </div>
-                            </div> -->
                         </div>
             
                         <hr class="my-4">

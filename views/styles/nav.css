@@ -5,6 +5,38 @@ body {
     margin: 0;
 }
 
+.form-check-input[type="radio"] {
+    display: none;
+}
+
+/* style for dropdown menu */
+#projectListDropdown {
+    min-width: auto; 
+    width: 100px; 
+    text-align: center;
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+}
+
+/* style for span inside the li set it center */
+.dropdown-menu li {
+    display: flex;
+    justify-content: center; 
+    align-items: center; 
+}
+
+.dropdown-menu li:hover {
+    background-color: #3d3d3d; 
+    color: antiquewhite;
+}
+
+
+/* side bar style */
+.offcanvas.showing, .offcanvas.show {
+    width: 70%;
+}
+
 .footer {
     width: 100%;
     position: fixed;
