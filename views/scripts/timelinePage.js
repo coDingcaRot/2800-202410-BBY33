@@ -159,6 +159,70 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 
 
+
+
+// base object in luxon
+let DateTime = luxon.DateTime;
+// function for processing the retrieved data, convert member time zones
+function processTaskDetails(data) {
+    try {
+        // array to store the processed data
+        const processedData = [];
+
+        // iterate the task of tasklist under project
+        for (const task of data) {
+            // get taskOwner time zone
+            const taskOwnerTimezone = task.taskOwner.timezone;
+
+            // array to store all members time zone info
+            const processedTaskMembers = [];
+
+            // iterate through all memebrs
+            for (const member of task.taskMembers) {
+                // get members time zone
+                const memberTimezone = member.timezone;
+
+                // convert time zone using luxon
+                const startDate = DateTime.fromISO(task.startDate, { zone: taskOwnerTimezone }).setZone(memberTimezone);
+                const startTime = DateTime.fromISO(task.startTime, { zone: taskOwnerTimezone }).setZone(memberTimezone);
+                const dueDate = DateTime.fromISO(task.dueDate, { zone: taskOwnerTimezone }).setZone(memberTimezone);
+                const dueTime = DateTime.fromISO(task.dueTime, { zone: taskOwnerTimezone }).setZone(memberTimezone);
+
+                // construct processed data
+                const processedMember = {
+                    username: member.username,
+                    timezone: member.timezone,
+                    startDate: startDate.toISO(),
+                    startTime: startTime.toISO(),
+                    dueDate: dueDate.toISO(),
+                    dueTime: dueTime.toISO()
+                };
+
+                processedTaskMembers.push(processedMember);
+            }
+
+            const processedTask = {
+                title: task.title,
+                taskOwner: {
+                    username: task.taskOwner.username,
+                    timezone: task.taskOwner.timezone
+                },
+                taskMembers: processedTaskMembers
+            };
+
+            processedData.push(processedTask);
+        }
+
+        return processedData;
+    } catch (error) {
+        throw new Error('Error processing task details: ' + error.message);
+    }
+}
+
+
+// NEED TO BE MODIFIED
+// getting task info based on projectId 
+let projectTaskDetails;
 const urlParams = new URLSearchParams(window.location.search);
 projectId = urlParams.get('projectId');
 fetch(`/getProjectTaskDetails?projectId=${projectId}`)
@@ -169,11 +233,21 @@ fetch(`/getProjectTaskDetails?projectId=${projectId}`)
         return response.json();
     })
     .then(data => {
-        console.log(data); 
+        projectTaskDetails = data;
+        console.log(projectTaskDetails);
+        const r = processTaskDetails(projectTaskDetails);
+        console.log(r);
     })
     .catch(error => {
         console.error('Error fetching data:', error);
     });
+// NEED TO BE MODIFIED
+
+
+
+
+
+// anychart section
 
 
 let DateTime = luxon.DateTime;

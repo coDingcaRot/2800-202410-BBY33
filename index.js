@@ -816,17 +816,6 @@ async function getTaskDetails(projectId) {
 
             tasksDetails.push(taskDetail);
         }
-        console.log(tasksDetails);
-        tasksDetails.forEach(task => {
-            console.log('Title:', task.title);
-            
-            console.log('Task Members:');
-            task.taskMembers.forEach((member, index) => {
-                console.log(`Member ${index + 1}:`, JSON.stringify(member, null, 2));
-            });
-        
-            console.log('-----------------------------');
-        });
 
         return tasksDetails;
     } catch (error) {
