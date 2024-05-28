@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
                 // filter matching members of list from the input
                 const filteredMembers = memberData.filter(member => {
-                    return member.username.toLowerCase().includes(searchTerm); // 假設成員數據中有一個 username 屬性
+                    return member.username.toLowerCase().includes(searchTerm); 
                 });
     
                 // filter rendered member list
