@@ -764,10 +764,71 @@ async function getUserTimeZone(userId) {
         if (!user) {
             throw new Error('User not found');
         }
-        return user.timezone; 
+        return {
+            username: user.username,
+            timezone: user.timezone
+        };
     } catch (error) {
         console.error('Error fetching user timezone:', error);
         return null; 
+    }
+}
+
+async function getTaskDetails(projectId) {
+    try {
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            throw new Error('Project not found');
+        }
+
+        const tasksDetails = [];
+
+        // iterate through all the taskIds in taskList
+        for (const task of project.taskList) {
+            // get task details based on taskId 
+            const taskInfo = await Task.findById(task);
+
+            // get info of taskOwner
+            const taskOwnerInfo = await getUserTimeZone(taskInfo.taskOwner);
+
+            // get taskMembers details
+            const taskMembersInfo = await Promise.all(taskInfo.taskMembers.map(memberId => getUserTimeZone(memberId)));
+
+            // construct task detail info
+            const taskDetail = {
+                title: taskInfo.title,
+                startDate: taskInfo.startDate,
+                startTime: taskInfo.startTime,
+                dueDate: taskInfo.dueDate,
+                dueTime: taskInfo.dueTime,
+                taskOwner: {
+                    username: taskOwnerInfo.username,
+                    timezone: taskOwnerInfo.timezone
+                },
+                taskMembers: taskMembersInfo.map(memberInfo => ({
+                    username: memberInfo.username,
+                    timezone: memberInfo.timezone
+                }))
+            };
+
+            tasksDetails.push(taskDetail);
+        }
+        console.log(tasksDetails);
+        tasksDetails.forEach(task => {
+            console.log('Title:', task.title);
+            
+            console.log('Task Members:');
+            task.taskMembers.forEach((member, index) => {
+                console.log(`Member ${index + 1}:`, JSON.stringify(member, null, 2));
+            });
+        
+            console.log('-----------------------------');
+        });
+
+        return tasksDetails;
+    } catch (error) {
+        throw new Error('Error getting task details: ' + error.message);
     }
 }
 
@@ -823,7 +884,7 @@ app.get('/getUserTimezone', ensureAuth, async (req, res) => {
             const userTimeZone = await getUserTimeZone(userId);
             
             if (userTimeZone) {
-                res.json({ userTimezone: userTimeZone });
+                res.json({ userTimezone: userTimeZone.timezone });
             } else {
                 res.status(404).json({ message: "Timezone not found" });
             }
@@ -835,7 +896,16 @@ app.get('/getUserTimezone', ensureAuth, async (req, res) => {
 });
 
 
-
+app.get('/getProjectTaskDetails', async (req, res) => {
+    try {
+        const projectId = req.query.projectId;
+        const tasksInfo = await getTaskDetails(projectId);
+        res.json(tasksInfo);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 
 
 
