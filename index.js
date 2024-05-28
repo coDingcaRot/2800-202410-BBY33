@@ -104,20 +104,10 @@ app.post('/signupSubmit', async (req, res) => {
     }
 
     try {
-<<<<<<< HEAD
-        const existingUser = await User.findOne({ email }); //find this email
-        // console.log(existingUser);
-        if (existingUser) {
-            res.status(400);
-            return res.render("signupError", { error: 'User already exists with that email.' });
-        } else {
-            // return res.redirect("/initializeTimezone");
-=======
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             res.status(400);
             return res.render("signupError", { error: 'User already exists with that email.' });
->>>>>>> bba7ead0e3817ce62735a87f2ca81122706c5d84
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -133,11 +123,7 @@ app.post('/signupSubmit', async (req, res) => {
         });
 
     } catch (err) {
-<<<<<<< HEAD
-        res.status(500)
-=======
         res.status(500);
->>>>>>> bba7ead0e3817ce62735a87f2ca81122706c5d84
         return res.render("signupError", { error: 'Error during signup process: ' + err.message });
     }
 });
@@ -615,12 +601,8 @@ app.get('/getProjectMembers', ensureAuth, async (req, res) => {
 
 // Add tasks, get data from users and insert to mongoDB
 app.post('/addTask', async (req, res) => {
-<<<<<<< HEAD
-    try {
-=======
     const userId = req.user._id;
-    try{
->>>>>>> bba7ead0e3817ce62735a87f2ca81122706c5d84
+    try {
         // Extract data from the request body
         const { title, description, startDate, startTime, dueDate, dueTime, reminderDatetime, selectedTaskMembers, projectId } = req.body;
 
