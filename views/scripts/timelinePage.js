@@ -159,6 +159,70 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 
 
+
+
+// base object in luxon
+let DateTime = luxon.DateTime;
+// function for processing the retrieved data, convert member time zones
+function processTaskDetails(data) {
+    try {
+        // array to store the processed data
+        const processedData = [];
+
+        // iterate the task of tasklist under project
+        for (const task of data) {
+            // get taskOwner time zone
+            const taskOwnerTimezone = task.taskOwner.timezone;
+
+            // array to store all members time zone info
+            const processedTaskMembers = [];
+
+            // iterate through all memebrs
+            for (const member of task.taskMembers) {
+                // get members time zone
+                const memberTimezone = member.timezone;
+
+                // convert time zone using luxon
+                const startDate = DateTime.fromISO(task.startDate, { zone: taskOwnerTimezone }).setZone(memberTimezone);
+                const startTime = DateTime.fromISO(task.startTime, { zone: taskOwnerTimezone }).setZone(memberTimezone);
+                const dueDate = DateTime.fromISO(task.dueDate, { zone: taskOwnerTimezone }).setZone(memberTimezone);
+                const dueTime = DateTime.fromISO(task.dueTime, { zone: taskOwnerTimezone }).setZone(memberTimezone);
+
+                // construct processed data
+                const processedMember = {
+                    username: member.username,
+                    timezone: member.timezone,
+                    startDate: startDate.toISO(),
+                    startTime: startTime.toISO(),
+                    dueDate: dueDate.toISO(),
+                    dueTime: dueTime.toISO()
+                };
+
+                processedTaskMembers.push(processedMember);
+            }
+
+            const processedTask = {
+                title: task.title,
+                taskOwner: {
+                    username: task.taskOwner.username,
+                    timezone: task.taskOwner.timezone
+                },
+                taskMembers: processedTaskMembers
+            };
+
+            processedData.push(processedTask);
+        }
+
+        return processedData;
+    } catch (error) {
+        throw new Error('Error processing task details: ' + error.message);
+    }
+}
+
+
+// NEED TO BE MODIFIED
+// getting task info based on projectId 
+let projectTaskDetails;
 const urlParams = new URLSearchParams(window.location.search);
 projectId = urlParams.get('projectId');
 fetch(`/getProjectTaskDetails?projectId=${projectId}`)
@@ -169,92 +233,18 @@ fetch(`/getProjectTaskDetails?projectId=${projectId}`)
         return response.json();
     })
     .then(data => {
-        console.log(data); 
+        projectTaskDetails = data;
+        console.log(projectTaskDetails);
+        const r = processTaskDetails(projectTaskDetails);
+        console.log(r);
     })
     .catch(error => {
         console.error('Error fetching data:', error);
     });
-
-
-let DateTime = luxon.DateTime;
-
+// NEED TO BE MODIFIED
 
 
 
 
 
-anychart.onDocumentReady(function () {
-    // The data used in this sample can be obtained from the CDN
-    // https://cdn.anychart.com/samples/gantt-charts/activity-oriented-chart/data.js
-    anychart.data.loadJsonFile(
-      'https://cdn.anychart.com/samples/gantt-charts/activity-oriented-chart/data.json',
-      function (data) {
-        // create data tree
-        var treeData = anychart.data.tree(data, 'as-table');
-
-        // create project gantt chart
-        var chart = anychart.ganttProject();
-
-        chart.height(700);
-        // set data for the chart
-        chart.data(treeData);
-
-        // set start splitter position settings
-        chart.splitterPosition(370);
-
-        // get chart data grid link to set column settings
-        var dataGrid = chart.dataGrid();
-
-        // set first column settings
-        dataGrid
-          .column(0)
-          .title('#')
-          .width(30)
-          .labels({ hAlign: 'center' });
-
-        // set second column settings
-        dataGrid.column(1).labels().hAlign('left').width(180);
-
-        // set third column settings
-        dataGrid
-          .column(2)
-          .title('Start Time')
-          .width(70)
-          .labels()
-          .hAlign('right')
-          .format(function () {
-            var date = new Date(this.actualStart);
-            var month = date.getUTCMonth() + 1;
-            var strMonth = month > 9 ? month : '0' + month;
-            var utcDate = date.getUTCDate();
-            var strDate = utcDate > 9 ? utcDate : '0' + utcDate;
-            return date.getUTCFullYear() + '.' + strMonth + '.' + strDate;
-          });
-
-        // set fourth column settings
-        dataGrid
-          .column(3)
-          .title('End Time')
-          .width(80)
-          .labels()
-          .hAlign('right')
-          .format(function () {
-            var date = new Date(this.actualEnd);
-            var month = date.getUTCMonth() + 1;
-            var strMonth = month > 9 ? month : '0' + month;
-            var utcDate = date.getUTCDate();
-            var strDate = utcDate > 9 ? utcDate : '0' + utcDate;
-            return date.getUTCFullYear() + '.' + strMonth + '.' + strDate;
-          });
-
-        // set container id for the chart
-        chart.container('timeline-container');
-
-        // initiate chart drawing
-        chart.draw();
-
-        // zoom chart to specified date
-        chart.zoomTo(951350400000, 954201600000);
-      }
-    );
-  });
+// anychart section
