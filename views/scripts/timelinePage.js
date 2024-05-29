@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 timezoneDiv.setAttribute('data-timezone', member.timezone);
 
                 const usernameSpan = document.createElement('span');
-                usernameSpan.textContent = member.username;
+                usernameSpan.textContent = member.username + " ";
 
                 const locationSpan = document.createElement('span');
                 locationSpan.textContent = member.location;
@@ -222,91 +222,55 @@ function processTaskDetails(data) {
 
 // NEED TO BE MODIFIED
 // getting task info based on projectId 
-let projectTaskDetails;
-const urlParams = new URLSearchParams(window.location.search);
-projectId = urlParams.get('projectId');
-fetch(`/getProjectTaskDetails?projectId=${projectId}`)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        projectTaskDetails = data;
-        console.log(projectTaskDetails);
-        const r = processTaskDetails(projectTaskDetails);
-        console.log(r);
-    })
-    .catch(error => {
-        console.error('Error fetching data:', error);
-    });
-// NEED TO BE MODIFIED
-
-
-
-
+// let projectTaskDetails;
+// const urlParams = new URLSearchParams(window.location.search);
+// projectId = urlParams.get('projectId');
+// var taskData = []
+// fetch(`/getProjectTaskDetails?projectId=${projectId}`)
+//     .then(response => {
+//         if (!response.ok) {
+//             throw new Error('Network response was not ok');
+//         }
+//         return response.json();
+//     })
+//     .then(async data => {
+//         projectTaskDetails = data;
+//         console.log("Project data: " + projectTaskDetails);
+//         const r = processTaskDetails(projectTaskDetails);
+//         // console.log(`239: ${r}`);
+//         // console.log(`Data line 240: ${processTaskDetails(data)}`)
+//     })
+//     .catch(error => {
+//         console.error('Error fetching data:', error);
+//     });
 
 // anychart section
 
 
-let DateTime = luxon.DateTime;
 
-anychart.onDocumentReady(function () {
+anychart.onDocumentReady(async function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('projectId');
+    console.log(`projectId: ${projectId}`);
+    //Fetch data 
+    var data = []
+    try {
+        const response = await fetch(`/timelineData?projectId=${projectId}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const r = await response.json();
+        console.log(r)
+        var taskData = r;
+        taskData.forEach(async task => {
+            data.push(task);
+        })
+            
+    } catch (error) {
+        console.error('Error fetching timeline data:', error);
+    }
 
-    // create data
 
-    //fill data here. 
-    //format 
-
-    // tasks. no child element.
-    var data = [ 
-      {
-        id: "developmenTaskID",
-        name: "Development",
-        actualStart: "2018-01-15",
-        actualEnd: "2018-01-25"
-    //     children: [
-    //       {
-    //         id: "1_1",
-    //         name: "Analysis",
-    //         actualStart: "2018-01-15",
-    //         actualEnd: "2018-01-25"
-    //       },
-    //       {
-    //         id: "1_2",
-    //         name: "Design",
-    //         actualStart: "2018-01-20",
-    //         actualEnd: "2018-02-04"
-    //       },
-    //       {
-    //         id: "1_3",
-    //         name: "Meeting",
-    //         actualStart: "2018-02-05",
-    //         actualEnd: "2018-02-05"
-    //       },
-    //       {
-    //         id: "1_4",
-    //         name: "Implementation",
-    //         actualStart: "2018-02-05",
-    //         actualEnd: "2018-02-24"
-    //       },
-    //       {
-    //         id: "1_5",
-    //         name: "Testing",
-    //         actualStart: "2018-02-25",
-    //         actualEnd: "2018-03-10"
-    //       }
-    //   ]}
-      },
-      {
-        id: "1_5",
-        name: "Testing",
-        actualStart: "2018-02-25",
-        actualEnd: "2018-03-10"
-      }
-    ];
-    
     // create a data tree
     var treeData = anychart.data.tree(data, "as-tree");
 
@@ -344,7 +308,7 @@ anychart.onDocumentReady(function () {
         console.log(`itemName: ${itemName}`)
         console.log(`item_id: ${item_id}`)
 
-        var url = "/homepage";  // Construct the URL using the item name
+        var url = "/membersDates?projectId=${item_id}";  // Construct the URL using the item name
     
         window.location.href = url;  // Redirect to the constructed URL
     });

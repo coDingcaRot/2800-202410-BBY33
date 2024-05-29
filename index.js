@@ -824,32 +824,68 @@ async function getTaskDetails(projectId) {
 }
 
 
+
+app.get("/timelineData", ensureAuth, async (req, res) => {
+    if (req.isAuthenticated()) {
+        const projectId = req.query.projectId;
+
+        // Check if projectId is null
+        if (!projectId) {
+            return res.status(400).send('Project ID is required');
+        }
+
+        // const userId = req.user._id;
+        try{
+            // Fetch the project by ID
+            const project = await Project.findOne({_id: new ObjectId(projectId)});
+
+            // Check if the project exists
+            if (!project) {
+                return res.status(404).send('Project not found');
+            }
+
+            // Fetch all tasks in parallel
+            const tasks = await Promise.all(project.taskList.map(async taskId => await Task.findOne({_id: new ObjectId(taskId)})));
+            // Extract necessary fields
+            const taskData = await Promise.all(tasks.map(task => ({
+                    id: task._id.toString(),
+                    name: task.title,
+                    actualStart: task.startDate.toISOString().split('T')[0],
+                    actualEnd: task.dueDate.toISOString().split('T')[0]
+                })
+            ));
+
+            // Log the taskData to verify
+            console.log(taskData);
+            res.json(taskData);
+        } catch (error) {
+            console.error('Error occurred: ', error);
+            res.status(500).send('Internal Server Error');
+        }
+    } else {
+        res.redirect('/homepage');
+    }
+})
+
 app.get('/timelinePage', ensureAuth, async (req, res) => {
     if (req.isAuthenticated()) {
         const projectId = req.query.projectId;
-        const userId = req.user._id;
 
-        if(projectId){
-            try{
-                // const tasksData = await fetchProjectTasks(projectId, userId);
-                res.render('timelinePage', {
-                    authenticated: req.isAuthenticated(), 
-                    username: req.user.username,
-                    isTaskPage: false,
-                    projectId: projectId
-                    // tasksData: tasksData
-                });
-            } catch (error) {
-                console.error('Error occurred: ', error);
-                res.status(500).send('Internal Server Error');
-            }
-        } else {
+        // Check if projectId is null
+        if (!projectId) {
+            return res.status(400).send('Project ID is required');
+        }
+
+        try{
             res.render('timelinePage', {
                 authenticated: req.isAuthenticated(), 
                 username: req.user.username,
-                projectId: projectId, 
-                timelineData: timelineData
+                isTaskPage: false,
+                projectId: projectId
             });
+        } catch (error) {
+            console.error('Error occurred: ', error);
+            res.status(500).send('Internal Server Error');
         }
     } else {
         res.redirect('/homepage');
