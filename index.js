@@ -340,7 +340,7 @@ app.post('/addMembersPageSubmit', async (req, res) => {
     }
 });
 
-//deletes a member
+//deletes a 
 app.post('/deleteMember', async (req, res) => {
     const { projectId, memberEmail } = req.body;
     try {
