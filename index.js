@@ -644,8 +644,17 @@ app.post('/addTask', async (req, res) => {
         // Determine the value of the reminder field based on the value of reminderDatetime
         const reminder = reminderDatetime ? reminderDatetime : 'none';
 
-        // Parse the selectedMembers from JSON string to an array
-        const taskMembers = JSON.parse(selectedTaskMembers);
+        let taskMembers = [];
+        // Check if selectedTaskMembers is provided and is a valid JSON string
+        if (selectedTaskMembers) {
+            try {
+                taskMembers = JSON.parse(selectedTaskMembers);
+            } catch (parseError) {
+                console.log('Error parsing selectedTaskMembers:', parseError);
+                // Handle the error or set a default value
+                taskMembers = [];
+            }
+        }
 
         // Check if the current user's ID already exists in taskMembers array
         if (!taskMembers.includes(userId)) {
@@ -692,7 +701,15 @@ app.post('/addTask', async (req, res) => {
 app.delete('/deleteTask/:taskId', async (req, res) => {
     const taskId = req.params.taskId;
     try {
+        // Remove the taskId from all projects that have it in their taskList
+        await Project.updateMany(
+            { taskList: taskId },
+            { $pull: { taskList: taskId } }
+        );
+
+        // Delete the task from the Task collection
         await Task.findByIdAndDelete(taskId);
+
         res.sendStatus(200);
     } catch (error) {
         console.error('Error deleting task:', error);
@@ -819,22 +836,6 @@ async function getProjectMembersInfo(projectId) {
         }));
     } catch (error) {
         throw new Error('Error fetching project members: ' + error.message);
-    }
-}
-
-async function getUserTimeZone(userId) {
-    try {
-        const user = await User.findById(userId);
-        if (!user) {
-            throw new Error('User not found');
-        }
-        return {
-            username: user.username,
-            timezone: user.timezone
-        };
-    } catch (error) {
-        console.error('Error fetching user timezone:', error);
-        return null; 
     }
 }
 
