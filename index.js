@@ -444,7 +444,6 @@ app.post('/profile', ensureAuth, async (req, res) => {
 /************************************************* AUTHENTICATED PAGES *************************************************/
 
 /* TaskPage START */
-
 // get the task data of specific project, matching same projectId and userId 
 async function fetchProjectTasks(projectId, userId) {
     try {
@@ -459,11 +458,70 @@ async function fetchProjectTasks(projectId, userId) {
         // find all the tasks that meet the same taskId get from project.taskList and the userId get from passin parameter
         const accessibleTasks = await Task.find({ _id: { $in: taskList }, taskMembers: userId });
 
-        return accessibleTasks;
+        // get the time zone info stored in accessible tasks
+        const accessibleTaskDatas  = await enrichTaskData(accessibleTasks);
+        
+        return accessibleTaskDatas;
     } catch (error) {
         console.error('Error fetching project tasks:', error);
         throw new Error("Internal server error");
     }
+}
+
+// get users time zones by their ids and return their username and time zones
+async function getUserTimeZone(userId) {
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new Error('User not found');
+        }
+        return {
+            username: user.username,
+            timezone: user.timezone
+        };
+    } catch (error) {
+        console.error('Error fetching user timezone:', error);
+        return null; 
+    }
+}
+
+// get the tasks also with the time zone of each member in group
+async function enrichTaskData(tasks) {
+    const enrichedTasks = [];
+
+    for (const task of tasks) {
+        const taskOwnerData = await getUserTimeZone(task.taskOwner);
+        const taskMembersData = await Promise.all(task.taskMembers.map(async memberId => {
+            const memberData = await getUserTimeZone(memberId);
+            return { _id: memberId, ...memberData }; 
+        }));
+
+        const enrichedTask = {
+            _id: task._id,
+            title: task.title,
+            description: task.description,
+            startDate: task.startDate,
+            startTime: task.startTime,
+            dueDate: task.dueDate,
+            dueTime: task.dueTime,
+            taskOwner: {
+                _id: task.taskOwner,
+                username: taskOwnerData.username,
+                timezone: taskOwnerData.timezone
+            },
+            taskMembers: taskMembersData.map(memberData => ({
+                _id: memberData._id,
+                username: memberData.username,
+                timezone: memberData.timezone
+            })),
+            reminder: task.reminder,
+            status: task.status,
+            completedMembers: task.completedMembers,
+        };
+
+        enrichedTasks.push(enrichedTask);
+    }
+    return enrichedTasks;
 }
 
 // Task page for users who are logged in
@@ -476,7 +534,8 @@ app.get('/taskPage', ensureAuth, async (req, res) => {
             try {
                 const tasksData = await fetchProjectTasks(projectId, userId);
                 res.render('taskPage', {
-                    authenticated: req.isAuthenticated(),
+                    authenticated: req.isAuthenticated(), 
+                    userId: userId.toString(),
                     username: req.user.username,
                     isTaskPage: true,
                     projectId: projectId,
@@ -487,8 +546,9 @@ app.get('/taskPage', ensureAuth, async (req, res) => {
                 res.status(500).send('Internal Server Error');
             }
         } else {
-            res.render('taskPage', {
-                authenticated: req.isAuthenticated(),
+            res.render('taskPage', { 
+                authenticated: req.isAuthenticated(), 
+                userId: userId,
                 username: req.user.username,
                 isTaskPage: true,
                 projectId: ""
@@ -497,6 +557,12 @@ app.get('/taskPage', ensureAuth, async (req, res) => {
     } else {
         res.redirect('/homepage');
     }
+});
+
+// get current user id
+app.get('/getCurrentUserId', (req, res) => {
+    const userId = req.user.id;
+    res.json({ userId: userId });
 });
 
 // Get a list of project names of users to put into navbar
@@ -564,7 +630,9 @@ app.get('/getProjectTasks', ensureAuth, async (req, res) => {
 
             const accessibleTasks = tasks.filter(task => task.taskMembers.includes(userId));
 
-            res.json(accessibleTasks);
+            const accessibleTaskDatas = await enrichTaskData(accessibleTasks);
+
+            res.json(accessibleTaskDatas);
         } else {
             res.status(404).json({ message: "Project not found" });
         }

@@ -35,56 +35,75 @@ projectListDiv.addEventListener('change', function(event) {
 });
 
 
-// format time got from mongodb
+// base object in luxon
+let DateTime = luxon.DateTime;
+
+// format the time
 function formatTime(timeStr) {
-    const [hours, minutes] = timeStr.split(":");
-    let formattedTime = "";
-    let meridiem = "";
+    const [hours, minutes] = timeStr.split(':').map(Number);
 
-    // convert 24 forma t to 12
-    let hour = parseInt(hours);
-    if (hour >= 12) {
-        meridiem = "pm";
-        if (hour > 12) {
-            hour -= 12;
-        }
-    } else {
-        meridiem = "am";
-        if (hour === 0) {
-            hour = 12;
-        }
-    }
+    const hour12 = (hours > 12) ? hours - 12 : hours;
+    const period = (hours >= 12) ? 'PM' : 'AM';
 
-    // add 0 to minute
-    let minute = parseInt(minutes);
-    if (minute < 10) {
-        minute = "0" + minute;
-    }
-
-    formattedTime = `${hour}:${minute} ${meridiem}`;
+    const formattedTime = `${hour12}:${String(minutes).padStart(2, '0')} ${period}`;
 
     return formattedTime;
-} 
+}
 
 function formatDate(dateStr) {
-    if (typeof dateStr !== 'string') {
-        console.error('formatDate: input is not a string', dateStr);
-        return ''; 
+    const [year, month, day] = dateStr.split('-');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthAbbreviation = months[parseInt(month) - 1];
+    return `${monthAbbreviation} ${parseInt(day)}, ${year}`;
+}
+
+function combineDateTime(dateStr, timeStr) {
+    const combinedDateTime = dateStr.replace(/Z$/, '').replace('T00:00', 'T' + timeStr);
+    return combinedDateTime;
+}
+
+async function convertToUserTimezone(todo) {
+    try {
+        const response = await fetch('/getCurrentUserId');
+        const data = await response.json();
+        const userId = data.userId;
+
+        const member = todo.taskMembers.find(member => member._id.toString() === userId);
+        if (!member) {
+            throw new Error('Member not found in taskMembers');
+        }
+
+        const memberTimezone = member.timezone;
+        const taskOwnerTimezone = todo.taskOwner.timezone;
+
+        // if current user has the same time zone as task owner return original data
+        if (memberTimezone === taskOwnerTimezone) {
+            console.log("No timezone conversion needed.");
+            console.log("no convert:",todo.dueDate);
+            return {
+                startDate: formatDate(todo.startDate),
+                startTime: formatTime(todo.startTime),
+                dueDate: formatDate(todo.dueDate),
+                dueTime: formatTime(todo.dueTime)
+            };
+        }
+
+        // Convert start date time to user timezone
+        const startDateTime = DateTime.fromISO(combineDateTime(todo.startDate, todo.startTime), { zone: taskOwnerTimezone }).setZone(memberTimezone);
+
+        // Convert due date time to user timezone
+        const dueDateTime = DateTime.fromISO(combineDateTime(todo.dueDate, todo.dueTime), { zone: taskOwnerTimezone }).setZone(memberTimezone);
+
+        return {
+            startDate: formatDate(startDateTime.toISO()),
+            startTime: formatTime(startDateTime.toISOTime()),
+            dueDate: formatDate(dueDateTime.toISO()),
+            dueTime: formatTime(dueDateTime.toISOTime())
+        };
+    } catch (error) {
+        console.error('Error converting to user timezone:', error);
+        throw new Error('Error converting to user timezone');
     }
-
-    const months = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    ];
-
-    // Extract date part from ISO 8601 datetime string
-    const datePattern = /^\d{4}-\d{2}-\d{2}/;
-    const extractedDate = dateStr.match(datePattern)[0];
-
-    const [year, month, day] = extractedDate.split("-");
-    const formattedDate = `${months[parseInt(month) - 1]} ${parseInt(day)}, ${year}`;
-
-    return formattedDate;
 }
 
 
@@ -98,11 +117,13 @@ async function showTodo(tasksData, tabType) {
                 (tabType === "pending" && !isChecked) || 
                 (tabType === "completed" && isChecked)
             ) {
-                let formatdate = formatDate(todo.dueDate);
-                let formattime = formatTime(todo.dueTime);
+                let convertedTimeDate = convertToUserTimezone(todo);
+                let formatdate = (await convertedTimeDate).dueDate;
+                let formattime = (await convertedTimeDate).dueTime;
                 let taskstatus = todo.status;
                 try {
-                    const memberAvatarsHTML = await generateMemberAvatars(todo.taskMembers);
+                    const taskMemberIds = todo.taskMembers.map(member => member._id);
+                    const memberAvatarsHTML = await generateMemberAvatars(taskMemberIds);
                     taskTag += `<div class="task-card" id="task-item-${todo._id}">
                                     <div class="task-card-body">
                                         <div class="checkbox-wrapper">
@@ -329,7 +350,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
                 // filter matching members of list from the input
                 const filteredMembers = memberData.filter(member => {
-                    return member.username.toLowerCase().includes(searchTerm); // 假設成員數據中有一個 username 屬性
+                    return member.username.toLowerCase().includes(searchTerm); 
                 });
     
                 // filter rendered member list
