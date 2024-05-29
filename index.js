@@ -776,55 +776,47 @@ async function getUserTimeZone(userId) {
     }
 }
 
-async function getTaskDetails(projectId) {
+async function getOneTaskDetails(taskId) {
     try {
-        const project = await Project.findById(projectId);
+        // Find the task by taskId
+        const taskInfo = await Task.findById(taskId);
 
-        if (!project) {
-            throw new Error('Project not found');
+        if (!taskInfo) {
+            throw new Error('Task not found');
         }
 
-        const tasksDetails = [];
+        // Get info of taskOwner
+        const taskOwnerInfo = await getUserTimeZone(taskInfo.taskOwner);
 
-        // iterate through all the taskIds in taskList
-        for (const task of project.taskList) {
-            // get task details based on taskId 
-            const taskInfo = await Task.findById(task);
+        // Get taskMembers details
+        const taskMembersInfo = await Promise.all(taskInfo.taskMembers.map(memberId => getUserTimeZone(memberId)));
 
-            // get info of taskOwner
-            const taskOwnerInfo = await getUserTimeZone(taskInfo.taskOwner);
+        // Construct task detail info
+        const taskDetail = {
+            title: taskInfo.title,
+            description: taskInfo.description,
+            startDate: taskInfo.startDate,
+            startTime: taskInfo.startTime,
+            dueDate: taskInfo.dueDate,
+            dueTime: taskInfo.dueTime,
+            taskOwner: {
+                username: taskOwnerInfo.username,
+                timezone: taskOwnerInfo.timezone
+            },
+            taskMembers: taskMembersInfo.map(memberInfo => ({
+                username: memberInfo.username,
+                timezone: memberInfo.timezone
+            }))
+        };
+        console.log(taskDetail);
 
-            // get taskMembers details
-            const taskMembersInfo = await Promise.all(taskInfo.taskMembers.map(memberId => getUserTimeZone(memberId)));
-
-            // construct task detail info
-            const taskDetail = {
-                title: taskInfo.title,
-                startDate: taskInfo.startDate,
-                startTime: taskInfo.startTime,
-                dueDate: taskInfo.dueDate,
-                dueTime: taskInfo.dueTime,
-                taskOwner: {
-                    username: taskOwnerInfo.username,
-                    timezone: taskOwnerInfo.timezone
-                },
-                taskMembers: taskMembersInfo.map(memberInfo => ({
-                    username: memberInfo.username,
-                    timezone: memberInfo.timezone
-                }))
-            };
-
-            tasksDetails.push(taskDetail);
-        }
-
-        return tasksDetails;
+        return taskDetail;
     } catch (error) {
         throw new Error('Error getting task details: ' + error.message);
     }
 }
 
-
-
+// get the task data from chart in timeline page
 app.get("/timelineData", ensureAuth, async (req, res) => {
     if (req.isAuthenticated()) {
         const projectId = req.query.projectId;
@@ -923,11 +915,11 @@ app.get('/getUserTimezone', ensureAuth, async (req, res) => {
 });
 
 
-app.get('/getProjectTaskDetails', async (req, res) => {
+app.get('/getOneTaskDetails', async (req, res) => {
     try {
-        const projectId = req.query.projectId;
-        const tasksInfo = await getTaskDetails(projectId);
-        res.json(tasksInfo);
+        const taskId = req.query.taskId;
+        const taskInfo = await getOneTaskDetails(taskId);
+        res.json(taskInfo);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });

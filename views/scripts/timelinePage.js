@@ -173,91 +173,47 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 // base object in luxon
 let DateTime = luxon.DateTime;
-// function for processing the retrieved data, convert member time zones
-function processTaskDetails(data) {
-    try {
-        // array to store the processed data
-        const processedData = [];
 
-        // iterate the task of tasklist under project
-        for (const task of data) {
-            // get taskOwner time zone
-            const taskOwnerTimezone = task.taskOwner.timezone;
+function combineDateTime(dateStr, timeStr) {
+    const combinedDateTime = dateStr.replace(/Z$/, '').replace('T00:00', 'T' + timeStr);
+    return combinedDateTime;
+}
 
-            // array to store all members time zone info
-            const processedTaskMembers = [];
+function convertMemberTimezone(taskDetail){
+    const taskOwnerTimezone = taskDetail.taskOwner.timezone;
+    const taskOwnerStartDateTime = DateTime.fromISO(combineDateTime(taskDetail.startDate, taskDetail.startTime)).setZone(taskOwnerTimezone);
+    const taskOwnerDueDateTime = DateTime.fromISO(combineDateTime(taskDetail.dueDate, taskDetail.dueTime)).setZone(taskOwnerTimezone);
 
-            // iterate through all memebrs
-            for (const member of task.taskMembers) {
-                // get members time zone
-                const memberTimezone = member.timezone;
+    const taskMembers = taskDetail.taskMembers.map(member => {
+        const memberTimezone = member.timezone;
 
-                // convert time zone using luxon
-                const startDate = DateTime.fromISO(task.startDate, { zone: taskOwnerTimezone }).setZone(memberTimezone);
-                const startTime = DateTime.fromISO(task.startTime, { zone: taskOwnerTimezone }).setZone(memberTimezone);
-                const dueDate = DateTime.fromISO(task.dueDate, { zone: taskOwnerTimezone }).setZone(memberTimezone);
-                const dueTime = DateTime.fromISO(task.dueTime, { zone: taskOwnerTimezone }).setZone(memberTimezone);
-
-                // construct processed data
-                const processedMember = {
-                    username: member.username,
-                    timezone: member.timezone,
-                    startDate: startDate.toISO(),
-                    startTime: startTime.toISO(),
-                    dueDate: dueDate.toISO(),
-                    dueTime: dueTime.toISO()
-                };
-
-                processedTaskMembers.push(processedMember);
-            }
-
-            const processedTask = {
-                title: task.title,
-                taskOwner: {
-                    username: task.taskOwner.username,
-                    timezone: task.taskOwner.timezone
-                },
-                taskMembers: processedTaskMembers
+        if (memberTimezone === taskOwnerTimezone) {
+            return {
+                username: member.username,
+                startDate: taskOwnerStartDateTime.toFormat('EEE, MMM dd'),
+                startTime: taskOwnerStartDateTime.toFormat('h:mm a'),
+                dueDate: taskOwnerDueDateTime.toFormat('EEE, MMM dd'), 
+                dueTime: taskOwnerDueDateTime.toFormat('h:mm a')
             };
-
-            processedData.push(processedTask);
         }
 
-        return processedData;
-    } catch (error) {
-        throw new Error('Error processing task details: ' + error.message);
-    }
+        const startMemberDateTime = taskOwnerStartDateTime.setZone(memberTimezone);
+        const dueMemberDateTime = taskOwnerDueDateTime.setZone(memberTimezone);
+
+        return {
+            username: member.username,
+            startDate: startMemberDateTime.toFormat('EEE, MMM dd'),
+            startTime: startMemberDateTime.toFormat('h:mm a'),
+            dueDate: dueMemberDateTime.toFormat('EEE, MMM dd'), 
+            dueTime: dueMemberDateTime.toFormat('h:mm a')
+        };
+    });
+
+    return taskMembers;
 }
 
 
-// NEED TO BE MODIFIED
-// getting task info based on projectId 
-// let projectTaskDetails;
-// const urlParams = new URLSearchParams(window.location.search);
-// projectId = urlParams.get('projectId');
-// var taskData = []
-// fetch(`/getProjectTaskDetails?projectId=${projectId}`)
-//     .then(response => {
-//         if (!response.ok) {
-//             throw new Error('Network response was not ok');
-//         }
-//         return response.json();
-//     })
-//     .then(async data => {
-//         projectTaskDetails = data;
-//         console.log("Project data: " + projectTaskDetails);
-//         const r = processTaskDetails(projectTaskDetails);
-//         // console.log(`239: ${r}`);
-//         // console.log(`Data line 240: ${processTaskDetails(data)}`)
-//     })
-//     .catch(error => {
-//         console.error('Error fetching data:', error);
-//     });
-
 // anychart section
-
-
-
 anychart.onDocumentReady(async function () {
     const urlParams = new URLSearchParams(window.location.search);
     const projectId = urlParams.get('projectId');
@@ -315,12 +271,37 @@ anychart.onDocumentReady(async function () {
     chart.listen("rowClick", async function (e) {
         var itemName = await e.item.get("name");  // Assuming the item has a "name" attribute
         var item_id = await e.item.get("id");
-        console.log(`itemName: ${itemName}`)
-        console.log(`item_id: ${item_id}`)
+        // console.log(`itemName: ${itemName}`)
+        // console.log(`item_id: ${item_id}`)
 
-        var url = "/membersDates?projectId=${item_id}";  // Construct the URL using the item name
+        const response = await fetch(`/getOneTaskDetails?taskId=${item_id}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const taskDetail = await response.json();
+        console.log(taskDetail);
+        const convertDateTime = convertMemberTimezone(taskDetail);
+
+        var modalTitle = document.getElementById('timelineModalTitle');
+        var modalBody = document.querySelector('#timelineModal .modal-body');
+        modalTitle.innerHTML = `${taskDetail.title}`;
+
+        modalBody.innerHTML = `
+        <span>Description: ${taskDetail.description}</span>
+      `;
+
+      convertDateTime.forEach(member => {
+        modalBody.innerHTML += `
+            <div>${member.username}</div>
+            <div>
+                <span>${member.startDate} - ${member.dueDate}</span>
+                <span>${member.startTime} - ${member.dueTime}</span>
+            </div>
+            `;
+      })
     
-        window.location.href = url;  // Redirect to the constructed URL
+      var myModal = new bootstrap.Modal(document.getElementById('timelineModal'));
+      myModal.show();
     });
         
     //set the splitter so theres no gaps //only side view though

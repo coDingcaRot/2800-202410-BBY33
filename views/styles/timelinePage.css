@@ -52,5 +52,5 @@ html, body, #timeline-container {
 }
 
 .timezone.open span.userspan:before {
-    background-color:rgb(255, 251, 0);
+    background-color:rgb(60, 255, 0);
 }
