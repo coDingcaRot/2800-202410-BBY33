@@ -127,40 +127,7 @@ app.post('/signupSubmit', async (req, res) => {
     }
 });
 
-
-/***** INITIALIZE TIMEZONE *****/
-// app.get('/initializeTimezone', async (req, res) => {
-//     let clientIp = requestIp.getClientIp(req); // Use requestIp to get the client IP
-//     console.log(`Initial Detected IP: ${clientIp}`);
-
-//     if (req.headers['x-forwarded-for']) {
-//         const forwardedIps = req.headers['x-forwarded-for'].split(',');
-//         clientIp = forwardedIps[0];
-//         // console.log(`Forwarded IP: ${clientIp}`);
-//     }
-
-//     let location = "Localhost";
-//     let timezone = "Local Timezone";
-
-//     try {
-//         const response = await axios.get(`https://ipinfo.io/${clientIp}?token=${process.env.IPINFO_TOKEN}`);
-//         // console.log('IPInfo Response:', response.data);
-
-//         const city = response.data.city || 'Unknown';
-//         const region = response.data.region || 'Unknown';
-//         const country = response.data.country || 'Unknown';
-//         timezone = response.data.timezone || 'Unknown';
-
-//         location = `${city}, ${region}, ${country}`;
-//     } catch (error) {
-//         console.error("Failed to fetch location:", error.response ? error.response.data : error.message);
-//         location = "Unknown";
-//         timezone = "Unknown";
-//     }
-
-//     res.render('initializeTimezone', { location, timezone, page: "/initializeTimezone", backlink: "/signup" });
-// });
-
+//Gets user timezone
 app.post('/initializeTimezone', async (req, res) => {
     let clientIp = requestIp.getClientIp(req);
     console.log(`Initial Detected IP: ${clientIp}`);
@@ -293,6 +260,7 @@ app.post('/deleteProject', ensureAuth, async (req, res) => {
 
     const project = await Project.findOne({_id: new ObjectId(projectId)});
 
+    //removes members from this project
     project.projectMembers.forEach(async member => {
         await User.updateOne(
             {email: member},
@@ -300,6 +268,10 @@ app.post('/deleteProject', ensureAuth, async (req, res) => {
         );
     });
 
+    //Deletes task belonging to this project
+    project.taskList.forEach(async task => {
+        await Task.findOneAndDelete({_id: new ObjectId(task)});
+    })
     //finds and deletes the project with given id
     const deletedProject = await Project.findOneAndDelete({_id: new ObjectId(projectId)});
 
@@ -348,12 +320,20 @@ app.post('/addMembersPageSubmit', async (req, res) => {
         );
         await project.save();
 
-        //adding the project id to members list
-        await member.updateOne({projectList: projectID});
+            // before updating user list
+        console.log(`Before adding the member to the project list: ${member.projectList}`);
 
+        //adding the project id to members list
+        await User.updateOne(
+            {email: memberEmail},
+            {$addToSet: {projectList: projectID}}
+        );
+
+        //error checking to see if update worked
+        const updatedMember = await User.findOne({ email: memberEmail });
+        console.log(`After adding member to project: ${updatedMember.projectList}`);
 
         res.render("successMessage", { success: "Member added successfully", backlink: "/homepage" });
-
     } catch (error) {
         // console.error("Error adding member to project:", error);
         res.render("errorMessage", { error: error, backlink: "/homepage" });
@@ -388,21 +368,16 @@ app.post('/deleteMember', async (req, res) => {
 /***** HOMEPAGE *****/
 app.get('/homepage', ensureAuth, async (req, res) => {
     const user = await User.findOne({ email: req.user.email });
+
     // Fetch all projects in the projectList
     const projectPromises = user.projectList.map(projectId => Project.findById(projectId));
     const pList = await Promise.all(projectPromises);
 
-    // console.log(pList)
-    // console.log(`pList.length: ${pList.length}`)
     res.render("homepage", {projects: pList, username: req.user.username});
 });
 
 /***** PROFILE ROUTES *****/
 app.get('/profile', ensureAuth, async(req, res) => {
-        // const email = req.User.email;
-        // const name = req.User.username;
-        console.log(req.user)
-        // console.log('User info:', userinfo);  // Add this line to log userinfo
         res.render('profile', {userinfo: req.user});
 });
 
@@ -431,7 +406,6 @@ app.post('/profile', ensureAuth, async (req, res) => {
 /************************************************* AUTHENTICATED PAGES *************************************************/
 
 /* TaskPage START */
-
 // get the task data of specific project, matching same projectId and userId 
 async function fetchProjectTasks(projectId, userId) {
     try {
@@ -707,7 +681,6 @@ app.post('/updateCompletedMembers/:taskId', async (req, res) => {
     }
 });
 
-
 // update the completed members of the specific task - remove user to completedMembers array when unchecked
 app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
     const taskId = req.params.taskId;
@@ -733,7 +706,6 @@ app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
     }
 });
 /* TaskPage END */
-
 
 
 /* TimelinePage START */
@@ -823,8 +795,6 @@ async function getTaskDetails(projectId) {
     }
 }
 
-
-
 app.get("/timelineData", ensureAuth, async (req, res) => {
     if (req.isAuthenticated()) {
         const projectId = req.query.projectId;
@@ -903,7 +873,6 @@ app.get('/getProjectMembersInfo', async (req, res) => {
     }
 });
 
-
 app.get('/getUserTimezone', ensureAuth, async (req, res) => {
     if (req.isAuthenticated()) {
         try {
@@ -922,7 +891,6 @@ app.get('/getUserTimezone', ensureAuth, async (req, res) => {
     }
 });
 
-
 app.get('/getProjectTaskDetails', async (req, res) => {
     try {
         const projectId = req.query.projectId;
@@ -935,7 +903,7 @@ app.get('/getProjectTaskDetails', async (req, res) => {
 });
 
 
-
+/* TimelinePage END */
 
 /*****CALENDAR ****/
 // Calendar page route
@@ -951,12 +919,6 @@ app.get('/calendarPage', ensureAuth, async (req, res) => {
     });
 });
 
-
-
-
-
-
-/* TimelinePage END */
 
 /* Easter Egg START */
 app.get('/easterEgg', ensureAuth, (req, res) => {
