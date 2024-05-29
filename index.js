@@ -459,8 +459,8 @@ async function fetchProjectTasks(projectId, userId) {
         const accessibleTasks = await Task.find({ _id: { $in: taskList }, taskMembers: userId });
 
         // get the time zone info stored in accessible tasks
-        const accessibleTaskDatas  = await enrichTaskData(accessibleTasks);
-        
+        const accessibleTaskDatas = await enrichTaskData(accessibleTasks);
+
         return accessibleTaskDatas;
     } catch (error) {
         console.error('Error fetching project tasks:', error);
@@ -481,7 +481,7 @@ async function getUserTimeZone(userId) {
         };
     } catch (error) {
         console.error('Error fetching user timezone:', error);
-        return null; 
+        return null;
     }
 }
 
@@ -493,7 +493,7 @@ async function enrichTaskData(tasks) {
         const taskOwnerData = await getUserTimeZone(task.taskOwner);
         const taskMembersData = await Promise.all(task.taskMembers.map(async memberId => {
             const memberData = await getUserTimeZone(memberId);
-            return { _id: memberId, ...memberData }; 
+            return { _id: memberId, ...memberData };
         }));
 
         const enrichedTask = {
@@ -534,7 +534,7 @@ app.get('/taskPage', ensureAuth, async (req, res) => {
             try {
                 const tasksData = await fetchProjectTasks(projectId, userId);
                 res.render('taskPage', {
-                    authenticated: req.isAuthenticated(), 
+                    authenticated: req.isAuthenticated(),
                     userId: userId.toString(),
                     username: req.user.username,
                     isTaskPage: true,
@@ -546,8 +546,8 @@ app.get('/taskPage', ensureAuth, async (req, res) => {
                 res.status(500).send('Internal Server Error');
             }
         } else {
-            res.render('taskPage', { 
-                authenticated: req.isAuthenticated(), 
+            res.render('taskPage', {
+                authenticated: req.isAuthenticated(),
                 userId: userId,
                 username: req.user.username,
                 isTaskPage: true,
