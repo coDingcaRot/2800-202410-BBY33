@@ -5,6 +5,7 @@ html, body, #timeline-container {
     padding: 0;
 }
 
+/* upper time zone display area style  */
 .timezone {
     display: grid;
     grid-template-areas:
@@ -53,4 +54,62 @@ html, body, #timeline-container {
 
 .timezone.open span.userspan:before {
     background-color:rgb(60, 255, 0);
+}
+
+/* modal showing task details style */
+.modal-content {
+    height: 300px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-header {
+    position: sticky;
+    top: 0; 
+    background-color: #ffffff; 
+    z-index: 1;
+}
+
+/* table in timeline modal style */
+.timeline-modal-body {
+    margin: 3%;
+}
+
+.timeline-modal-tb {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    margin-top: 10%;
+}
+
+.timeline-modal-tb th,
+.timeline-modal-tb td {
+    overflow: hidden;
+    text-overflow: ellipsis; 
+    white-space: nowrap;
+}
+
+/* hover to overflow item show all the content */
+.timeline-modal-tb td:hover {
+    overflow: visible; 
+    text-overflow: clip; 
+    white-space: normal; 
+}
+
+.timeline-modal-tb th:nth-child(1), .timeline-modal-tb td:nth-child(1) {
+    width: 20%; 
+    text-transform: capitalize;
+}
+
+.timeline-modal-tb th:nth-child(2), .timeline-modal-tb td:nth-child(2),
+.timeline-modal-tb th:nth-child(3), .timeline-modal-tb td:nth-child(3) {
+    width: 40%;
+}
+
+.timeline-modal-tb td:nth-child(2) {
+    padding-right: 5px; /* Add space between second and third column */
+}
+
+.timeline-modal-tb td:nth-child(2), .timeline-modal-tb td:nth-child(3) {
+    font-size: 13px; /* Adjust this value as needed */
 }

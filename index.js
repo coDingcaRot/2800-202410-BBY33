@@ -506,7 +506,7 @@ app.get('/getProjectName', ensureAuth, async (req, res) => {
         }
     } catch (error) {
         console.error('Error fetching project name:', error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: "ProjectId is null" });
     }
 });
 
@@ -831,25 +831,30 @@ app.get("/timelineData", ensureAuth, async (req, res) => {
     }
 })
 
+
 app.get('/timelinePage', ensureAuth, async (req, res) => {
     if (req.isAuthenticated()) {
         const projectId = req.query.projectId;
 
-        // Check if projectId is null
-        if (!projectId) {
-            return res.status(400).send('Project ID is required');
-        }
-
-        try{
-            res.render('timelinePage', {
+        if(projectId){
+            try{
+                res.render('timelinePage', {
+                    authenticated: req.isAuthenticated(), 
+                    username: req.user.username,
+                    isTaskPage: false,
+                    projectId: projectId 
+                });
+            } catch (error) {
+                console.error('Error occurred: ', error);
+                res.status(500).send('Internal Server Error');
+            }
+        } else {
+            res.render('timelinePage', { 
                 authenticated: req.isAuthenticated(), 
                 username: req.user.username,
                 isTaskPage: false,
-                projectId: projectId
+                projectId: "" 
             });
-        } catch (error) {
-            console.error('Error occurred: ', error);
-            res.status(500).send('Internal Server Error');
         }
     } else {
         res.redirect('/homepage');

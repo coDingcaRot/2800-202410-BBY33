@@ -67,12 +67,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     // get project's name through projectId
     async function getProjectName(projectId) {
         try {
-            const response = await fetch(`/getProjectName?projectId=${projectId}`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            if(projectId){
+                const response = await fetch(`/getProjectName?projectId=${projectId}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const project = await response.json();
+                return project.projectName;
+            } else {
+                console.log("projectId is null");
+                return "Choose a project";
             }
-            const project = await response.json();
-            return project.projectName;
         } catch (error) {
             throw new Error('Error fetching project name: ' + error.message);
         }
@@ -98,12 +103,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         }));
     }
 
-    // Function to update timeline when project changes
+    // Functions to update timeline when projectId changes in drop down menu
     async function updateTimelineOnProjectChange(projectId) {
         if (projectId) {
+            // update members with different selected projectId
             renderProjectMembersTimeline(projectId);
+            // update chart data with different selected projectId
+            renderChart(projectId);
         } else {
-            console.error('Project ID not found in URL');
+            console.log('Project ID not found in URL');
         }
     }
 
@@ -133,24 +141,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             })
             .catch(error => {
-                console.error('Error fetching project data:', error);
+                console.log('Error fetching project data:', error);
             });
 
             // Update timeline based on selected project ID
             updateTimelineOnProjectChange(selectedProjectId);
-        }
-    });
 
-    // Check for project ID changes in the URL
-    window.addEventListener('popstate', async function() {
-        const projectId = getProjectIdFromURL();
-        try {
-            const projectName = await getProjectName(projectId);
-            const navbarBrand = document.getElementById('navbarDropdown');
-            navbarBrand.textContent = projectName;
-            updateTimelineOnProjectChange(projectId);
-        } catch (error) {
-            console.error('Error updating project name:', error);
         }
     });
 
@@ -161,7 +157,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const navbarBrand = document.getElementById('navbarDropdown');
         navbarBrand.textContent = projectName;
     } catch (error) {
-        console.error('Error setting initial project name:', error);
+        console.log('Error setting initial project name:', error);
     }
     updateTimelineOnProjectChange(initialProjectId);
 
@@ -190,9 +186,9 @@ function convertMemberTimezone(taskDetail){
         if (memberTimezone === taskOwnerTimezone) {
             return {
                 username: member.username,
-                startDate: taskOwnerStartDateTime.toFormat('EEE, MMM dd'),
+                startDate: taskOwnerStartDateTime.toFormat('MMM/dd/yyyy'),
                 startTime: taskOwnerStartDateTime.toFormat('h:mm a'),
-                dueDate: taskOwnerDueDateTime.toFormat('EEE, MMM dd'), 
+                dueDate: taskOwnerDueDateTime.toFormat('MMM/dd/yyyy'), 
                 dueTime: taskOwnerDueDateTime.toFormat('h:mm a')
             };
         }
@@ -202,9 +198,9 @@ function convertMemberTimezone(taskDetail){
 
         return {
             username: member.username,
-            startDate: startMemberDateTime.toFormat('EEE, MMM dd'),
+            startDate: startMemberDateTime.toFormat('MMM/dd/yyyy'),
             startTime: startMemberDateTime.toFormat('h:mm a'),
-            dueDate: dueMemberDateTime.toFormat('EEE, MMM dd'), 
+            dueDate: dueMemberDateTime.toFormat('MMM/dd/yyyy'), 
             dueTime: dueMemberDateTime.toFormat('h:mm a')
         };
     });
@@ -212,33 +208,28 @@ function convertMemberTimezone(taskDetail){
     return taskMembers;
 }
 
-
-// anychart section
-anychart.onDocumentReady(async function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    const projectId = urlParams.get('projectId');
-    console.log(`projectId: ${projectId}`);
-    //Fetch data 
-    var data = []
+// timeline chart function
+async function renderChart(projectId) {
+    var chartData = [];
     try {
         const response = await fetch(`/timelineData?projectId=${projectId}`);
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-        const r = await response.json();
-        console.log(r)
-        var taskData = r;
-        taskData.forEach(async task => {
-            data.push(task);
+        const taskData = await response.json();
+        
+        taskData.forEach(async task =>{
+            chartData.push(task);
         })
-            
     } catch (error) {
-        console.error('Error fetching timeline data:', error);
+        console.error('Error fetching chart data:', error);
     }
 
+    // clear the chart
+    document.getElementById('timeline-container').innerHTML = '';
 
     // create a data tree
-    var treeData = anychart.data.tree(data, "as-tree");
+    var treeData = anychart.data.tree(chartData, "as-tree");
 
     // create a chart
     var chart = anychart.ganttProject();
@@ -254,25 +245,10 @@ anychart.onDocumentReady(async function () {
     column1.width(50); //sets "Tasks" column width
     column1.title().text("Task");
 
-    //timeline customization scaling timeline
-    // var timeline = chart.getTimeline();
-    // var periodLabels = timeline.periods().labels();
-    // var labels = timeline.labels();
-
-    // console.log(`labels: ${labels}`)
-    // periodLabels.enabled(true);
-    // timeline.scale().zoomLevels([
-    //     {unit: "month", count: 1},
-    //     {unit: "quarter", count: 1}
-    // ]);
-
     //Event listener for clicks
     /* listen to the rowClick event and redirect to another page */
     chart.listen("rowClick", async function (e) {
-        var itemName = await e.item.get("name");  // Assuming the item has a "name" attribute
         var item_id = await e.item.get("id");
-        // console.log(`itemName: ${itemName}`)
-        // console.log(`item_id: ${item_id}`)
 
         const response = await fetch(`/getOneTaskDetails?taskId=${item_id}`);
         if (!response.ok) {
@@ -283,25 +259,41 @@ anychart.onDocumentReady(async function () {
         const convertDateTime = convertMemberTimezone(taskDetail);
 
         var modalTitle = document.getElementById('timelineModalTitle');
-        var modalBody = document.querySelector('#timelineModal .modal-body');
+        var modalBody = document.querySelector('#timelineModal .timeline-modal-body');
         modalTitle.innerHTML = `${taskDetail.title}`;
 
-        modalBody.innerHTML = `
-        <span>Description: ${taskDetail.description}</span>
-      `;
+        let tableHTML = `
+        <div>Description: ${taskDetail.description}</div>
+        <table class="timeline-modal-tb">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Start</th>
+                    <th>Due</th>
+                </tr>
+            </thead>
+            <tbody>
+        `;
 
-      convertDateTime.forEach(member => {
-        modalBody.innerHTML += `
-            <div>${member.username}</div>
-            <div>
-                <span>${member.startDate} - ${member.dueDate}</span>
-                <span>${member.startTime} - ${member.dueTime}</span>
-            </div>
+        convertDateTime.forEach(member => {
+        tableHTML += `
+            <tr>
+                <td>${member.username}</td>
+                <td>${member.startDate} ${member.startTime}</td>
+                <td>${member.dueDate} ${member.dueTime}</td>
+            </tr>
             `;
-      })
+        });
+
+        tableHTML += `
+            </tbody>
+        </table>
+        `;
+
+        modalBody.innerHTML = tableHTML;
     
-      var myModal = new bootstrap.Modal(document.getElementById('timelineModal'));
-      myModal.show();
+        var myModal = new bootstrap.Modal(document.getElementById('timelineModal'));
+        myModal.show();
     });
         
     //set the splitter so theres no gaps //only side view though
@@ -318,4 +310,128 @@ anychart.onDocumentReady(async function () {
 
     // fit elements to the width of the timeline
     chart.fitAll();
-});
+}
+
+
+// anychart section - previous version
+// anychart.onDocumentReady(async function () {
+//     const urlParams = new URLSearchParams(window.location.search);
+//     const projectId = urlParams.get('projectId');
+//     console.log(`projectId: ${projectId}`);
+//     //Fetch data 
+//     var data = []
+//     try {
+//         const response = await fetch(`/timelineData?projectId=${projectId}`);
+//         if (!response.ok) {
+//             throw new Error('Network response was not ok');
+//         }
+//         const r = await response.json();
+//         console.log(r)
+//         var taskData = r;
+//         taskData.forEach(async task => {
+//             data.push(task);
+//         })
+            
+//     } catch (error) {
+//         console.error('Error fetching timeline data:', error);
+//     }
+
+
+    // // create a data tree
+    // var treeData = anychart.data.tree(data, "as-tree");
+
+    // // create a chart
+    // var chart = anychart.ganttProject();
+
+    // // var timeline = chart.timeline();
+
+    // //left side data grid column
+    // var dataGrid = chart.dataGrid();
+    // column0 = dataGrid.column(0);
+    // column1 = dataGrid.column(1);
+
+    // column0.width(10); //sets # width
+    // column1.width(50); //sets "Tasks" column width
+    // column1.title().text("Task");
+
+    // //timeline customization scaling timeline
+    // // var timeline = chart.getTimeline();
+    // // var periodLabels = timeline.periods().labels();
+    // // var labels = timeline.labels();
+
+    // // console.log(`labels: ${labels}`)
+    // // periodLabels.enabled(true);
+    // // timeline.scale().zoomLevels([
+    // //     {unit: "month", count: 1},
+    // //     {unit: "quarter", count: 1}
+    // // ]);
+
+    // //Event listener for clicks
+    // /* listen to the rowClick event and redirect to another page */
+    // chart.listen("rowClick", async function (e) {
+    //     var itemName = await e.item.get("name");  // Assuming the item has a "name" attribute
+    //     var item_id = await e.item.get("id");
+    //     // console.log(`itemName: ${itemName}`)
+    //     // console.log(`item_id: ${item_id}`)
+
+    //     const response = await fetch(`/getOneTaskDetails?taskId=${item_id}`);
+    //     if (!response.ok) {
+    //         throw new Error('Network response was not ok');
+    //     }
+    //     const taskDetail = await response.json();
+    //     console.log(taskDetail);
+    //     const convertDateTime = convertMemberTimezone(taskDetail);
+
+    //     var modalTitle = document.getElementById('timelineModalTitle');
+    //     var modalBody = document.querySelector('#timelineModal .timeline-modal-body');
+    //     modalTitle.innerHTML = `${taskDetail.title}`;
+
+    //     let tableHTML = `
+    //     <div>Description: ${taskDetail.description}</div>
+    //     <table class="timeline-modal-tb">
+    //         <thead>
+    //             <tr>
+    //                 <th>Name</th>
+    //                 <th>Start</th>
+    //                 <th>Due</th>
+    //             </tr>
+    //         </thead>
+    //         <tbody>
+    //   `;
+
+    //   convertDateTime.forEach(member => {
+    //     tableHTML += `
+    //         <tr>
+    //             <td>${member.username}</td>
+    //             <td>${member.startDate} ${member.startTime}</td>
+    //             <td>${member.dueDate} ${member.dueTime}</td>
+    //         </tr>
+    //         `;
+    //   });
+
+    //   tableHTML += `
+    //         </tbody>
+    //     </table>
+    //   `;
+
+    //   modalBody.innerHTML = tableHTML;
+    
+    //   var myModal = new bootstrap.Modal(document.getElementById('timelineModal'));
+    //   myModal.show();
+    // });
+        
+    // //set the splitter so theres no gaps //only side view though
+    // chart.splitterPosition("20%");
+
+    // // set the data
+    // chart.data(treeData);
+
+    // // set the container id
+    // chart.container("timeline-container");
+
+    // // initiate drawing the chart
+    // chart.draw();
+
+    // // fit elements to the width of the timeline
+    // chart.fitAll();
+// });
