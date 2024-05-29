@@ -33,6 +33,7 @@
     height: 93%;
     /* overflow-y: auto;  */
     border-radius: 15px;
+    z-index: 6;
 }
 
 .task-form.show {

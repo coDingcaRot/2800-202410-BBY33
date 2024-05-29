@@ -250,6 +250,8 @@ app.post('/forgotPass', async (req, res) => {
     res.render('passwordChanged');
 });
 
+/************************************************* AUTHENTICATED PAGES *************************************************/
+
 //Calendar page
 app.get('/calendar', (req, res) => {
     // console.log(selectedProjectId);
@@ -259,8 +261,6 @@ app.get('/calendar', (req, res) => {
         isTaskPage: true,
     });
 });
-
-/************************************************* AUTHENTICATED PAGES *************************************************/
 
 /***** PROJECT CREATION *****/
 //create project page
@@ -683,7 +683,7 @@ app.post('/addTask', async (req, res) => {
         const reminder = reminderDatetime ? reminderDatetime : 'none';
 
         // Parse the selectedMembers from JSON string to an array
-        // const taskMembers = JSON.parse(selectedTaskMembers);
+        const taskMembers = JSON.parse(selectedTaskMembers);
 
         // Create a new document object with the extracted data
         const newTask = new Task({
@@ -695,7 +695,7 @@ app.post('/addTask', async (req, res) => {
             dueTime,
             reminder,
             taskOwner: userId,
-            // taskMembers
+            taskMembers
             // Add other fields as needed
         });
 

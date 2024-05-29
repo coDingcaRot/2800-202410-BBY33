@@ -4,14 +4,14 @@ function fetchAndShowTasksData(projectId) {
         fetch(`/getProjectTasks?projectId=${projectId}`).then(response => response.json()),
         fetch(`/getProjectName?projectId=${projectId}`).then(response => response.json())
     ])
-    .then(([tasksData, project]) => {
-        showTodo(tasksData, 'all'); // Default to 'all' tab when loading tasks
-        const navbarBrand = document.getElementById('navbarDropdown');
-        if (project && project.projectName) {
-            navbarBrand.textContent = project.projectName;
-        }
-    })
-    .catch(error => console.error('Error fetching project data:', error));
+        .then(([tasksData, project]) => {
+            showTodo(tasksData, 'all'); // Default to 'all' tab when loading tasks
+            const navbarBrand = document.getElementById('navbarDropdown');
+            if (project && project.projectName) {
+                navbarBrand.textContent = project.projectName;
+            }
+        })
+        .catch(error => console.error('Error fetching project data:', error));
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -24,13 +24,13 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 const projectListDiv = document.getElementById('projectListDropdown');
-projectListDiv.addEventListener('change', function(event) {
+projectListDiv.addEventListener('change', function (event) {
     if (event.target.matches('input[name="listGroupRadios"]')) {
         const selectedProjectId = event.target.value;
         const url = new URL(window.location.href);
         url.searchParams.set('projectId', selectedProjectId);
         history.pushState(null, '', url);
-        fetchAndShowTasksData(selectedProjectId); 
+        fetchAndShowTasksData(selectedProjectId);
     }
 });
 
@@ -79,7 +79,7 @@ async function convertToUserTimezone(todo) {
         // if current user has the same time zone as task owner return original data
         if (memberTimezone === taskOwnerTimezone) {
             console.log("No timezone conversion needed.");
-            console.log("no convert:",todo.dueDate);
+            console.log("no convert:", todo.dueDate);
             return {
                 startDate: formatDate(todo.startDate),
                 startTime: formatTime(todo.startTime),
@@ -113,8 +113,8 @@ async function showTodo(tasksData, tabType) {
         for (const todo of tasksData) {
             const isChecked = localStorage.getItem(todo._id) === "true";
             if (
-                (tabType === "all") || 
-                (tabType === "pending" && !isChecked) || 
+                (tabType === "all") ||
+                (tabType === "pending" && !isChecked) ||
                 (tabType === "completed" && isChecked)
             ) {
                 let convertedTimeDate = convertToUserTimezone(todo);
@@ -167,7 +167,7 @@ async function showTodo(tasksData, tabType) {
         : taskBox.classList.remove("overflow");
 }
 
-document.addEventListener('DOMContentLoaded', function () {   
+document.addEventListener('DOMContentLoaded', function () {
     const filters = document.querySelectorAll(".filters span");
 
     filters.forEach((btn) => {
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.querySelector("span.active").classList.remove("active");
             btn.classList.add("active");
             const urlParams = new URLSearchParams(window.location.search);
-            const projectId = urlParams.get('projectId'); 
+            const projectId = urlParams.get('projectId');
             const tabType = btn.textContent.trim().toLowerCase();
             fetch(`/getProjectTasks?projectId=${projectId}`)
                 .then(response => response.json())
@@ -232,15 +232,15 @@ function handleCheckboxChange(taskId) {
             'Content-Type': 'application/json'
         }
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(isChecked ? 'Failed to update completed members' : 'Failed to remove user from completed members');
-        }
-        // add other actions if needed
-    })
-    .catch(error => {
-        console.error(`Error ${isChecked ? 'updating' : 'removing'} completed members:`, error);
-    });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(isChecked ? 'Failed to update completed members' : 'Failed to remove user from completed members');
+            }
+            // add other actions if needed
+        })
+        .catch(error => {
+            console.error(`Error ${isChecked ? 'updating' : 'removing'} completed members:`, error);
+        });
 }
 
 
@@ -278,11 +278,11 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // date time picker shows up after reminder switch is checked and if reminder checked store the datetime to database
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     var reminderCheckbox = document.getElementById('reminder-checkbox');
     var reminderDatetime = document.getElementById('reminder-datetime');
 
-    reminderCheckbox.addEventListener('change', function() {
+    reminderCheckbox.addEventListener('change', function () {
         if (reminderCheckbox.checked) {
             reminderDatetime.style.display = 'block';
         } else {
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add event listener to the form submission
     var taskForm = document.getElementById('task-form');
-    taskForm.addEventListener('submit', function(event) {
+    taskForm.addEventListener('submit', function (event) {
         // If the reminder checkbox is checked, set the value of the reminder datetime input
         if (reminderCheckbox.checked) {
             reminderDatetime.value = new Date().toISOString().slice(0, 16); // Set the value to the current datetime
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 // pop up add-member-modal after clicking plus button, adding selected members to taskform 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     // to open the assign-to-members modal
     const addMemberBtn = document.getElementById('add-member-btn');
     const addMemberModal = document.getElementById('add-member-modal');
@@ -316,18 +316,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     // the div that insert the selected members in taskform
     const memberListDiv = document.getElementById('taskform-member-list');
 
-    addMemberBtn.addEventListener('click', async function() {
+    addMemberBtn.addEventListener('click', async function () {
         addMemberModal.classList.add('show');
         addMemberModal.style.display = 'block';
     });
 
-    searchBar.addEventListener('click', async function(event) {
+    searchBar.addEventListener('click', async function (event) {
         // get all the members under specific project group
         try {
-            const projectId = projectIdInput.value.trim(); 
+            const projectId = projectIdInput.value.trim();
             const response = await fetch(`/getProjectMembers?projectId=${projectId}`);
             if (response.ok) {
-                const memberData = await response.json(); 
+                const memberData = await response.json();
 
                 renderMemberList(memberData);
             } else {
@@ -338,21 +338,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
-    searchBar.addEventListener('input', async function(event) {
+    searchBar.addEventListener('input', async function (event) {
         // get the value from input of search bar convert to lower case
-        const searchTerm = event.target.value.trim().toLowerCase(); 
-    
+        const searchTerm = event.target.value.trim().toLowerCase();
+
         try {
-            const projectId = projectIdInput.value.trim(); 
+            const projectId = projectIdInput.value.trim();
             const response = await fetch(`/getProjectMembers?projectId=${projectId}`);
             if (response.ok) {
-                const memberData = await response.json(); 
-    
+                const memberData = await response.json();
+
                 // filter matching members of list from the input
                 const filteredMembers = memberData.filter(member => {
-                    return member.username.toLowerCase().includes(searchTerm); 
+                    return member.username.toLowerCase().includes(searchTerm);
                 });
-    
+
                 // filter rendered member list
                 renderMemberList(filteredMembers);
             } else {
@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // render members into list
     function renderMemberList(memberData) {
-        memberListWrap.innerHTML = ''; 
+        memberListWrap.innerHTML = '';
 
         // iterate through user list and put data into list li
         memberData.forEach(data => {
@@ -380,14 +380,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     const closeButton = addMemberModal.querySelector('.btn-close');
-    closeButton.addEventListener('click', function() {
+    closeButton.addEventListener('click', function () {
         addMemberModal.classList.remove('show');
         addMemberModal.style.display = 'none';
         // Clear member list
         memberListWrap.innerHTML = '';
     });
 
-    modalAddMemberButton.addEventListener('click', function() {
+    modalAddMemberButton.addEventListener('click', function () {
         // Clear existing member avatars
         memberListDiv.innerHTML = '';
         // Clear the selected members array
