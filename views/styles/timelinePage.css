@@ -4,3 +4,53 @@ html, body, #timeline-container {
     margin: 0;
     padding: 0;
 }
+
+.timezone {
+    display: grid;
+    grid-template-areas:
+        "username time"
+        "location date";
+    grid-template-columns: auto auto; 
+    grid-template-rows: auto auto; 
+    padding-top: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.userspan {
+    grid-area: username;
+    text-transform: capitalize;
+}
+
+.locationspan {
+    grid-area: location;
+    margin-left: 20px;
+    font-size: smaller;
+}
+
+.output-time {
+    grid-area: time;
+    justify-self: end;
+}
+
+.output-date {
+    grid-area: date;
+    justify-self: end;
+    font-size: smaller;
+}
+
+.timezone span.userspan:before{
+    content: "";
+    display: inline-block;
+    width: 0.8em;
+    height: 0.8em;
+    background-color: rgb(170, 170, 170);
+    border-radius: 50%;
+    margin: 0 0.5em 0 0;
+    vertical-align: -0.05em;
+    transition: background-color 0.5s;
+}
+
+.timezone.open span.userspan:before {
+    background-color:rgb(255, 251, 0);
+}

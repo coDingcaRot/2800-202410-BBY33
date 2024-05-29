@@ -17,17 +17,25 @@ document.addEventListener('DOMContentLoaded', async function() {
                 timezoneDiv.setAttribute('data-timezone', member.timezone);
 
                 const usernameSpan = document.createElement('span');
+                usernameSpan.classList.add('userspan');
                 usernameSpan.textContent = member.username + " ";
 
                 const locationSpan = document.createElement('span');
+                locationSpan.classList.add('locationspan');
                 locationSpan.textContent = member.location;
 
-                const output = document.createElement('output');
-                output.textContent = "time";
+                const outputTime = document.createElement('output');
+                outputTime.classList.add('output-time');
+                outputTime.textContent = "time";
+
+                const outputDate = document.createElement('output');
+                outputDate.classList.add('output-date');
+                outputDate.textContent = "date";
 
                 timezoneDiv.appendChild(usernameSpan);
                 timezoneDiv.appendChild(locationSpan);
-                timezoneDiv.appendChild(output);
+                timezoneDiv.appendChild(outputTime);
+                timezoneDiv.appendChild(outputDate);
 
                 timezoneContainer.appendChild(timezoneDiv);
             });
@@ -74,12 +82,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     const updateTimes = async function () {
         const locations = document.querySelectorAll(".timezone");
         await Promise.all(Array.from(locations).map(async (location) => {
-            const output = location.querySelector("output");
+            const outputDate = location.querySelector("output.output-date");
+            const outputTime = location.querySelector("output.output-time");
             const timezone = location.getAttribute("data-timezone");
         
             // current time with .now
             const now = luxon.DateTime.now().setZone(timezone);
-            output.innerHTML = now.toFormat("(ccc) MM-dd-yyyy, HH:mm:ss");
+            outputDate.innerHTML = now.toFormat("ccc, MMM dd");
+            outputTime.innerHTML = now.toFormat("h:mm a");
 
             const hour = parseInt(now.toFormat("H"));
             if(hour >= 9 && hour < 18){
