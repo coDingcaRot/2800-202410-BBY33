@@ -1,0 +1,32 @@
+<%- include("templates/headerAfter", {dropdown: true, page: "/", isTaskPage: isTaskPage }) %>
+
+
+<div class="container-fluid">
+    <div class="container dropdown-menu">
+
+    </div>
+    <div class="timezone-container">
+        <!-- add project member local time info -->
+    </div>
+    
+    <hr>
+    
+    <div id="timeline-container" class="container-fluid" style="height: 500px;"></div>
+</div>
+  
+<!-- Pop up Modal for displaying task detail and converted date time -->
+<div class="modal fade" id="timelineModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="timelineModalTitle">Modal title</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="timeline-modal-body">
+                ...
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include("templates/footerAfter", {dropdown: true, footer: true, isTaskPage: isTaskPage, isTimelinePage: true }) %>

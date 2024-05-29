@@ -12,11 +12,20 @@
     <% if (isTaskPage) { %>
         <link rel="stylesheet" type="text/css" href="/styles/taskPage.css">
     <% } %>  
+
+    <link rel="stylesheet" href="/styles/timelinePage.css">
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-base.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-ui.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-exports.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-gantt.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-data-adapter.min.js"></script>
+    <link href="https://cdn.anychart.com/releases/v8/css/anychart-ui.min.css" type="text/css" rel="stylesheet">
+    <link href="https://cdn.anychart.com/releases/v8/fonts/css/anychart-font.min.css" type="text/css" rel="stylesheet">
  </head>
 <body>
 
     <% if(page == "/homepage" || page == "/"){ %> <!-- Define if its the homepage or pages that require burger -->
-        <nav class="navbar navbar-expand-lg bg-body-tertiary rounded" aria-label="Eleventh navbar example">
+        <nav class="navbar navbar-expand-lg bg-body-tertiary rounded position-sticky fixed-top" aria-label="Eleventh navbar example">
             <div class="container-fluid">
               <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
                 <span class="navbar-toggler-icon"></span>
