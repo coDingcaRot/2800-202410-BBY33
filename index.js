@@ -77,6 +77,7 @@ mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_ho
 const User = require('./modules/user.js');
 const Project = require('./modules/project.js');
 const Task = require('./modules/task.js');
+const { access } = require('fs');
 
 function ensureAuth(req, res, next) {
     if (req.isAuthenticated()) {
@@ -674,23 +675,22 @@ app.get('/getProjectMembers', ensureAuth, async (req, res) => {
 // Add tasks, get data from users and insert to mongoDB
 app.post('/addTask', async (req, res) => {
     const userId = req.user._id;
-    try {
+    try{
         // Extract data from the request body
         const { title, description, startDate, startTime, dueDate, dueTime, reminderDatetime, selectedTaskMembers, projectId } = req.body;
-
+        
         // Determine the value of the reminder field based on the value of reminderDatetime
         const reminder = reminderDatetime ? reminderDatetime : 'none';
 
-        let taskMembers = [];
-        // Check if selectedTaskMembers is provided and is a valid JSON string
-        if (selectedTaskMembers) {
-            try {
-                taskMembers = JSON.parse(selectedTaskMembers);
-            } catch (parseError) {
-                console.log('Error parsing selectedTaskMembers:', parseError);
-                // Handle the error or set a default value
-                taskMembers = [];
-            }
+        // Parse the selectedMembers from JSON string to an array
+        const taskMembers = JSON.parse(selectedTaskMembers);
+
+        // Check if the current user's ID already exists in taskMembers array
+        if (!taskMembers.includes(userId)) {
+            // Add the current user's ID to taskMembers array
+            taskMembers.push(userId);
+        } else {
+            console.log('Current user already exists in taskMembers array');
         }
 
         // Create a new document object with the extracted data
@@ -712,10 +712,6 @@ app.post('/addTask', async (req, res) => {
 
         // Insert the task id with string type
         const taskId = savedTask._id.toString();
-        console.log("TESTS");
-        console.log(req.user._id);
-        console.log(projectId);
-        console.log(taskId);
 
         await Project.findByIdAndUpdate(
             projectId,
@@ -723,11 +719,11 @@ app.post('/addTask', async (req, res) => {
         );
 
         res.redirect(`/taskPage?projectId=${projectId}`);
-    } catch (err) {
+    } catch(err){
         console.error('Error adding task: ', err);
         res.status(500).send('Error adding task')
     }
-
+        
 });
 
 // delete the task by taskId
