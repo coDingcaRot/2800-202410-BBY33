@@ -123,7 +123,6 @@ function fetchAndShowTasksData(projectId) {
         console.log("test"),
     ])
         .then(([tasksData]) => {
-            console.log(tasksData);
             submit(tasksData, projectId);
         })
         .catch(error => console.error('Error fetching project data:', error));
@@ -169,23 +168,25 @@ function submit(tasksData, projectId) {
         }
     });
 
-    console.log(tasksData);
     for (var i = 0; i < tasksData.length; i++) {
-        var id = tasksData[i]._id;
-        var title = tasksData[i].title;
-        var startDate = moment(tasksData[i].startDate).format('YYYY-MM-DD');
-        var startTime = tasksData[i].startTime;
-        var dueDate = moment(tasksData[i].dueDate).format('YYYY-MM-DD');
-        var dueTime = tasksData[i].dueTime;
-        var start = moment(`${startDate}T${startTime}`).format('YYYY-MM-DDTHH:mm');
-        var end = moment(`${dueDate}T${dueTime}`).format('YYYY-MM-DDTHH:mm');
-        calendar.addEvent({
-            id: id,
-            title: title,
-            start: start,
-            end: end,
-            allDay: false
-        })
+        // var id = tasksData[i]._id;
+        // var title = tasksData[i].title;
+        console.log(title);
+        let convertedTimeDate = convertToUserTimezone(tasksData[i]);
+
+        convertedTimeDate.then(function (value) {
+            let id = value.id;
+            let title = value.title;
+            let start = value.start;
+            let end = value.end;
+            calendar.addEvent({
+                id: id,
+                title: title,
+                start: start,
+                end: end,
+                allDay: false
+            })
+        });
     }
     calendar.render();
 }
@@ -319,3 +320,64 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
 });
+
+async function convertToUserTimezone(tasksData) {
+    const response = await fetch('/getCurrentUserId');
+    const data = await response.json();
+    const userId = data.userId;
+    let tasksOwnerTimezone = tasksData.taskOwner.timezone;
+    for (taskMember of tasksData.taskMembers) {
+        if (taskMember._id === userId) {
+            memberTimezone = taskMember.timezone;
+        }
+    }
+
+    let DateTime = luxon.DateTime;
+
+    try {
+        // if current user has the same time zone as task owner return original data
+        if (memberTimezone === tasksOwnerTimezone) {
+            console.log("No timezone conversion needed.");
+            console.log("no convert:", tasksData.dueDate);
+            // Convert start date time to user timezone
+            const startDateTime = DateTime.fromISO(combineDateTime(tasksData.startDate, tasksData.startTime), { zone: tasksOwnerTimezone }).setZone(memberTimezone);
+
+            // Convert due date time to user timezone
+            const dueDateTime = DateTime.fromISO(combineDateTime(tasksData.dueDate, tasksData.dueTime), { zone: tasksOwnerTimezone }).setZone(memberTimezone);
+
+            let start = startDateTime.toFormat("yyyy-MM-dd'T'HH:mm");
+            let end = dueDateTime.toFormat("yyyy-MM-dd'T'HH:mm");
+
+            return {
+                id: tasksData._id,
+                title: tasksData.title,
+                start: start,
+                end: end
+            };
+        }
+
+        function combineDateTime(dateStr, timeStr) {
+            const combinedDateTime = dateStr.replace(/Z$/, '').replace('T00:00', 'T' + timeStr);
+            return combinedDateTime;
+        }
+
+        // Convert start date time to user timezone
+        const startDateTime = DateTime.fromISO(combineDateTime(tasksData.startDate, tasksData.startTime), { zone: tasksOwnerTimezone }).setZone(memberTimezone);
+
+        // Convert due date time to user timezone
+        const dueDateTime = DateTime.fromISO(combineDateTime(tasksData.dueDate, tasksData.dueTime), { zone: tasksOwnerTimezone }).setZone(memberTimezone);
+
+        let start = startDateTime.toFormat("yyyy-MM-dd'T'HH:mm");
+        let end = dueDateTime.toFormat("yyyy-MM-dd'T'HH:mm");
+
+        return {
+            id: tasksData._id,
+            title: tasksData.title,
+            start: start,
+            end: end
+        };
+    } catch (error) {
+        console.error('Error converting to user timezone:', error);
+        throw new Error('Error converting to user timezone');
+    }
+};

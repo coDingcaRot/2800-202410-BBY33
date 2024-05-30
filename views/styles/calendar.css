@@ -2,6 +2,7 @@
     min-width: 50%;
     max-width: 900px;
     margin: 40px auto;
+    max-height: 70%;
 }
 
 .add-task {

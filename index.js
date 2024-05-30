@@ -1048,26 +1048,16 @@ app.get('/getOneTaskDetails', async (req, res) => {
 // Calendar page route
 app.get('/calendarPage', ensureAuth, async (req, res) => {
     const projectId = req.query.projectId;
+    const userId = req.user._id;
     // Fetch calendar data or other data using projectId
     // const calendarData = await fetchProjectCalendar(projectId, req.user._id);
     res.render('calendarPage', {
         authenticated: req.isAuthenticated(),
         username: req.user.username,
-        projectId: projectId
-        // calendarData: calendarData
+        projectId: projectId,
+        userId: userId
     });
 });
-
-// //Calendar page
-// app.get('/calendar', (req, res) => {
-//     // console.log(selectedProjectId);
-//     res.render('calendar', {
-//         authenticated: req.isAuthenticated(),
-//         username: req.user.username,
-//         isTaskPage: true,
-//     });
-// });
-
 
 /* Easter Egg START */
 app.get('/easterEgg', ensureAuth, (req, res) => {
