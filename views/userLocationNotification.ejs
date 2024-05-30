@@ -1,31 +1,42 @@
 <%- include("templates/headerBefore", {page: '/'}) %>
 
-    <!-- Modal for user location and timezone -->
-    <div class="modal fade" id="user-info-modal" tabindex="-1" aria-labelledby="userInfoModalLabel" aria-hidden="false">
-        <div class="modal-dialog">
+    <div class="modal fade" id="user-info-modal" tabindex="-1" aria-labelledby="userInfoModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header justify-content-center">
                     <h5 class="modal-title" id="userInfoModalLabel">Hello, <%= username %>.</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p id="user-info-text" style="font-size: 1.2em; color: #333; line-height: 1.5;">
-                        You are currently in <span style="font-weight: bold;">
-                            <%= location %>
-                        </span>. The local time is <span style="font-weight: bold;" id="local-time"></span> (<%=
-                            timezone %>).
+                    <p id="user-info-text" style="font-size: 1em; color: #333; line-height: 1.5;">
+                        You are currently in <span style="font-weight: bold;"><%= location %></span>. The local time is <span style="font-weight: bold;" id="local-time"></span> (<%= timezone %>).
                     </p>
                 </div>
-                <div>
+                <div class="modal-footer justify-content-center">
                     <form action="/homepage" method="get">
-                        <button type="submit">Okay</button>
+                        <button type="submit" class="btn btn-secondary">Okay</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        .modal-title {
+            width: 100%;
+            text-align: center;
+        }
+        .modal-footer {
+            justify-content: center;
+        }
+        .btn-secondary:hover {
+            background-color: rgba(23, 23, 214, 0.861);
+            color: white;
+        }
+    </style>
+    
     <script>
         const userLocation = "<%= location %>";
         const userTimezone = "<%= timezone %>";
     </script>
+
 <%- include("templates/footerBefore") %>
