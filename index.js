@@ -1,5 +1,6 @@
 /***** REQUIRED TO START! *****/
 require('dotenv').config();
+const moment = require('moment');
 const express = require('express');
 const app = express();
 const session = require('express-session');
@@ -27,7 +28,7 @@ const node_session_secret = process.env.NODE_SESSION_SECRET;
 //node built in middleware
 app.use(express.json()) //parsing json bodies
 app.use(express.urlencoded({ extended: true })); // complex parsing set true: used for json formatting
-app.use(favicon(path.join(__dirname, 'public', 'favicon.ico'))); 
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.set("view engine", "ejs"); // ejs engine setup
 app.use(express.static(__dirname + '/public'));
 app.use(express.static(__dirname + '/modules'));
@@ -60,7 +61,7 @@ app.use(session({
 
 //Passport ease of use for login and signup
 app.use(passport.initialize()); //sets up passport
-app.use(passport.session()); 
+app.use(passport.session());
 require('./modules/passport.js')(passport);
 
 mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/comp2800-a1`)
@@ -71,11 +72,11 @@ mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_ho
         console.error("Failed to connect to MongoDB:", err);
         process.exit(1);
     });
-    
+
 // Mongodb schema fetching
-const User = require('./modules/user.js'); 
+const User = require('./modules/user.js');
 const Project = require('./modules/project.js');
-const Task = require('./modules/task.js'); 
+const Task = require('./modules/task.js');
 
 function ensureAuth(req, res, next) {
     if (req.isAuthenticated()) {
@@ -122,7 +123,7 @@ module.exports = getLocationAndTimezone;
 
 /*** PAGES ***/
 app.get('/', (req, res) => {
-    res.render('main'); 
+    res.render('main');
 });
 
 /***** SIGN UP FEATURE *****/
@@ -201,7 +202,7 @@ app.post('/loggingin', (req, res, next) => {
             try {
                 // Fetch user's location and timezone
                 const { location, timezone } = await getLocationAndTimezone(req);
-               
+
                 // Retrieve the user document from the database
                 const dbUser = await User.findOne({ email: user.email });
                 if (!dbUser) {
@@ -212,7 +213,7 @@ app.post('/loggingin', (req, res, next) => {
                 dbUser.location = location;
                 dbUser.timezone = timezone;
                 await dbUser.save();
-                
+
                 //Redirect to homepage
                 return res.render('homepage', { projects: [], username: dbUser.username, location: dbUser.location, timezone: dbUser.timezone });
             } catch (error) {
@@ -229,7 +230,7 @@ app.get('/forgotPass', (req, res) => {
 });
 
 app.post('/forgotPass', async (req, res) => {
-    const {email, password} = req.body
+    const { email, password } = req.body
 
 
     const user = await User.findOne({ email: email });
@@ -263,29 +264,31 @@ app.post('/forgotPass', async (req, res) => {
 app.post('/createProjectSubmit', async (req, res) => {
     const { projectName } = req.body;
 
-    if(!projectName){
-        res.render(`errorMessage`, {error: "All fields need to be filled", backlink: "/homepage"});
+    if (!projectName) {
+        res.render(`errorMessage`, { error: "All fields need to be filled", backlink: "/homepage" });
     }
 
     try {
-        const existingProjectName = await Project.findOne({name: projectName});
-        const user = await User.findOne({email: req.user.email});
-        if(existingProjectName){
+        const existingProjectName = await Project.findOne({ name: projectName });
+        const user = await User.findOne({ email: req.user.email });
+        if (existingProjectName) {
             res.status(400)
-            return res.render("errorMessage", 
-                {error: `Project exists with name ${projectName}`, 
-                backlink: "/homepage"});
+            return res.render("errorMessage",
+                {
+                    error: `Project exists with name ${projectName}`,
+                    backlink: "/homepage"
+                });
         }
 
-        const newProject = new Project({ projectOwner: req.user._id, name: projectName, projectMembers: [req.user.email]});
+        const newProject = new Project({ projectOwner: req.user._id, name: projectName, projectMembers: [req.user.email] });
         await newProject.save();
-        
+
         await User.updateOne({ _id: user._id }, { $push: { projectList: newProject._id } });
 
         const message = "Project Created!";
         res.render('successMessage', { success: message, backlink: "/homepage" });
     } catch (dbError) {
-        res.render('errorMessage', { error: `This error is: ${dbError.message}`, backlink: "/homepage"});
+        res.render('errorMessage', { error: `This error is: ${dbError.message}`, backlink: "/homepage" });
     }
 });
 
@@ -293,46 +296,46 @@ app.post('/createProjectSubmit', async (req, res) => {
 app.post('/deleteProject', ensureAuth, async (req, res) => {
     const { projectId } = req.body;
 
-    const project = await Project.findOne({_id: new ObjectId(projectId)});
+    const project = await Project.findOne({ _id: new ObjectId(projectId) });
 
     //removes members from this project
     project.projectMembers.forEach(async member => {
         await User.updateOne(
-            {email: member},
-            {$pull: {projectList: projectId}}
+            { email: member },
+            { $pull: { projectList: projectId } }
         );
     });
 
     //Deletes task belonging to this project
     project.taskList.forEach(async task => {
-        await Task.findOneAndDelete({_id: new ObjectId(task)});
+        await Task.findOneAndDelete({ _id: new ObjectId(task) });
     })
     //finds and deletes the project with given id
-    const deletedProject = await Project.findOneAndDelete({_id: new ObjectId(projectId)});
+    const deletedProject = await Project.findOneAndDelete({ _id: new ObjectId(projectId) });
 
     //Success or error message
     if (deletedProject) {
-        res.render("successMessage", {success: "Project Deleted", backlink: "/homepage"});
+        res.render("successMessage", { success: "Project Deleted", backlink: "/homepage" });
     } else {
         console.log('Project not found');
-        res.render("errorMessage", {error: "Project could not be deleted", backlink: "/homepage"});
+        res.render("errorMessage", { error: "Project could not be deleted", backlink: "/homepage" });
     }
 })
 
 /***** MEMBER ADDITION  *****/
 app.get('/addMembersPage', ensureAuth, async (req, res) => {
     const projectId = req.query.projectId;
-    const project = await Project.findOne({_id: new ObjectId(projectId)});
+    const project = await Project.findOne({ _id: new ObjectId(projectId) });
 
     res.render("addMembersPage", { project: project });
 });
 
 //adding member function
 app.post('/addMembersPageSubmit', async (req, res) => {
-    const {memberEmail, projectId} = req.body;
+    const { memberEmail, projectId } = req.body;
     try {
         const projectID = new ObjectId(projectId)
-        const project = await Project.findById({_id: projectID});
+        const project = await Project.findById({ _id: projectID });
         //Checks if project exists
         if (!project) {
             return res.render("errorMessage", { error: "Project not found", backlink: "/homepage" });
@@ -342,10 +345,10 @@ app.post('/addMembersPageSubmit', async (req, res) => {
         const member = await User.findOne({ email: memberEmail });
         if (!member) {
             return res.render("errorMessage", { error: "Member does not exist", backlink: "/homepage" });
-        }   
+        }
 
         //checks if member added already
-        if(project.projectMembers.includes(member.email)){
+        if (project.projectMembers.includes(member.email)) {
             return res.render("errorMessage", { error: "Member already added", backlink: "/homepage" });
         }
 
@@ -355,13 +358,13 @@ app.post('/addMembersPageSubmit', async (req, res) => {
         );
         await project.save();
 
-            // before updating user list
+        // before updating user list
         console.log(`Before adding the member to the project list: ${member.projectList}`);
 
         //adding the project id to members list
         await User.updateOne(
-            {email: memberEmail},
-            {$addToSet: {projectList: projectID}}
+            { email: memberEmail },
+            { $addToSet: { projectList: projectID } }
         );
 
         //error checking to see if update worked
@@ -386,8 +389,8 @@ app.post('/deleteMember', async (req, res) => {
         );
 
         const memberResult = await User.updateOne(
-            {email: memberEmail},
-            {$pull: {projectList: projectId}}
+            { email: memberEmail },
+            { $pull: { projectList: projectId } }
         )
 
         if (result.modifiedCount === 1 && memberResult.modifiedCount === 1) {
@@ -408,12 +411,12 @@ app.get('/homepage', ensureAuth, async (req, res) => {
     const projectPromises = user.projectList.map(projectId => Project.findById(projectId));
     const pList = await Promise.all(projectPromises);
 
-    res.render("homepage", {projects: pList, username: req.user.username, createProject: false});
+    res.render("homepage", { projects: pList, username: req.user.username, createProject: false });
 });
 
 /***** PROFILE ROUTES *****/
-app.get('/profile', ensureAuth, async(req, res) => {
-        res.render('profile', {userinfo: req.user});
+app.get('/profile', ensureAuth, async (req, res) => {
+    res.render('profile', { userinfo: req.user });
 });
 
 //handle profile update
@@ -454,10 +457,10 @@ async function fetchProjectTasks(projectId, userId) {
 
         // find all the tasks that meet the same taskId get from project.taskList and the userId get from passin parameter
         const accessibleTasks = await Task.find({ _id: { $in: taskList }, taskMembers: userId });
-        
+
         // get the time zone info stored in accessible tasks
-        const accessibleTaskDatas  = await enrichTaskData(accessibleTasks);
-        
+        const accessibleTaskDatas = await enrichTaskData(accessibleTasks);
+
         return accessibleTaskDatas;
     } catch (error) {
         console.error('Error fetching project tasks:', error);
@@ -478,7 +481,7 @@ async function getUserTimeZone(userId) {
         };
     } catch (error) {
         console.error('Error fetching user timezone:', error);
-        return null; 
+        return null;
     }
 }
 
@@ -490,7 +493,7 @@ async function enrichTaskData(tasks) {
         const taskOwnerData = await getUserTimeZone(task.taskOwner);
         const taskMembersData = await Promise.all(task.taskMembers.map(async memberId => {
             const memberData = await getUserTimeZone(memberId);
-            return { _id: memberId, ...memberData }; 
+            return { _id: memberId, ...memberData };
         }));
 
         const enrichedTask = {
@@ -527,15 +530,15 @@ app.get('/taskPage', ensureAuth, async (req, res) => {
         const projectId = req.query.projectId;
         const userId = req.user._id;
 
-        if(projectId){
-            try{
+        if (projectId) {
+            try {
                 const tasksData = await fetchProjectTasks(projectId, userId);
                 res.render('taskPage', {
-                    authenticated: req.isAuthenticated(), 
+                    authenticated: req.isAuthenticated(),
                     userId: userId.toString(),
                     username: req.user.username,
                     isTaskPage: true,
-                    projectId: projectId, 
+                    projectId: projectId,
                     tasksData: tasksData
                 });
             } catch (error) {
@@ -543,12 +546,12 @@ app.get('/taskPage', ensureAuth, async (req, res) => {
                 res.status(500).send('Internal Server Error');
             }
         } else {
-            res.render('taskPage', { 
-                authenticated: req.isAuthenticated(), 
+            res.render('taskPage', {
+                authenticated: req.isAuthenticated(),
                 userId: userId,
                 username: req.user.username,
                 isTaskPage: true,
-                projectId: "" 
+                projectId: ""
             });
         }
     } else {
@@ -563,7 +566,7 @@ app.get('/getCurrentUserId', (req, res) => {
 });
 
 // Get a list of project names of users to put into navbar
-app.get('/getUserProjectList', ensureAuth,  async (req, res) => {
+app.get('/getUserProjectList', ensureAuth, async (req, res) => {
     try {
         const userId = req.user._id;
 
@@ -639,7 +642,7 @@ app.get('/getProjectTasks', ensureAuth, async (req, res) => {
     }
 });
 
-app.get('/getProjectMembers', ensureAuth,  async (req, res) => {
+app.get('/getProjectMembers', ensureAuth, async (req, res) => {
     try {
         const projectId = req.query.projectId;
 
@@ -652,7 +655,7 @@ app.get('/getProjectMembers', ensureAuth,  async (req, res) => {
 
         // const memberIds = project.projectMembers.map(member => member._id);
         // const users = await User.find({ _id: { $in: memberIds } });
-        
+
         const memberEmails = project.projectMembers;
         const users = await User.find({ email: { $in: memberEmails } });
 
@@ -672,10 +675,10 @@ app.get('/getProjectMembers', ensureAuth,  async (req, res) => {
 // Add tasks, get data from users and insert to mongoDB
 app.post('/addTask', async (req, res) => {
     const userId = req.user._id;
-    try{
+    try {
         // Extract data from the request body
         const { title, description, startDate, startTime, dueDate, dueTime, reminderDatetime, selectedTaskMembers, projectId } = req.body;
-        
+
         // Determine the value of the reminder field based on the value of reminderDatetime
         const reminder = reminderDatetime ? reminderDatetime : 'none';
 
@@ -689,14 +692,6 @@ app.post('/addTask', async (req, res) => {
                 // Handle the error or set a default value
                 taskMembers = [];
             }
-        }
-
-        // Check if the current user's ID already exists in taskMembers array
-        if (!taskMembers.includes(userId)) {
-            // Add the current user's ID to taskMembers array
-            taskMembers.push(userId);
-        } else {
-            console.log('Current user already exists in taskMembers array');
         }
 
         // Create a new document object with the extracted data
@@ -718,6 +713,10 @@ app.post('/addTask', async (req, res) => {
 
         // Insert the task id with string type
         const taskId = savedTask._id.toString();
+        console.log("TESTS");
+        console.log(req.user._id);
+        console.log(projectId);
+        console.log(taskId);
 
         await Project.findByIdAndUpdate(
             projectId,
@@ -725,11 +724,11 @@ app.post('/addTask', async (req, res) => {
         );
 
         res.redirect(`/taskPage?projectId=${projectId}`);
-    } catch(err){
+    } catch (err) {
         console.error('Error adding task: ', err);
         res.status(500).send('Error adding task')
     }
-        
+
 });
 
 // delete the task by taskId
@@ -752,6 +751,55 @@ app.delete('/deleteTask/:taskId', async (req, res) => {
     }
 });
 
+// Add tasks, get data from users and insert to mongoDB
+app.post('/addTaskCalendar', async (req, res) => {
+    const userId = req.user._id;
+    try {
+        // Extract data from the request body
+        const { title, description, startDate, startTime, dueDate, dueTime, reminderDatetime, selectedTaskMembers, projectId } = req.body;
+
+        // Determine the value of the reminder field based on the value of reminderDatetime
+        const reminder = reminderDatetime ? reminderDatetime : 'none';
+
+        // Parse the selectedMembers from JSON string to an array
+        const taskMembers = JSON.parse(selectedTaskMembers);
+
+        // Create a new document object with the extracted data
+        const newTask = new Task({
+            title,
+            description,
+            startDate,
+            startTime,
+            dueDate,
+            dueTime,
+            reminder,
+            taskOwner: userId,
+            taskMembers
+            // Add other fields as needed
+        });
+
+        // Insert the new document into the MongoDB tasks collection
+        const savedTask = await newTask.save();
+
+        // Insert the task id with string type
+        const taskId = savedTask._id.toString();
+        console.log("TESTS");
+        console.log(req.user._id);
+        console.log(projectId);
+        console.log(taskId);
+
+        await Project.findByIdAndUpdate(
+            projectId,
+            { $push: { taskList: taskId } }
+        );
+
+        res.redirect(`/calendarPage?projectId=${projectId}`);
+    } catch (err) {
+        console.error('Error adding task: ', err);
+        res.status(500).send('Error adding task')
+    }
+
+});
 
 // get user data based on their id for showing user name on task card
 app.get('/getUserById/:userId', ensureAuth, async (req, res) => {
@@ -775,9 +823,9 @@ app.put('/updateTaskStatus/:id', ensureAuth, async (req, res) => {
         const { status } = req.body;
 
         const task = await Task.findByIdAndUpdate(
-            taskId, 
-            { status }, 
-            { new: true } 
+            taskId,
+            { status },
+            { new: true }
         );
 
         if (!task) {
@@ -925,9 +973,9 @@ app.get("/timelineData", ensureAuth, async (req, res) => {
         }
 
         // const userId = req.user._id;
-        try{
+        try {
             // Fetch the project by ID
-            const project = await Project.findOne({_id: new ObjectId(projectId)});
+            const project = await Project.findOne({ _id: new ObjectId(projectId) });
 
             // Check if the project exists
             if (!project) {
@@ -935,14 +983,14 @@ app.get("/timelineData", ensureAuth, async (req, res) => {
             }
 
             // Fetch all tasks in parallel
-            const tasks = await Promise.all(project.taskList.map(async taskId => await Task.findOne({_id: new ObjectId(taskId)})));
+            const tasks = await Promise.all(project.taskList.map(async taskId => await Task.findOne({ _id: new ObjectId(taskId) })));
             // Extract necessary fields
             const taskData = await Promise.all(tasks.map(task => ({
-                    id: task._id.toString(),
-                    name: task.title,
-                    actualStart: task.startDate.toISOString().split('T')[0],
-                    actualEnd: task.dueDate.toISOString().split('T')[0]
-                })
+                id: task._id.toString(),
+                name: task.title,
+                actualStart: task.startDate.toISOString().split('T')[0],
+                actualEnd: task.dueDate.toISOString().split('T')[0]
+            })
             ));
 
             // Log the taskData to verify
@@ -962,24 +1010,24 @@ app.get('/timelinePage', ensureAuth, async (req, res) => {
     if (req.isAuthenticated()) {
         const projectId = req.query.projectId;
 
-        if(projectId){
-            try{
+        if (projectId) {
+            try {
                 res.render('timelinePage', {
-                    authenticated: req.isAuthenticated(), 
+                    authenticated: req.isAuthenticated(),
                     username: req.user.username,
                     isTaskPage: false,
-                    projectId: projectId 
+                    projectId: projectId
                 });
             } catch (error) {
                 console.error('Error occurred: ', error);
                 res.status(500).send('Internal Server Error');
             }
         } else {
-            res.render('timelinePage', { 
-                authenticated: req.isAuthenticated(), 
+            res.render('timelinePage', {
+                authenticated: req.isAuthenticated(),
                 username: req.user.username,
                 isTaskPage: false,
-                projectId: "" 
+                projectId: ""
             });
         }
     } else {
@@ -1003,7 +1051,7 @@ app.get('/getUserTimezone', ensureAuth, async (req, res) => {
         try {
             const userId = req.user._id;
             const userTimeZone = await getUserTimeZone(userId);
-            
+
             if (userTimeZone) {
                 res.json({ userTimezone: userTimeZone.timezone });
             } else {
@@ -1035,16 +1083,16 @@ app.get('/getOneTaskDetails', async (req, res) => {
 // Calendar page route
 app.get('/calendarPage', ensureAuth, async (req, res) => {
     const projectId = req.query.projectId;
+    const userId = req.user._id;
     // Fetch calendar data or other data using projectId
     // const calendarData = await fetchProjectCalendar(projectId, req.user._id);
     res.render('calendarPage', {
-        authenticated: req.isAuthenticated(), 
+        authenticated: req.isAuthenticated(),
         username: req.user.username,
-        projectId: projectId
-        // calendarData: calendarData
+        projectId: projectId,
+        userId: userId
     });
 });
-
 
 /* Easter Egg START */
 app.get('/easterEgg', ensureAuth, (req, res) => {
@@ -1074,4 +1122,4 @@ app.get('*', (req, res) => {
 /**** END OF PAGES ****/
 app.listen(port, () => {
     console.log(`SyncPro node application listening on port ${port}`);
-}); 
+});
