@@ -78,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        editable: true,
         headerToolbar: { // buttons for switching between views
             left: 'dayGridMonth,timeGridWeek',
             center: 'title',
@@ -89,14 +88,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 titleFormat: { year: 'numeric', month: 'long' }
                 // other view-specific options here
             }
-        },
-
-        select: function (start, end, jsEvent, view) {
-            console.log('select', start, end, jsEvent, view);
-        },
-
-        dateClick: function (info) {
-            alert('Date: ' + info.dateStr);
         },
 
         eventClick: function (info) {
@@ -144,7 +135,6 @@ function submit(tasksData, projectId) {
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        editable: true,
         headerToolbar: { // buttons for switching between views
             left: 'dayGridMonth,timeGridWeek',
             center: 'title',
@@ -155,14 +145,6 @@ function submit(tasksData, projectId) {
                 titleFormat: { year: 'numeric', month: 'long' }
                 // other view-specific options here
             }
-        },
-
-        select: function (start, end, jsEvent, view) {
-            console.log('select', start, end, jsEvent, view);
-        },
-
-        dateClick: function (info) {
-            alert('Date: ' + info.dateStr);
         },
 
         eventClick: function (info) {

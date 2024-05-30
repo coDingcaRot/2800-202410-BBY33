@@ -17,6 +17,16 @@
     border-radius: 50%;
 }
 
+.modal-content {
+    height: auto;
+    overflow-y: auto;
+    position: relative;
+}
+
+.footer {
+    z-index: 5;
+}
+
 /* CSS for the sliding up Task Form */
 .task-form {
     display: none;

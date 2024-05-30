@@ -219,16 +219,6 @@ app.post('/forgotPass', async (req, res) => {
 
 /************************************************* AUTHENTICATED PAGES *************************************************/
 
-//Calendar page
-app.get('/calendar', (req, res) => {
-    // console.log(selectedProjectId);
-    res.render('calendar', {
-        authenticated: req.isAuthenticated(),
-        username: req.user.username,
-        isTaskPage: true,
-    });
-});
-
 /***** PROJECT CREATION *****/
 //create project page
 // app.post('/createProject', ensureAuth, (req, res) => {
@@ -283,7 +273,7 @@ app.post('/deleteProject', ensureAuth, async (req, res) => {
 
     //Deletes task belonging to this project
     project.taskList.forEach(async task => {
-        await Task.findOneAndDelete({_id: new ObjectId(task)});
+        await Task.findOneAndDelete({ _id: new ObjectId(task) });
     })
     //finds and deletes the project with given id
     const deletedProject = await Project.findOneAndDelete({ _id: new ObjectId(projectId) });
@@ -333,13 +323,13 @@ app.post('/addMembersPageSubmit', async (req, res) => {
         );
         await project.save();
 
-            // before updating user list
+        // before updating user list
         console.log(`Before adding the member to the project list: ${member.projectList}`);
 
         //adding the project id to members list
         await User.updateOne(
-            {email: memberEmail},
-            {$addToSet: {projectList: projectID}}
+            { email: memberEmail },
+            { $addToSet: { projectList: projectID } }
         );
 
         //error checking to see if update worked
@@ -386,12 +376,12 @@ app.get('/homepage', ensureAuth, async (req, res) => {
     const projectPromises = user.projectList.map(projectId => Project.findById(projectId));
     const pList = await Promise.all(projectPromises);
 
-    res.render("homepage", {projects: pList, username: req.user.username, createProject: false});
+    res.render("homepage", { projects: pList, username: req.user.username, createProject: false });
 });
 
 /***** PROFILE ROUTES *****/
-app.get('/profile', ensureAuth, async(req, res) => {
-        res.render('profile', {userinfo: req.user});
+app.get('/profile', ensureAuth, async (req, res) => {
+    res.render('profile', { userinfo: req.user });
 });
 
 //handle profile update
@@ -768,7 +758,7 @@ app.post('/addTaskCalendar', async (req, res) => {
             { $push: { taskList: taskId } }
         );
 
-        res.redirect(`/calendar?projectId=${projectId}`);
+        res.redirect(`/calendarPage?projectId=${projectId}`);
     } catch (err) {
         console.error('Error adding task: ', err);
         res.status(500).send('Error adding task')
@@ -948,9 +938,9 @@ app.get("/timelineData", ensureAuth, async (req, res) => {
         }
 
         // const userId = req.user._id;
-        try{
+        try {
             // Fetch the project by ID
-            const project = await Project.findOne({_id: new ObjectId(projectId)});
+            const project = await Project.findOne({ _id: new ObjectId(projectId) });
 
             // Check if the project exists
             if (!project) {
@@ -958,14 +948,14 @@ app.get("/timelineData", ensureAuth, async (req, res) => {
             }
 
             // Fetch all tasks in parallel
-            const tasks = await Promise.all(project.taskList.map(async taskId => await Task.findOne({_id: new ObjectId(taskId)})));
+            const tasks = await Promise.all(project.taskList.map(async taskId => await Task.findOne({ _id: new ObjectId(taskId) })));
             // Extract necessary fields
             const taskData = await Promise.all(tasks.map(task => ({
-                    id: task._id.toString(),
-                    name: task.title,
-                    actualStart: task.startDate.toISOString().split('T')[0],
-                    actualEnd: task.dueDate.toISOString().split('T')[0]
-                })
+                id: task._id.toString(),
+                name: task.title,
+                actualStart: task.startDate.toISOString().split('T')[0],
+                actualEnd: task.dueDate.toISOString().split('T')[0]
+            })
             ));
 
             // Log the taskData to verify
@@ -985,24 +975,24 @@ app.get('/timelinePage', ensureAuth, async (req, res) => {
     if (req.isAuthenticated()) {
         const projectId = req.query.projectId;
 
-        if(projectId){
-            try{
+        if (projectId) {
+            try {
                 res.render('timelinePage', {
-                    authenticated: req.isAuthenticated(), 
+                    authenticated: req.isAuthenticated(),
                     username: req.user.username,
                     isTaskPage: false,
-                    projectId: projectId 
+                    projectId: projectId
                 });
             } catch (error) {
                 console.error('Error occurred: ', error);
                 res.status(500).send('Internal Server Error');
             }
         } else {
-            res.render('timelinePage', { 
-                authenticated: req.isAuthenticated(), 
+            res.render('timelinePage', {
+                authenticated: req.isAuthenticated(),
                 username: req.user.username,
                 isTaskPage: false,
-                projectId: "" 
+                projectId: ""
             });
         }
     } else {
@@ -1026,7 +1016,7 @@ app.get('/getUserTimezone', ensureAuth, async (req, res) => {
         try {
             const userId = req.user._id;
             const userTimeZone = await getUserTimeZone(userId);
-            
+
             if (userTimeZone) {
                 res.json({ userTimezone: userTimeZone.timezone });
             } else {
@@ -1061,10 +1051,20 @@ app.get('/calendarPage', ensureAuth, async (req, res) => {
     // Fetch calendar data or other data using projectId
     // const calendarData = await fetchProjectCalendar(projectId, req.user._id);
     res.render('calendarPage', {
-        authenticated: req.isAuthenticated(), 
+        authenticated: req.isAuthenticated(),
         username: req.user.username,
         projectId: projectId
         // calendarData: calendarData
+    });
+});
+
+//Calendar page
+app.get('/calendar', (req, res) => {
+    // console.log(selectedProjectId);
+    res.render('calendar', {
+        authenticated: req.isAuthenticated(),
+        username: req.user.username,
+        isTaskPage: true,
     });
 });
 
