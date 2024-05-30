@@ -128,14 +128,12 @@ li {
   margin-bottom: 3%;
 }
 
-.task-card-title{
-  display: inline-block;
-  max-width: 240px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 17px;
-  vertical-align: middle;
+.task-card-title {
+  display: inline-block;  
+  overflow-x: auto;       
+  white-space: nowrap;    
+  max-width: 240px;   
+  -webkit-overflow-scrolling: touch; 
 }
 
 .task-card-member-wrapper {
