@@ -128,40 +128,7 @@ app.post('/signupSubmit', async (req, res) => {
     }
 });
 
-
-/***** INITIALIZE TIMEZONE *****/
-// app.get('/initializeTimezone', async (req, res) => {
-//     let clientIp = requestIp.getClientIp(req); // Use requestIp to get the client IP
-//     console.log(`Initial Detected IP: ${clientIp}`);
-
-//     if (req.headers['x-forwarded-for']) {
-//         const forwardedIps = req.headers['x-forwarded-for'].split(',');
-//         clientIp = forwardedIps[0];
-//         // console.log(`Forwarded IP: ${clientIp}`);
-//     }
-
-//     let location = "Localhost";
-//     let timezone = "Local Timezone";
-
-//     try {
-//         const response = await axios.get(`https://ipinfo.io/${clientIp}?token=${process.env.IPINFO_TOKEN}`);
-//         // console.log('IPInfo Response:', response.data);
-
-//         const city = response.data.city || 'Unknown';
-//         const region = response.data.region || 'Unknown';
-//         const country = response.data.country || 'Unknown';
-//         timezone = response.data.timezone || 'Unknown';
-
-//         location = `${city}, ${region}, ${country}`;
-//     } catch (error) {
-//         console.error("Failed to fetch location:", error.response ? error.response.data : error.message);
-//         location = "Unknown";
-//         timezone = "Unknown";
-//     }
-
-//     res.render('initializeTimezone', { location, timezone, page: "/initializeTimezone", backlink: "/signup" });
-// });
-
+//Gets user timezone
 app.post('/initializeTimezone', async (req, res) => {
     let clientIp = requestIp.getClientIp(req);
     console.log(`Initial Detected IP: ${clientIp}`);
@@ -264,9 +231,9 @@ app.get('/calendar', (req, res) => {
 
 /***** PROJECT CREATION *****/
 //create project page
-app.get('/createProject', ensureAuth, (req, res) => {
-    res.render("createProject");
-})
+// app.post('/createProject', ensureAuth, (req, res) => {
+//     res.render("homepage", {createProject: true});
+// })
 
 //create project funx
 app.post('/createProjectSubmit', async (req, res) => {
@@ -294,7 +261,7 @@ app.post('/createProjectSubmit', async (req, res) => {
         await User.updateOne({ _id: user._id }, { $push: { projectList: newProject._id } });
 
         const message = "Project Created!";
-        res.render('projectCreated', { message: message });
+        res.render('successMessage', { success: message, backlink: "/homepage" });
     } catch (dbError) {
         res.render('errorMessage', { error: `This error is: ${dbError.message}`, backlink: "/homepage" });
     }
@@ -306,6 +273,7 @@ app.post('/deleteProject', ensureAuth, async (req, res) => {
 
     const project = await Project.findOne({ _id: new ObjectId(projectId) });
 
+    //removes members from this project
     project.projectMembers.forEach(async member => {
         await User.updateOne(
             { email: member },
@@ -313,6 +281,10 @@ app.post('/deleteProject', ensureAuth, async (req, res) => {
         );
     });
 
+    //Deletes task belonging to this project
+    project.taskList.forEach(async task => {
+        await Task.findOneAndDelete({_id: new ObjectId(task)});
+    })
     //finds and deletes the project with given id
     const deletedProject = await Project.findOneAndDelete({ _id: new ObjectId(projectId) });
 
@@ -361,19 +333,27 @@ app.post('/addMembersPageSubmit', async (req, res) => {
         );
         await project.save();
 
-        //adding the project id to members list
-        await member.updateOne({ projectList: projectID });
+            // before updating user list
+        console.log(`Before adding the member to the project list: ${member.projectList}`);
 
+        //adding the project id to members list
+        await User.updateOne(
+            {email: memberEmail},
+            {$addToSet: {projectList: projectID}}
+        );
+
+        //error checking to see if update worked
+        const updatedMember = await User.findOne({ email: memberEmail });
+        console.log(`After adding member to project: ${updatedMember.projectList}`);
 
         res.render("successMessage", { success: "Member added successfully", backlink: "/homepage" });
-
     } catch (error) {
         // console.error("Error adding member to project:", error);
         res.render("errorMessage", { error: error, backlink: "/homepage" });
     }
 });
 
-//deletes a member
+//deletes a 
 app.post('/deleteMember', async (req, res) => {
     const { projectId, memberEmail } = req.body;
     try {
@@ -401,22 +381,17 @@ app.post('/deleteMember', async (req, res) => {
 /***** HOMEPAGE *****/
 app.get('/homepage', ensureAuth, async (req, res) => {
     const user = await User.findOne({ email: req.user.email });
+
     // Fetch all projects in the projectList
     const projectPromises = user.projectList.map(projectId => Project.findById(projectId));
     const pList = await Promise.all(projectPromises);
 
-    console.log(pList)
-    console.log(`pList.length: ${pList.length}`)
-    res.render("homepage", { projects: pList, username: req.user.username });
+    res.render("homepage", {projects: pList, username: req.user.username, createProject: false});
 });
 
 /***** PROFILE ROUTES *****/
-app.get('/profile', ensureAuth, async (req, res) => {
-    // const email = req.User.email;
-    // const name = req.User.username;
-    console.log(req.user)
-    // console.log('User info:', userinfo);  // Add this line to log userinfo
-    res.render('profile', { userinfo: req.user });
+app.get('/profile', ensureAuth, async(req, res) => {
+        res.render('profile', {userinfo: req.user});
 });
 
 //handle profile update
@@ -611,7 +586,7 @@ app.get('/getProjectName', ensureAuth, async (req, res) => {
         }
     } catch (error) {
         console.error('Error fetching project name:', error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: "ProjectId is null" });
     }
 });
 
@@ -682,8 +657,17 @@ app.post('/addTask', async (req, res) => {
         // Determine the value of the reminder field based on the value of reminderDatetime
         const reminder = reminderDatetime ? reminderDatetime : 'none';
 
-        // Parse the selectedMembers from JSON string to an array
-        const taskMembers = JSON.parse(selectedTaskMembers);
+        let taskMembers = [];
+        // Check if selectedTaskMembers is provided and is a valid JSON string
+        if (selectedTaskMembers) {
+            try {
+                taskMembers = JSON.parse(selectedTaskMembers);
+            } catch (parseError) {
+                console.log('Error parsing selectedTaskMembers:', parseError);
+                // Handle the error or set a default value
+                taskMembers = [];
+            }
+        }
 
         // Create a new document object with the extracted data
         const newTask = new Task({
@@ -862,7 +846,6 @@ app.post('/updateCompletedMembers/:taskId', async (req, res) => {
     }
 });
 
-
 // update the completed members of the specific task - remove user to completedMembers array when unchecked
 app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
     const taskId = req.params.taskId;
@@ -888,6 +871,203 @@ app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
     }
 });
 /* TaskPage END */
+
+
+/* TimelinePage START */
+/* functions */
+async function getProjectMembersInfo(projectId) {
+    try {
+        const project = await Project.findById(projectId);
+        if (!project) {
+            throw new Error('Project not found');
+        }
+
+        const memberEmails = project.projectMembers;
+        const users = await User.find({ email: { $in: memberEmails } });
+
+        return users.map(user => ({
+            _id: user._id.toString(), // return as string type
+            username: user.username,
+            email: user.email,
+            location: user.location,
+            timezone: user.timezone
+        }));
+    } catch (error) {
+        throw new Error('Error fetching project members: ' + error.message);
+    }
+}
+
+async function getOneTaskDetails(taskId) {
+    try {
+        // Find the task by taskId
+        const taskInfo = await Task.findById(taskId);
+
+        if (!taskInfo) {
+            throw new Error('Task not found');
+        }
+
+        // Get info of taskOwner
+        const taskOwnerInfo = await getUserTimeZone(taskInfo.taskOwner);
+
+        // Get taskMembers details
+        const taskMembersInfo = await Promise.all(taskInfo.taskMembers.map(memberId => getUserTimeZone(memberId)));
+
+        // Construct task detail info
+        const taskDetail = {
+            title: taskInfo.title,
+            description: taskInfo.description,
+            startDate: taskInfo.startDate,
+            startTime: taskInfo.startTime,
+            dueDate: taskInfo.dueDate,
+            dueTime: taskInfo.dueTime,
+            taskOwner: {
+                username: taskOwnerInfo.username,
+                timezone: taskOwnerInfo.timezone
+            },
+            taskMembers: taskMembersInfo.map(memberInfo => ({
+                username: memberInfo.username,
+                timezone: memberInfo.timezone
+            }))
+        };
+        console.log(taskDetail);
+
+        return taskDetail;
+    } catch (error) {
+        throw new Error('Error getting task details: ' + error.message);
+    }
+}
+
+// get the task data from chart in timeline page
+app.get("/timelineData", ensureAuth, async (req, res) => {
+    if (req.isAuthenticated()) {
+        const projectId = req.query.projectId;
+
+        // Check if projectId is null
+        if (!projectId) {
+            return res.status(400).send('Project ID is required');
+        }
+
+        // const userId = req.user._id;
+        try{
+            // Fetch the project by ID
+            const project = await Project.findOne({_id: new ObjectId(projectId)});
+
+            // Check if the project exists
+            if (!project) {
+                return res.status(404).send('Project not found');
+            }
+
+            // Fetch all tasks in parallel
+            const tasks = await Promise.all(project.taskList.map(async taskId => await Task.findOne({_id: new ObjectId(taskId)})));
+            // Extract necessary fields
+            const taskData = await Promise.all(tasks.map(task => ({
+                    id: task._id.toString(),
+                    name: task.title,
+                    actualStart: task.startDate.toISOString().split('T')[0],
+                    actualEnd: task.dueDate.toISOString().split('T')[0]
+                })
+            ));
+
+            // Log the taskData to verify
+            console.log(taskData);
+            res.json(taskData);
+        } catch (error) {
+            console.error('Error occurred: ', error);
+            res.status(500).send('Internal Server Error');
+        }
+    } else {
+        res.redirect('/homepage');
+    }
+})
+
+
+app.get('/timelinePage', ensureAuth, async (req, res) => {
+    if (req.isAuthenticated()) {
+        const projectId = req.query.projectId;
+
+        if(projectId){
+            try{
+                res.render('timelinePage', {
+                    authenticated: req.isAuthenticated(), 
+                    username: req.user.username,
+                    isTaskPage: false,
+                    projectId: projectId 
+                });
+            } catch (error) {
+                console.error('Error occurred: ', error);
+                res.status(500).send('Internal Server Error');
+            }
+        } else {
+            res.render('timelinePage', { 
+                authenticated: req.isAuthenticated(), 
+                username: req.user.username,
+                isTaskPage: false,
+                projectId: "" 
+            });
+        }
+    } else {
+        res.redirect('/homepage');
+    }
+});
+
+app.get('/getProjectMembersInfo', async (req, res) => {
+    try {
+        const projectId = req.query.projectId;
+        const membersInfo = await getProjectMembersInfo(projectId);
+        res.json(membersInfo);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+app.get('/getUserTimezone', ensureAuth, async (req, res) => {
+    if (req.isAuthenticated()) {
+        try {
+            const userId = req.user._id;
+            const userTimeZone = await getUserTimeZone(userId);
+            
+            if (userTimeZone) {
+                res.json({ userTimezone: userTimeZone.timezone });
+            } else {
+                res.status(404).json({ message: "Timezone not found" });
+            }
+        } catch (error) {
+            console.error('Error fetching timezone:', error);
+            res.status(500).json({ message: "Internal server error" });
+        }
+    }
+});
+
+
+app.get('/getOneTaskDetails', async (req, res) => {
+    try {
+        const taskId = req.query.taskId;
+        const taskInfo = await getOneTaskDetails(taskId);
+        res.json(taskInfo);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+
+/* TimelinePage END */
+
+/*****CALENDAR ****/
+// Calendar page route
+app.get('/calendarPage', ensureAuth, async (req, res) => {
+    const projectId = req.query.projectId;
+    // Fetch calendar data or other data using projectId
+    // const calendarData = await fetchProjectCalendar(projectId, req.user._id);
+    res.render('calendarPage', {
+        authenticated: req.isAuthenticated(), 
+        username: req.user.username,
+        projectId: projectId
+        // calendarData: calendarData
+    });
+});
+
 
 /* Easter Egg START */
 app.get('/easterEgg', ensureAuth, (req, res) => {

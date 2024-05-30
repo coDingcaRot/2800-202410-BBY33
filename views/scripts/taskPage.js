@@ -4,14 +4,14 @@ function fetchAndShowTasksData(projectId) {
         fetch(`/getProjectTasks?projectId=${projectId}`).then(response => response.json()),
         fetch(`/getProjectName?projectId=${projectId}`).then(response => response.json())
     ])
-        .then(([tasksData, project]) => {
-            showTodo(tasksData, 'all'); // Default to 'all' tab when loading tasks
-            const navbarBrand = document.getElementById('navbarDropdown');
-            if (project && project.projectName) {
-                navbarBrand.textContent = project.projectName;
-            }
-        })
-        .catch(error => console.error('Error fetching project data:', error));
+    .then(([tasksData, project]) => {
+        showTodo(tasksData, 'all'); // Default to 'all' tab when loading tasks
+        const navbarBrand = document.getElementById('navbarDropdown');
+        if (project && project.projectName) {
+            navbarBrand.textContent = project.projectName;
+        }
+    })
+    .catch(error => console.error('Error fetching project data:', error));
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -24,13 +24,13 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 const projectListDiv = document.getElementById('projectListDropdown');
-projectListDiv.addEventListener('change', function (event) {
+projectListDiv.addEventListener('change', function(event) {
     if (event.target.matches('input[name="listGroupRadios"]')) {
         const selectedProjectId = event.target.value;
         const url = new URL(window.location.href);
         url.searchParams.set('projectId', selectedProjectId);
         history.pushState(null, '', url);
-        fetchAndShowTasksData(selectedProjectId);
+        fetchAndShowTasksData(selectedProjectId); 
     }
 });
 
@@ -79,7 +79,7 @@ async function convertToUserTimezone(todo) {
         // if current user has the same time zone as task owner return original data
         if (memberTimezone === taskOwnerTimezone) {
             console.log("No timezone conversion needed.");
-            console.log("no convert:", todo.dueDate);
+            console.log("no convert:",todo.dueDate);
             return {
                 startDate: formatDate(todo.startDate),
                 startTime: formatTime(todo.startTime),
@@ -113,8 +113,8 @@ async function showTodo(tasksData, tabType) {
         for (const todo of tasksData) {
             const isChecked = localStorage.getItem(todo._id) === "true";
             if (
-                (tabType === "all") ||
-                (tabType === "pending" && !isChecked) ||
+                (tabType === "all") || 
+                (tabType === "pending" && !isChecked) || 
                 (tabType === "completed" && isChecked)
             ) {
                 let convertedTimeDate = convertToUserTimezone(todo);
@@ -134,10 +134,10 @@ async function showTodo(tasksData, tabType) {
                                                     <polyline points="1 5 4 8 11 1"></polyline>
                                                     </svg>
                                                 </span>
-                                                <span>${todo.title}</span>
+                                                    <span class="task-card-title">${todo.title}</span>
                                             </label>
                                             <button class="taskcard-delete-btn" id="taskcard-delete-btn">
-                                                <svg viewBox="0 0 15 17.5" height="13.5" width="11" xmlns="http://www.w3.org/2000/svg" class="icon">
+                                                <svg viewBox="0 0 15 17.5" height="15.5" width="13" xmlns="http://www.w3.org/2000/svg" class="icon">
                                                 <path transform="translate(-2.5 -1.25)" d="M15,18.75H5A1.251,1.251,0,0,1,3.75,17.5V5H2.5V3.75h15V5H16.25V17.5A1.251,1.251,0,0,1,15,18.75ZM5,5V17.5H15V5Zm7.5,10H11.25V7.5H12.5V15ZM8.75,15H7.5V7.5H8.75V15ZM12.5,2.5h-5V1.25h5V2.5Z" id="Fill"></path>
                                                 </svg>
                                             </button>
@@ -172,7 +172,7 @@ async function showTodo(tasksData, tabType) {
         : taskBox.classList.remove("overflow");
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {   
     const filters = document.querySelectorAll(".filters span");
 
     filters.forEach((btn) => {
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.querySelector("span.active").classList.remove("active");
             btn.classList.add("active");
             const urlParams = new URLSearchParams(window.location.search);
-            const projectId = urlParams.get('projectId');
+            const projectId = urlParams.get('projectId'); 
             const tabType = btn.textContent.trim().toLowerCase();
             fetch(`/getProjectTasks?projectId=${projectId}`)
                 .then(response => response.json())
@@ -237,19 +237,19 @@ function handleCheckboxChange(taskId) {
             'Content-Type': 'application/json'
         }
     })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(isChecked ? 'Failed to update completed members' : 'Failed to remove user from completed members');
-            }
-            // add other actions if needed
-        })
-        .catch(error => {
-            console.error(`Error ${isChecked ? 'updating' : 'removing'} completed members:`, error);
-        });
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(isChecked ? 'Failed to update completed members' : 'Failed to remove user from completed members');
+        }
+        // add other actions if needed
+    })
+    .catch(error => {
+        console.error(`Error ${isChecked ? 'updating' : 'removing'} completed members:`, error);
+    });
 }
 
 // handle the task-card delete button
-document.addEventListener('click', async function (event) {
+document.addEventListener('click', async function(event) {
     if (event.target.matches('.taskcard-delete-btn')) {
         const taskId = event.target.closest('.task-card').id.replace('task-item-', '');
         try {
@@ -258,7 +258,7 @@ document.addEventListener('click', async function (event) {
             });
             if (response.ok) {
                 const deletedTask = document.getElementById(`task-item-${taskId}`);
-                deletedTask.remove();
+                deletedTask.remove(); 
             } else {
                 console.error('Failed to delete task:', response.statusText);
             }
@@ -302,11 +302,11 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // date time picker shows up after reminder switch is checked and if reminder checked store the datetime to database
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
     var reminderCheckbox = document.getElementById('reminder-checkbox');
     var reminderDatetime = document.getElementById('reminder-datetime');
 
-    reminderCheckbox.addEventListener('change', function () {
+    reminderCheckbox.addEventListener('change', function() {
         if (reminderCheckbox.checked) {
             reminderDatetime.style.display = 'block';
         } else {
@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Add event listener to the form submission
     var taskForm = document.getElementById('task-form');
-    taskForm.addEventListener('submit', function (event) {
+    taskForm.addEventListener('submit', function(event) {
         // If the reminder checkbox is checked, set the value of the reminder datetime input
         if (reminderCheckbox.checked) {
             reminderDatetime.value = new Date().toISOString().slice(0, 16); // Set the value to the current datetime
@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 // pop up add-member-modal after clicking plus button, adding selected members to taskform 
-document.addEventListener('DOMContentLoaded', async function () {
+document.addEventListener('DOMContentLoaded', async function() {
     // to open the assign-to-members modal
     const addMemberBtn = document.getElementById('add-member-btn');
     const addMemberModal = document.getElementById('add-member-modal');
@@ -339,19 +339,22 @@ document.addEventListener('DOMContentLoaded', async function () {
     const modalAddMemberButton = document.getElementById('modal-add-member-btn');
     // the div that insert the selected members in taskform
     const memberListDiv = document.getElementById('taskform-member-list');
-
-    addMemberBtn.addEventListener('click', async function () {
+    
+    addMemberBtn.addEventListener('click', async function() {
         addMemberModal.classList.add('show');
         addMemberModal.style.display = 'block';
+
+        // Load members when Add Member button is clicked
+        loadMembers();
     });
 
-    searchBar.addEventListener('click', async function (event) {
-        // get all the members under specific project group
+    // Function to load members
+    async function loadMembers() {
         try {
-            const projectId = projectIdInput.value.trim();
+            const projectId = projectIdInput.value.trim(); 
             const response = await fetch(`/getProjectMembers?projectId=${projectId}`);
             if (response.ok) {
-                const memberData = await response.json();
+                const memberData = await response.json(); 
 
                 renderMemberList(memberData);
             } else {
@@ -360,23 +363,23 @@ document.addEventListener('DOMContentLoaded', async function () {
         } catch (error) {
             console.error('Error fetching member data:', error);
         }
-    });
+    }
 
-    searchBar.addEventListener('input', async function (event) {
+    searchBar.addEventListener('input', async function(event) {
         // get the value from input of search bar convert to lower case
-        const searchTerm = event.target.value.trim().toLowerCase();
-
+        const searchTerm = event.target.value.trim().toLowerCase(); 
+    
         try {
-            const projectId = projectIdInput.value.trim();
+            const projectId = projectIdInput.value.trim(); 
             const response = await fetch(`/getProjectMembers?projectId=${projectId}`);
             if (response.ok) {
-                const memberData = await response.json();
-
+                const memberData = await response.json(); 
+    
                 // filter matching members of list from the input
                 const filteredMembers = memberData.filter(member => {
-                    return member.username.toLowerCase().includes(searchTerm);
+                    return member.username.toLowerCase().includes(searchTerm); 
                 });
-
+    
                 // filter rendered member list
                 renderMemberList(filteredMembers);
             } else {
@@ -389,7 +392,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // render members into list
     function renderMemberList(memberData) {
-        memberListWrap.innerHTML = '';
+        memberListWrap.innerHTML = ''; 
 
         // iterate through user list and put data into list li
         memberData.forEach(data => {
@@ -404,14 +407,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     const closeButton = addMemberModal.querySelector('.btn-close');
-    closeButton.addEventListener('click', function () {
+    closeButton.addEventListener('click', function() {
         addMemberModal.classList.remove('show');
         addMemberModal.style.display = 'none';
         // Clear member list
         memberListWrap.innerHTML = '';
     });
 
-    modalAddMemberButton.addEventListener('click', function () {
+    modalAddMemberButton.addEventListener('click', function() {
         // Clear existing member avatars
         memberListDiv.innerHTML = '';
         // Clear the selected members array
@@ -443,10 +446,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             const user = await response.json();
             if (user && user.img) {
                 // Add the user's image to the member list
-                memberListDiv.innerHTML += `<img src="${user.img}" alt="${user.username}" class="task-card-img">`;
+                memberListDiv.innerHTML += `<img src="${user.img}" alt="${user.username}" class="task-card-img" id="avatar-${memberId}">`;
             } else {
                 // If no image is available, use the user's initial
-                memberListDiv.innerHTML += `<div class="task-card-img">${user.username.charAt(0).toUpperCase()}</div>`;
+                memberListDiv.innerHTML += `<div class="task-card-img" id="avatar-${memberId}">${user.username.charAt(0).toUpperCase()}</div>`;
             }
         } catch (error) {
             console.error('Error fetching user by ID:', error);
