@@ -722,6 +722,26 @@ app.post('/addTask', async (req, res) => {
 
 });
 
+// delete the task by taskId
+app.delete('/deleteTask/:taskId', async (req, res) => {
+    const taskId = req.params.taskId;
+    try {
+        // Remove the taskId from all projects that have it in their taskList
+        await Project.updateMany(
+            { taskList: taskId },
+            { $pull: { taskList: taskId } }
+        );
+
+        // Delete the task from the Task collection
+        await Task.findByIdAndDelete(taskId);
+
+        res.sendStatus(200);
+    } catch (error) {
+        console.error('Error deleting task:', error);
+        res.sendStatus(500);
+    }
+});
+
 // Add tasks, get data from users and insert to mongoDB
 app.post('/addTaskCalendar', async (req, res) => {
     const userId = req.user._id;
