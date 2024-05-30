@@ -411,7 +411,7 @@ app.get('/homepage', ensureAuth, async (req, res) => {
     const projectPromises = user.projectList.map(projectId => Project.findById(projectId));
     const pList = await Promise.all(projectPromises);
 
-    res.render("homepage", { projects: pList, username: req.user.username, createProject: false });
+    res.render("homepage", { projects: pList, username: req.user.username, createProject: false, location: req.user.location, timezone: req.user.timezone });
 });
 
 /***** PROFILE ROUTES *****/
