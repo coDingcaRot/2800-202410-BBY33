@@ -54,21 +54,25 @@
     <script src="/scripts/addMembersToProject.js"></script>
     <script src="/scripts/membersLink.js"></script>
     <script src="/scripts/easterEgg.js"></script>
-    <script src="/scripts/homePage.js"></script>
 
     <!-- luxon timezone api import -->
     <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
-
+    
     <% if(isTimelinePage) { %>
         <script src="/scripts/timelinePage.js"></script>
     <% } %>
 
-    <!-- Clear the sessionStorage item modalShown when the user clicks the logout link -->
     <script>
-        document.getElementById('logoutLink').addEventListener('click', function() {
-            sessionStorage.removeItem('modalShown');
+        document.addEventListener('DOMContentLoaded', function () {
+            if (document.getElementById('successModal')) {
+                var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                successModal.show();
+            }
+            if (document.getElementById('errorModal')) {
+                var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                errorModal.show();
+            }
         });
     </script>
-    
 </body>
 </html>
