@@ -178,7 +178,6 @@ app.post('/initializeTimezone', async (req, res) => {
 });
 
 
-
 /***** LOGIN ROUTES *****/
 app.get('/login', (req, res) => {
     res.render('login');
@@ -215,7 +214,7 @@ app.post('/loggingin', (req, res, next) => {
                 await dbUser.save();
 
                 //Redirect to homepage
-                return res.render('homepage', { projects: [], username: dbUser.username, location: dbUser.location, timezone: dbUser.timezone });
+                return res.render('userLocationNotification', {username: dbUser.username, location: dbUser.location, timezone: dbUser.timezone });
             } catch (error) {
                 console.error("Failed to update user's location and timezone:", error);
                 return res.status(500).render("loginError", { error: "Failed to update user's location and timezone in database" });

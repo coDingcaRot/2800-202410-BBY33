@@ -124,7 +124,7 @@
                                 </div>
                             </div>
                             <% }) %>
-                                <% } %>
+                    <% } %>
             </div>
         </div>
     </div>
@@ -138,30 +138,5 @@
     </nav>
     <!-- Gets replaced one a project is created -->
 
-    <!-- Modal for user location and timezone -->
-    <div class="modal fade" id="user-info-modal" tabindex="-1" aria-labelledby="userInfoModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="userInfoModalLabel">Hello, <%= username %>.</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="user-info-text" style="font-size: 1.2em; color: #333; line-height: 1.5;">
-                        You are currently in <span style="font-weight: bold;">
-                            <%= location %>
-                        </span>. The local time is <span style="font-weight: bold;" id="local-time"></span> (<%=
-                            timezone %>).
-                    </p>
 
-                </div>
-            </div>
-        </div>
-
-        <script>
-            const userLocation = "<%= location %>";
-            const userTimezone = "<%= timezone %>";
-        </script>
-
-        <%- include("templates/footerAfter", {footer: false, dropdown: false, isTaskPage: false, isTimelinePage: false})
-            %>
+<%- include("templates/footerAfter", {footer: false, dropdown: false, isTaskPage: false, isTimelinePage: false})%>
