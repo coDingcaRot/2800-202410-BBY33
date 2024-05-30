@@ -1,6 +1,7 @@
 body{
-    background:#f7f8fa
- }
+  width: 100%;
+  background:#f7f8fa
+}
 
 
 .add-task {
@@ -24,10 +25,9 @@ body{
 
 /* task wrapper for tab style */
 .task-wrapper {
-    position: absolute;
+    position: relative;
     margin-top: 70px;
-    margin-right: 20px;
-    width: 90%;
+    width: 100%;
     max-height: 640px;
     background: #fff;
     border-radius: 7px;
@@ -63,7 +63,7 @@ li {
 
 
 .task-card-container {
-    margin-top: 20px;
+    margin-top: 10px;
     padding: 10px 20px 10px 25px;
     max-height: 560px;
     overflow-y: auto;
@@ -116,7 +116,8 @@ li {
 /* task card body in task page style */
 .task-card {
   width: 100%;
-  height: 120px;
+  /* height: 120px; */
+  height: auto;
   border-radius: 10px;
   border: 1px solid #3F3F40;
   margin-bottom: 10px;
@@ -124,6 +125,17 @@ li {
 
 .task-card-body {
   margin-top: 5%;
+  margin-bottom: 3%;
+}
+
+.task-card-title{
+  display: inline-block;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 17px;
+  vertical-align: middle;
 }
 
 .task-card-member-wrapper {
@@ -158,13 +170,12 @@ hr {
 .task-card-due-wrapper {
   display: flex;
   justify-content: space-between; 
-  align-items: center; 
+  align-items: center;
 }
 
 .task-status {
   margin-left: auto;
 }
-
 
 .due-date, .due-time {
     font-size: small;
