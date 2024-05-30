@@ -6,6 +6,42 @@ window.onload = function () {
     }
 };
 
+document.addEventListener('DOMContentLoaded', async function() {
+    function getProjectIdFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('projectId');
+    }
+
+    // get project's name through projectId
+    async function getProjectName(projectId) {
+        try {
+            if(projectId){
+                const response = await fetch(`/getProjectName?projectId=${projectId}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const project = await response.json();
+                return project.projectName;
+            } else {
+                console.log("projectId is null");
+                return "Choose a project";
+            }
+        } catch (error) {
+            throw new Error('Error fetching project name: ' + error.message);
+        }
+    }
+
+    // Initial render based on the current project ID in the URL
+    const initialProjectId = getProjectIdFromURL();
+    try {
+        const projectName = await getProjectName(initialProjectId);
+        const navbarBrand = document.getElementById('navbarDropdown');
+        navbarBrand.textContent = projectName;
+    } catch (error) {
+        console.log('Error setting initial project name:', error);
+    }
+});
+
 // listen to the top navbar dropdown menu and show project name on it
 const projectListDiv = document.getElementById('projectListDropdown');
 projectListDiv.addEventListener('change', function (event) {
