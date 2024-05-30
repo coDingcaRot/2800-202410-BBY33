@@ -208,7 +208,6 @@ function convertMemberTimezone(taskDetail){
     return taskMembers;
 }
 
-
 // timeline chart function
 async function renderChart(projectId) {
     var chartData = [];

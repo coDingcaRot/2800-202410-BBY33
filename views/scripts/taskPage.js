@@ -134,10 +134,10 @@ async function showTodo(tasksData, tabType) {
                                                     <polyline points="1 5 4 8 11 1"></polyline>
                                                     </svg>
                                                 </span>
-                                                    <span class="task-card-title">${todo.title}</span>
+                                                <span>${todo.title}</span>
                                             </label>
                                             <button class="taskcard-delete-btn" id="taskcard-delete-btn">
-                                                <svg viewBox="0 0 15 17.5" height="15.5" width="13" xmlns="http://www.w3.org/2000/svg" class="icon">
+                                                <svg viewBox="0 0 15 17.5" height="13.5" width="11" xmlns="http://www.w3.org/2000/svg" class="icon">
                                                 <path transform="translate(-2.5 -1.25)" d="M15,18.75H5A1.251,1.251,0,0,1,3.75,17.5V5H2.5V3.75h15V5H16.25V17.5A1.251,1.251,0,0,1,15,18.75ZM5,5V17.5H15V5Zm7.5,10H11.25V7.5H12.5V15ZM8.75,15H7.5V7.5H8.75V15ZM12.5,2.5h-5V1.25h5V2.5Z" id="Fill"></path>
                                                 </svg>
                                             </button>
@@ -339,17 +339,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     const modalAddMemberButton = document.getElementById('modal-add-member-btn');
     // the div that insert the selected members in taskform
     const memberListDiv = document.getElementById('taskform-member-list');
-    
+
     addMemberBtn.addEventListener('click', async function() {
         addMemberModal.classList.add('show');
         addMemberModal.style.display = 'block';
-
-        // Load members when Add Member button is clicked
-        loadMembers();
     });
 
-    // Function to load members
-    async function loadMembers() {
+    searchBar.addEventListener('click', async function(event) {
+        // get all the members under specific project group
         try {
             const projectId = projectIdInput.value.trim(); 
             const response = await fetch(`/getProjectMembers?projectId=${projectId}`);
@@ -363,7 +360,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         } catch (error) {
             console.error('Error fetching member data:', error);
         }
-    }
+    });
 
     searchBar.addEventListener('input', async function(event) {
         // get the value from input of search bar convert to lower case
@@ -446,10 +443,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             const user = await response.json();
             if (user && user.img) {
                 // Add the user's image to the member list
-                memberListDiv.innerHTML += `<img src="${user.img}" alt="${user.username}" class="task-card-img" id="avatar-${memberId}">`;
+                memberListDiv.innerHTML += `<img src="${user.img}" alt="${user.username}" class="task-card-img">`;
             } else {
                 // If no image is available, use the user's initial
-                memberListDiv.innerHTML += `<div class="task-card-img" id="avatar-${memberId}">${user.username.charAt(0).toUpperCase()}</div>`;
+                memberListDiv.innerHTML += `<div class="task-card-img">${user.username.charAt(0).toUpperCase()}</div>`;
             }
         } catch (error) {
             console.error('Error fetching user by ID:', error);
