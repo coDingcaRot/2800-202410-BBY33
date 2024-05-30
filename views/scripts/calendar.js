@@ -100,31 +100,27 @@ document.addEventListener('DOMContentLoaded', function () {
         },
 
         eventClick: function (info) {
-            console.log("HI");
-            var event = calendar.getEventById(info.event.id);
+            var taskId = info.event._def.publicId;
             var myModal = new bootstrap.Modal(document.getElementById("deleteDivTask"));
             myModal.show();
-            console.log(info.event.id);
+            $('.cancelAction').on('click', function (e) {
+                console.log("cancel");
+                location.href = location.href;
+            });
             $('#confirmDeleteTask').on('click', function (e) {
                 e.preventDefault();
-                event.remove();
+                $.ajax({
+                    url: `/deleteTask/${taskId}`,
+                    type: 'DELETE',
+                    success: function () {
+                        console.log("Deleted");
+                        location.href = location.href;
+                    }
+                });
             });
         }
     });
     calendar.render();
-
-    //For removing tasks/events
-    calendar.on('eventClick', function (info) {
-        console.log("HI");
-        var event = calendar.getEventById(info.event.id);
-        var myModal = new bootstrap.Modal(document.getElementById("deleteDivTask"));
-        myModal.show();
-        console.log(info.event.id);
-        $('#confirmDeleteTask').on('click', function (e) {
-            e.preventDefault();
-            event.remove();
-        });
-    });
 
 });
 
@@ -173,7 +169,6 @@ function submit(tasksData, projectId) {
             var taskId = info.event._def.publicId;
             var myModal = new bootstrap.Modal(document.getElementById("deleteDivTask"));
             myModal.show();
-            // console.log(taskId);
             $('.cancelAction').on('click', function (e) {
                 console.log("cancel");
                 location.href = location.href;
