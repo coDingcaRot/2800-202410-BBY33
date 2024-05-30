@@ -84,6 +84,42 @@ function ensureAuth(req, res, next) {
     res.redirect('/');
 }
 
+/***** GET USER LOCATION AND TIMEZONE *****/
+const getLocationAndTimezone = async (req) => {
+    let clientIp = requestIp.getClientIp(req);
+    //console.log(`Initial Detected IP: ${clientIp}`);
+
+    if (req.headers['x-forwarded-for']) {
+        const forwardedIps = req.headers['x-forwarded-for'].split(',');
+        clientIp = forwardedIps[0];
+    }
+
+    console.log(`Client IP used for location: ${clientIp}`);
+
+    let location = "LocalHost";
+    let timezone = "LocalTimezone";
+
+    try {
+        const response = await axios.get(`https://ipinfo.io/${clientIp}?token=${process.env.IPINFO_TOKEN}`);
+        //console.log("IPInfo API Response:", response.data);
+
+        const city = response.data.city || 'Unknown';
+        const region = response.data.region || 'Unknown';
+        const country = response.data.country || 'Unknown';
+        timezone = response.data.timezone || 'Unknown';
+
+        location = `${city}, ${region}, ${country}`;
+    } catch (error) {
+        console.error("Failed to fetch location:", error.response ? error.response.data : error.message);
+        location = "Unknown";
+        timezone = "Unknown";
+    }
+
+    return { location, timezone };
+};
+
+module.exports = getLocationAndTimezone;
+
 /*** PAGES ***/
 app.get('/', (req, res) => {
     res.render('main'); 
@@ -127,35 +163,17 @@ app.post('/signupSubmit', async (req, res) => {
     }
 });
 
-//Gets user timezone
+//Gets user timezone when signup
 app.post('/initializeTimezone', async (req, res) => {
-    let clientIp = requestIp.getClientIp(req);
-    console.log(`Initial Detected IP: ${clientIp}`);
-
-    if (req.headers['x-forwarded-for']) {
-        const forwardedIps = req.headers['x-forwarded-for'].split(',');
-        clientIp = forwardedIps[0];
-    }
-
-    let location = "Localhost";
-    let timezone = "Local Timezone";
-
     try {
-        const response = await axios.get(`https://ipinfo.io/${clientIp}?token=${process.env.IPINFO_TOKEN}`);
-        const city = response.data.city || 'Unknown';
-        const region = response.data.region || 'Unknown';
-        const country = response.data.country || 'Unknown';
-        timezone = response.data.timezone || 'Unknown';
+        const { location, timezone } = await getLocationAndTimezone(req);
+        const { username, email, password } = req.body;
+        res.render('initializeTimezone', { location, timezone, username, email, password, page: "/initializeTimezone", backlink: "/signup" });
 
-        location = `${city}, ${region}, ${country}`;
     } catch (error) {
-        console.error("Failed to fetch location:", error.response ? error.response.data : error.message);
-        location = "Unknown";
-        timezone = "Unknown";
+        console.error("Failed to get user's location and timezone", error.message);
+        res.status(500).render('initializeTimezone', { location: "Unknown", timezone: "Unknown" });
     }
-
-    const { username, email, password } = req.body;
-    res.render('initializeTimezone', { location, timezone, username, email, password, page: "/initializeTimezone", backlink: "/signup" });
 });
 
 
@@ -166,24 +184,41 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/loggingin', (req, res, next) => {
-    passport.authenticate('local', async (err, email, password, info) => {        
-        //After going into passport.js we recieve the done notifications stored into info 
-
-        if(err){
-            if(!email){
-                return res.status(401).render("loginError", {error: info.message}); //extract info if there is an error
-            }
-    
-            if(!password){
-                return res.status(401).render("loginError", {error: info.message});
-            }
+    passport.authenticate('local', async (err, user, info) => {
+        if (err) {
+            console.error("Passport authentication error:", err);
+            return res.status(500).render("loginError", { error: err.message });
         }
-        //Attempts to login in the user Goes to 
-        req.login(email, loginErr => {
+        if (!user) {
+            console.error("Authentication failed, user not found:", info.message);
+            return res.status(401).render("loginError", { error: info.message });
+        }
+        req.login(user, async (loginErr) => {
             if (loginErr) {
-                return res.status(500).render("loginError", {error: "Username and password not a match"});
+                console.error("Login error:", loginErr);
+                return res.status(500).render("loginError", { error: loginErr.message });
             }
-            return res.redirect("/homepage");
+            try {
+                // Fetch user's location and timezone
+                const { location, timezone } = await getLocationAndTimezone(req);
+               
+                // Retrieve the user document from the database
+                const dbUser = await User.findOne({ email: user.email });
+                if (!dbUser) {
+                    return res.status(404).render("loginError", { error: "User not found" });
+                }
+
+                // Update user's location and timezone
+                dbUser.location = location;
+                dbUser.timezone = timezone;
+                await dbUser.save();
+                
+                //Redirect to homepage
+                return res.render('homepage', { projects: [], username: dbUser.username, location: dbUser.location, timezone: dbUser.timezone });
+            } catch (error) {
+                console.error("Failed to update user's location and timezone:", error);
+                return res.status(500).render("loginError", { error: "Failed to update user's location and timezone in database" });
+            }
         });
     })(req, res, next);
 });
