@@ -1,6 +1,6 @@
 body{
   width: 100%;
-  background:#f7f8fa
+  background:#f7f8fa;
 }
 
 
@@ -514,6 +514,7 @@ hr {
     width: 100%; 
     max-height: 200px; 
     overflow-y: auto;
+    padding-left: 5%;
 }
 
 .member-list-wrap li {
@@ -523,4 +524,14 @@ hr {
 /* new-task form profile image style */
 #taskform-member-list .task-card-img {
   margin-right: 10px; 
+}
+
+.member-list-group-item label::first-letter {
+  text-transform: capitalize;
+}
+
+.modal-footer{
+  position: sticky;
+  bottom: 0;
+  background:white;
 }

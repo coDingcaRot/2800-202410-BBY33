@@ -339,14 +339,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     const modalAddMemberButton = document.getElementById('modal-add-member-btn');
     // the div that insert the selected members in taskform
     const memberListDiv = document.getElementById('taskform-member-list');
-
+    
     addMemberBtn.addEventListener('click', async function() {
         addMemberModal.classList.add('show');
         addMemberModal.style.display = 'block';
+
+        // Load members when Add Member button is clicked
+        loadMembers();
     });
 
-    searchBar.addEventListener('click', async function(event) {
-        // get all the members under specific project group
+    // Function to load members
+    async function loadMembers() {
         try {
             const projectId = projectIdInput.value.trim(); 
             const response = await fetch(`/getProjectMembers?projectId=${projectId}`);
@@ -360,7 +363,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         } catch (error) {
             console.error('Error fetching member data:', error);
         }
-    });
+    }
 
     searchBar.addEventListener('input', async function(event) {
         // get the value from input of search bar convert to lower case
@@ -443,10 +446,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             const user = await response.json();
             if (user && user.img) {
                 // Add the user's image to the member list
-                memberListDiv.innerHTML += `<img src="${user.img}" alt="${user.username}" class="task-card-img">`;
+                memberListDiv.innerHTML += `<img src="${user.img}" alt="${user.username}" class="task-card-img" id="avatar-${memberId}">`;
             } else {
                 // If no image is available, use the user's initial
-                memberListDiv.innerHTML += `<div class="task-card-img">${user.username.charAt(0).toUpperCase()}</div>`;
+                memberListDiv.innerHTML += `<div class="task-card-img" id="avatar-${memberId}">${user.username.charAt(0).toUpperCase()}</div>`;
             }
         } catch (error) {
             console.error('Error fetching user by ID:', error);
