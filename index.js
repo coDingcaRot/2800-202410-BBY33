@@ -685,14 +685,6 @@ app.post('/addTask', async (req, res) => {
         // Parse the selectedMembers from JSON string to an array
         const taskMembers = JSON.parse(selectedTaskMembers);
 
-        // Check if the current user's ID already exists in taskMembers array
-        if (!taskMembers.includes(userId)) {
-            // Add the current user's ID to taskMembers array
-            taskMembers.push(userId);
-        } else {
-            console.log('Current user already exists in taskMembers array');
-        }
-
         // Create a new document object with the extracted data
         const newTask = new Task({
             title,
@@ -730,18 +722,55 @@ app.post('/addTask', async (req, res) => {
 
 });
 
-// delete the task by taskId
-app.delete('/deleteTask/:taskId', async (req, res) => {
-    const taskId = req.params.taskId;
+// Add tasks, get data from users and insert to mongoDB
+app.post('/addTaskCalendar', async (req, res) => {
+    const userId = req.user._id;
     try {
-        await Task.findByIdAndDelete(taskId);
-        res.sendStatus(200);
-    } catch (error) {
-        console.error('Error deleting task:', error);
-        res.sendStatus(500);
-    }
-});
+        // Extract data from the request body
+        const { title, description, startDate, startTime, dueDate, dueTime, reminderDatetime, selectedTaskMembers, projectId } = req.body;
 
+        // Determine the value of the reminder field based on the value of reminderDatetime
+        const reminder = reminderDatetime ? reminderDatetime : 'none';
+
+        // Parse the selectedMembers from JSON string to an array
+        const taskMembers = JSON.parse(selectedTaskMembers);
+
+        // Create a new document object with the extracted data
+        const newTask = new Task({
+            title,
+            description,
+            startDate,
+            startTime,
+            dueDate,
+            dueTime,
+            reminder,
+            taskOwner: userId,
+            taskMembers
+            // Add other fields as needed
+        });
+
+        // Insert the new document into the MongoDB tasks collection
+        const savedTask = await newTask.save();
+
+        // Insert the task id with string type
+        const taskId = savedTask._id.toString();
+        console.log("TESTS");
+        console.log(req.user._id);
+        console.log(projectId);
+        console.log(taskId);
+
+        await Project.findByIdAndUpdate(
+            projectId,
+            { $push: { taskList: taskId } }
+        );
+
+        res.redirect(`/calendar?projectId=${projectId}`);
+    } catch (err) {
+        console.error('Error adding task: ', err);
+        res.status(500).send('Error adding task')
+    }
+
+});
 
 // get user data based on their id for showing user name on task card
 app.get('/getUserById/:userId', ensureAuth, async (req, res) => {

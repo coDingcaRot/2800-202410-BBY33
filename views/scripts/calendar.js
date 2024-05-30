@@ -1,3 +1,11 @@
+window.onload = function () {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.has('projectId')) {
+        const selectedProjectId = searchParams.get('projectId');
+        fetchAndShowTasksData(selectedProjectId);
+    }
+};
+
 // listen to the top navbar dropdown menu and show project name on it
 const projectListDiv = document.getElementById('projectListDropdown');
 projectListDiv.addEventListener('change', function (event) {
@@ -89,12 +97,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
         dateClick: function (info) {
             alert('Date: ' + info.dateStr);
+        },
+
+        eventClick: function (info) {
+            console.log("HI");
+            var event = calendar.getEventById(info.event.id);
+            var myModal = new bootstrap.Modal(document.getElementById("deleteDivTask"));
+            myModal.show();
+            console.log(info.event.id);
+            $('#confirmDeleteTask').on('click', function (e) {
+                e.preventDefault();
+                event.remove();
+            });
         }
     });
     calendar.render();
 
     //For removing tasks/events
     calendar.on('eventClick', function (info) {
+        console.log("HI");
         var event = calendar.getEventById(info.event.id);
         var myModal = new bootstrap.Modal(document.getElementById("deleteDivTask"));
         myModal.show();
@@ -116,12 +137,12 @@ function fetchAndShowTasksData(projectId) {
     ])
         .then(([tasksData]) => {
             console.log(tasksData);
-            submit(tasksData);
+            submit(tasksData, projectId);
         })
         .catch(error => console.error('Error fetching project data:', error));
 }
 
-function submit(tasksData) {
+function submit(tasksData, projectId) {
     //Settings variables of new task
     // Calendar functions
     var calendarEl = document.getElementById('calendar');
@@ -146,10 +167,34 @@ function submit(tasksData) {
 
         dateClick: function (info) {
             alert('Date: ' + info.dateStr);
+        },
+
+        eventClick: function (info) {
+            var taskId = info.event._def.publicId;
+            var myModal = new bootstrap.Modal(document.getElementById("deleteDivTask"));
+            myModal.show();
+            // console.log(taskId);
+            $('.cancelAction').on('click', function (e) {
+                console.log("cancel");
+                location.href = location.href;
+            });
+            $('#confirmDeleteTask').on('click', function (e) {
+                e.preventDefault();
+                $.ajax({
+                    url: `/deleteTask/${taskId}`,
+                    type: 'DELETE',
+                    success: function () {
+                        console.log("Deleted");
+                        location.href = location.href;
+                    }
+                });
+            });
         }
     });
+
     console.log(tasksData);
     for (var i = 0; i < tasksData.length; i++) {
+        var id = tasksData[i]._id;
         var title = tasksData[i].title;
         var startDate = moment(tasksData[i].startDate).format('YYYY-MM-DD');
         var startTime = tasksData[i].startTime;
@@ -157,15 +202,16 @@ function submit(tasksData) {
         var dueTime = tasksData[i].dueTime;
         var start = moment(`${startDate}T${startTime}`).format('YYYY-MM-DDTHH:mm');
         var end = moment(`${dueDate}T${dueTime}`).format('YYYY-MM-DDTHH:mm');
-        console.log(startDate);
-        console.log(startTime);
-        console.log(dueDate);
-        console.log(dueTime);
-        console.log(title);
-        console.log(start);
-        console.log(end);
+        // console.log(id);
+        // console.log(startDate);
+        // console.log(startTime);
+        // console.log(dueDate);
+        // console.log(dueTime);
+        // console.log(title);
+        // console.log(start);
+        // console.log(end);
         calendar.addEvent({
-            id: title,
+            id: id,
             title: title,
             start: start,
             end: end,

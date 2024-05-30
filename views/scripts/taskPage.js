@@ -249,7 +249,7 @@ function handleCheckboxChange(taskId) {
 }
 
 // handle the task-card delete button
-document.addEventListener('click', async function(event) {
+document.addEventListener('click', async function (event) {
     if (event.target.matches('.taskcard-delete-btn')) {
         const taskId = event.target.closest('.task-card').id.replace('task-item-', '');
         try {
@@ -258,7 +258,7 @@ document.addEventListener('click', async function(event) {
             });
             if (response.ok) {
                 const deletedTask = document.getElementById(`task-item-${taskId}`);
-                deletedTask.remove(); 
+                deletedTask.remove();
             } else {
                 console.error('Failed to delete task:', response.statusText);
             }
