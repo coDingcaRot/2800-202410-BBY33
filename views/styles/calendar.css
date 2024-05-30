@@ -8,6 +8,7 @@
     position: absolute;
     bottom: 80px;
     right: 20px;
+    z-index: 4;
 }
 
 .add-btn {
@@ -43,7 +44,7 @@
     height: 93%;
     /* overflow-y: auto;  */
     border-radius: 15px;
-    z-index: 6;
+    z-index: 1040;
 }
 
 .task-form.show {
@@ -203,14 +204,17 @@
 
 @media screen and (max-width: 768px) {
     #calendar {
-        margin-top: 0;
+        margin-top: 2%;
+        height: 75%;
+        width: 100%;
     }
 
-    .fc-toolbar.fc-header-toolbar {
-        font-size: 99%;
+    .fc-header-toolbar {
+        font-size: 70%;
     }
 
     .fc-view-harness.fc-view-harness-active {
         height: 600px !important;
+        width: 100% !important;
     }
 }

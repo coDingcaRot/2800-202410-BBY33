@@ -179,14 +179,6 @@ function submit(tasksData, projectId) {
         var dueTime = tasksData[i].dueTime;
         var start = moment(`${startDate}T${startTime}`).format('YYYY-MM-DDTHH:mm');
         var end = moment(`${dueDate}T${dueTime}`).format('YYYY-MM-DDTHH:mm');
-        // console.log(id);
-        // console.log(startDate);
-        // console.log(startTime);
-        // console.log(dueDate);
-        // console.log(dueTime);
-        // console.log(title);
-        // console.log(start);
-        // console.log(end);
         calendar.addEvent({
             id: id,
             title: title,

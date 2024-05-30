@@ -279,7 +279,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var memberListDiv = document.getElementById('taskform-member-list');
 
     addTaskButton.addEventListener('click', function () {
-        console.log("CLICKED");
         // Show the task form
         taskForm.classList.add('show');
 

@@ -1058,15 +1058,15 @@ app.get('/calendarPage', ensureAuth, async (req, res) => {
     });
 });
 
-//Calendar page
-app.get('/calendar', (req, res) => {
-    // console.log(selectedProjectId);
-    res.render('calendar', {
-        authenticated: req.isAuthenticated(),
-        username: req.user.username,
-        isTaskPage: true,
-    });
-});
+// //Calendar page
+// app.get('/calendar', (req, res) => {
+//     // console.log(selectedProjectId);
+//     res.render('calendar', {
+//         authenticated: req.isAuthenticated(),
+//         username: req.user.username,
+//         isTaskPage: true,
+//     });
+// });
 
 
 /* Easter Egg START */
