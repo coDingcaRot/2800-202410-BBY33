@@ -685,6 +685,14 @@ app.post('/addTask', async (req, res) => {
         // Parse the selectedMembers from JSON string to an array
         const taskMembers = JSON.parse(selectedTaskMembers);
 
+        // Check if the current user's ID already exists in taskMembers array
+        if (!taskMembers.includes(userId)) {
+            // Add the current user's ID to taskMembers array
+            taskMembers.push(userId);
+        } else {
+            console.log('Current user already exists in taskMembers array');
+        }
+
         // Create a new document object with the extracted data
         const newTask = new Task({
             title,
@@ -721,6 +729,19 @@ app.post('/addTask', async (req, res) => {
     }
 
 });
+
+// delete the task by taskId
+app.delete('/deleteTask/:taskId', async (req, res) => {
+    const taskId = req.params.taskId;
+    try {
+        await Task.findByIdAndDelete(taskId);
+        res.sendStatus(200);
+    } catch (error) {
+        console.error('Error deleting task:', error);
+        res.sendStatus(500);
+    }
+});
+
 
 // get user data based on their id for showing user name on task card
 app.get('/getUserById/:userId', ensureAuth, async (req, res) => {
