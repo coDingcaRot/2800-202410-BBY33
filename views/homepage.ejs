@@ -3,12 +3,36 @@
     <nav class="navbar navbar-expand-lg border-bottom">
         <div class="container d-flex justify-content-between">
             <span class="navbar-brand">Projects</span>
-            <form action="/createProject" method="get">
-                <button class="navbar" style="text-decoration: none; size: 5em;">+</button>
-            </form>
+            <button id="" type="button" data-bs-toggle="modal" data-bs-target="#createProjectModal" class="navbar rounded btn btn-outline-secondary btn-sm">+</button>
         </div>
     </nav>
     <br>
+
+    <!-- Create project modal -->
+    <div class="modal fade" id="createProjectModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Create Project</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- FUNCTIONAL PART OF FORM -->
+                    <form action="/createProjectSubmit" method="POST">
+                        <!-- Project name  -->
+                        <div class="mb-3">
+                            <label for="project-name" class="form-label">Project Name</label>
+                            <input type="text" class="form-control" id="projectName" name="projectName" required>
+                        </div>
+
+                        <div class="modal-footer flex-column align-items-stretch w-100 gap-2 pb-3 border-top-0">
+                            <button type="submit" class="btn btn-lg btn-primary" data-toggle="modal" data-target="#success_tic">Create</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Projects list -->
     <div class="d-flex justify-content-center" id="projectList">

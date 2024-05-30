@@ -220,9 +220,9 @@ app.post('/forgotPass', async (req, res) => {
 
 /***** PROJECT CREATION *****/
 //create project page
-app.get('/createProject', ensureAuth, (req, res) => {
-    res.render("createProject");
-})
+// app.post('/createProject', ensureAuth, (req, res) => {
+//     res.render("homepage", {createProject: true});
+// })
 
 //create project funx
 app.post('/createProjectSubmit', async (req, res) => {
@@ -248,7 +248,7 @@ app.post('/createProjectSubmit', async (req, res) => {
         await User.updateOne({ _id: user._id }, { $push: { projectList: newProject._id } });
 
         const message = "Project Created!";
-        res.render('projectCreated', { message: message });
+        res.render('successMessage', { success: message, backlink: "/homepage" });
     } catch (dbError) {
         res.render('errorMessage', { error: `This error is: ${dbError.message}`, backlink: "/homepage"});
     }
@@ -373,7 +373,7 @@ app.get('/homepage', ensureAuth, async (req, res) => {
     const projectPromises = user.projectList.map(projectId => Project.findById(projectId));
     const pList = await Promise.all(projectPromises);
 
-    res.render("homepage", {projects: pList, username: req.user.username});
+    res.render("homepage", {projects: pList, username: req.user.username, createProject: false});
 });
 
 /***** PROFILE ROUTES *****/

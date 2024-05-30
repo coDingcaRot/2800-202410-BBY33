@@ -1,0 +1,30 @@
+/* CSS for the success and error modals */
+@keyframes slideIn {
+    from {
+        transform: translateY(-50%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-50%);
+        opacity: 0;
+    }
+}
+
+.modal.show .modal-dialog {
+    animation: slideIn 0.5s forwards;
+}
+
+.modal.hide .modal-dialog {
+    animation: slideOut 0.5s forwards;
+}

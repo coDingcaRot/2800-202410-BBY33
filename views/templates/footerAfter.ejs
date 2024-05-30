@@ -57,9 +57,22 @@
 
     <!-- luxon timezone api import -->
     <script src="https://moment.github.io/luxon/global/luxon.min.js"></script>
-
+    
     <% if(isTimelinePage) { %>
         <script src="/scripts/timelinePage.js"></script>
     <% } %>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (document.getElementById('successModal')) {
+                var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                successModal.show();
+            }
+            if (document.getElementById('errorModal')) {
+                var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                errorModal.show();
+            }
+        });
+    </script>
 </body>
 </html>
