@@ -340,10 +340,10 @@ async function convertToUserTimezone(tasksData) {
             console.log("No timezone conversion needed.");
             console.log("no convert:", tasksData.dueDate);
             // Convert start date time to user timezone
-            const startDateTime = DateTime.fromISO(combineDateTime(tasksData.startDate, tasksData.startTime), { zone: tasksOwnerTimezone }).setZone(memberTimezone);
+            const startDateTime = DateTime.fromISO(combineDateTime(tasksData.startDate, tasksData.startTime));
 
             // Convert due date time to user timezone
-            const dueDateTime = DateTime.fromISO(combineDateTime(tasksData.dueDate, tasksData.dueTime), { zone: tasksOwnerTimezone }).setZone(memberTimezone);
+            const dueDateTime = DateTime.fromISO(combineDateTime(tasksData.dueDate, tasksData.dueTime));
 
             let start = startDateTime.toFormat("yyyy-MM-dd'T'HH:mm");
             let end = dueDateTime.toFormat("yyyy-MM-dd'T'HH:mm");
