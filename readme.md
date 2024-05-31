@@ -13,7 +13,6 @@ SyncPro is a centralized application designed to streamline task and meeting sch
 - **Cloud hosting sites**: Render
 
 ## Listing of File Contents
-project_directory/
 ├── .env
 ├── .gitignore
 ├── file_structure.txt
