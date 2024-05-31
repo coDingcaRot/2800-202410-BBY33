@@ -215,7 +215,7 @@ app.post('/loggingin', (req, res, next) => {
                 await dbUser.save();
 
                 //Redirect to homepage
-                return res.render('userLocationNotification', {username: dbUser.username, location: dbUser.location, timezone: dbUser.timezone });
+                return res.render('userLocationNotification', { username: dbUser.username, location: dbUser.location, timezone: dbUser.timezone });
             } catch (error) {
                 console.error("Failed to update user's location and timezone:", error);
                 return res.status(500).render("loginError", { error: "Failed to update user's location and timezone in database" });
@@ -675,10 +675,10 @@ app.get('/getProjectMembers', ensureAuth, async (req, res) => {
 // Add tasks, get data from users and insert to mongoDB
 app.post('/addTask', async (req, res) => {
     const userId = req.user._id;
-    try{
+    try {
         // Extract data from the request body
         const { title, description, startDate, startTime, dueDate, dueTime, reminderDatetime, selectedTaskMembers, projectId } = req.body;
-        
+
         // Determine the value of the reminder field based on the value of reminderDatetime
         const reminder = reminderDatetime ? reminderDatetime : 'none';
 
@@ -719,11 +719,11 @@ app.post('/addTask', async (req, res) => {
         );
 
         res.redirect(`/taskPage?projectId=${projectId}`);
-    } catch(err){
+    } catch (err) {
         console.error('Error adding task: ', err);
         res.status(500).send('Error adding task')
     }
-        
+
 });
 
 // delete the task by taskId
@@ -891,8 +891,8 @@ app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
     }
 });
 
-app.get('/getTaskcardDetails/:taskId', async (req,res) =>{
-    try{
+app.get('/getTaskcardDetails/:taskId', async (req, res) => {
+    try {
         const taskId = req.params.taskId;
         const task = await Task.findById(taskId);
         if (!task) {
@@ -913,8 +913,8 @@ app.get('/getTaskcardDetails/:taskId', async (req,res) =>{
             if (memberUser) {
                 taskMemberUsernames.push({
                     _id: memberUser._id,
-                    username: memberUser.username, 
-                    email: memberUser.email, 
+                    username: memberUser.username,
+                    email: memberUser.email,
                     timezone: memberUser.timezone
                 });
             }
