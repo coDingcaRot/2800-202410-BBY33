@@ -13,15 +13,16 @@ SyncPro is a centralized application designed to streamline task and meeting sch
 - **Cloud hosting sites**: Render
 
 ## Listing of File Contents
-+---.env
-+---.gitignore
-+---file_structure.txt
-+---index.js
-+---package-lock.json
-+---package.json
-+---Procfile
-+---readme.md
-|       
+project_directory/
+|   .env
+|   .gitignore
+|   file_structure.txt
+|   index.js
+|   package-lock.json
+|   package.json
+|   Procfile
+|   readme.md
+|   
 +---modules
 |       passport.js
 |       project.js
@@ -93,7 +94,7 @@ SyncPro is a centralized application designed to streamline task and meeting sch
             memberManagementList.ejs
             notification.ejs
             successModal.ejs
-            
+
 
 ## Features added
 - **Automatic Location and Timezone Sync**: 
@@ -154,18 +155,23 @@ This project uses [IPinfo](https://ipinfo.io/) License (https://ipinfo.io/terms-
 
 ## Contact Information
 For any questions or feedback, please contact:
+
+### Jonathaniel information
 - **Name**: [Jonathaniel]
 - **Email**: [Jonathanielalipes905@gmail.com]
 - **GitHub**: [https://github.com/coDingcaRot]
 
+### Joyce information
 - **Name**: [Joyce]
 - **Email**: [jowchuang@gmail.com]
 - **GitHub**: [https://github.com/joyceh14]
 
+### Anne information
 - **Name**: [Anne]
 - **Email**: [kying3689@gmail.com]
 - **GitHub**: [https://github.com/annkclu]
 
+### Alex information
 - **Name**: [Alex]
 - **Email**: [cyberandpower@gmail.com]
 - **GitHub**: [https://github.com/iXelias]
