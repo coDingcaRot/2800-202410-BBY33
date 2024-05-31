@@ -1,3 +1,4 @@
+// Gets the project ID from the URL query parameters and fetches the project's tasks if there is a project ID in the URL.
 window.onload = function () {
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.has('projectId')) {
@@ -6,7 +7,7 @@ window.onload = function () {
     }
 };
 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     function getProjectIdFromURL() {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get('projectId');
@@ -15,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // get project's name through projectId
     async function getProjectName(projectId) {
         try {
-            if(projectId){
+            if (projectId) {
                 const response = await fetch(`/getProjectName?projectId=${projectId}`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -50,7 +51,6 @@ projectListDiv.addEventListener('change', function (event) {
         const url = new URL(window.location.href);
         url.searchParams.set('projectId', selectedProjectId);
         history.pushState(null, '', url);
-        console.log(url);
 
         // Fetch project name and update navbar brand
         fetch(`/getProjectName?projectId=${selectedProjectId}`)
@@ -73,7 +73,6 @@ projectListDiv.addEventListener('change', function (event) {
             });
 
         // Fetch tasks and update calendar
-        console.log(selectedProjectId);
         fetchAndShowTasksData(selectedProjectId);
 
     };
@@ -126,12 +125,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         },
 
+        // Event click function to delete task
         eventClick: function (info) {
             var taskId = info.event._def.publicId;
             var myModal = new bootstrap.Modal(document.getElementById("deleteDivTask"));
             myModal.show();
             $('.cancelAction').on('click', function (e) {
-                console.log("cancel");
                 location.href = location.href;
             });
             $('#confirmDeleteTask').on('click', function (e) {
@@ -140,7 +139,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     url: `/deleteTask/${taskId}`,
                     type: 'DELETE',
                     success: function () {
-                        console.log("Deleted");
                         location.href = location.href;
                     }
                 });
@@ -156,7 +154,6 @@ function fetchAndShowTasksData(projectId) {
     Promise.all([
         fetch(`/getProjectTasks?projectId=${projectId}`).then(response => response.json()),
         fetch(`/getProjectName?projectId=${projectId}`).then(response => response.json()),
-        console.log("test"),
     ])
         .then(([tasksData]) => {
             submit(tasksData, projectId);
@@ -165,7 +162,6 @@ function fetchAndShowTasksData(projectId) {
 }
 
 function submit(tasksData, projectId) {
-    //Settings variables of new task
     // Calendar functions
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
@@ -182,12 +178,12 @@ function submit(tasksData, projectId) {
             }
         },
 
+        // Event click function to delete task
         eventClick: function (info) {
             var taskId = info.event._def.publicId;
             var myModal = new bootstrap.Modal(document.getElementById("deleteDivTask"));
             myModal.show();
             $('.cancelAction').on('click', function (e) {
-                console.log("cancel");
                 location.href = location.href;
             });
             $('#confirmDeleteTask').on('click', function (e) {
@@ -196,7 +192,6 @@ function submit(tasksData, projectId) {
                     url: `/deleteTask/${taskId}`,
                     type: 'DELETE',
                     success: function () {
-                        console.log("Deleted");
                         location.href = location.href;
                     }
                 });
@@ -204,10 +199,8 @@ function submit(tasksData, projectId) {
         }
     });
 
+    // Add tasks found from database onto the calendar
     for (var i = 0; i < tasksData.length; i++) {
-        // var id = tasksData[i]._id;
-        // var title = tasksData[i].title;
-        console.log(title);
         let convertedTimeDate = convertToUserTimezone(tasksData[i]);
 
         convertedTimeDate.then(function (value) {
@@ -357,6 +350,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 });
 
+// Timezone conversion
 async function convertToUserTimezone(tasksData) {
     const response = await fetch('/getCurrentUserId');
     const data = await response.json();
