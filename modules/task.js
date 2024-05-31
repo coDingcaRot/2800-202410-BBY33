@@ -1,3 +1,11 @@
+/**
+ * Task template to replace joi using mongoose and more efficient CRUD operations
+ * 
+ * @author https://chat.openai.com/
+ * @author Jonathaniel Alipes
+ * @author Joyce Huang
+ */
+
 const { string } = require("joi");
 const mongoose = require("mongoose");
 

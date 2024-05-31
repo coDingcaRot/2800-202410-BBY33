@@ -2,6 +2,15 @@ const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require("bcrypt");
 const User = require('./user.js');
 
+/**
+ * Logging in and sign up function replacing express-session 
+ * for easier logging in functins and authorizatoin checking
+ * 
+ * @author https://chat.openai.com/
+ * @author Jonathaniel Alipes
+ * 
+ * @param {*} passport 
+ */
 module.exports = function (passport) {
     passport.use(new LocalStrategy({ usernameField: 'email', passwordField: 'password'},
         async (email, password, done) => { //params are req.body from login form field

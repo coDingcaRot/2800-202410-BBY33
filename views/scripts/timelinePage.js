@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get('projectId');
     }
-
+    
     async function renderProjectMembersTimeline(projectId) {
         try {
             const members = await getProjectMembersInfo(projectId);
@@ -208,7 +208,12 @@ function convertMemberTimezone(taskDetail){
     return taskMembers;
 }
 
-
+/**
+ * Displays timeline to user
+ * 
+ * @author Jonathaniel Alipes, Joyce Huang
+ * @param {*} projectId 
+ */
 // timeline chart function
 async function renderChart(projectId) {
     var chartData = [];
