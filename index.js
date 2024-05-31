@@ -44,7 +44,7 @@ const mongodb_password = process.env.MONGODB_PASSWORD;
 const mongodb_database = process.env.MONGODB_DATABASE;
 const mongodb_session_secret = process.env.MONGODB_SESSION_SECRET;
 
-// Configure session management with MongoDB storage
+// Configure session management with MongoDB storage + session creation
 const MongoStore = require('connect-mongo');
 app.use(session({
     secret: node_session_secret, //key that will sign cookie
@@ -64,6 +64,7 @@ app.use(passport.initialize()); //sets up passport
 app.use(passport.session());
 require('./modules/passport.js')(passport);
 
+//Mongodb connection
 mongoose.connect(`mongodb+srv://${mongodb_user}:${mongodb_password}@${mongodb_host}/comp2800-a1`)
     .then(async () => {
         console.log(("\n***MongoDB connected successfully***\n").toUpperCase()); // indicate we are connected to db
@@ -78,7 +79,9 @@ const User = require('./modules/user.js');
 const Project = require('./modules/project.js');
 const Task = require('./modules/task.js');
 const { access } = require('fs');
+module.exports = getLocationAndTimezone;
 
+//Authentication function with passport
 function ensureAuth(req, res, next) {
     if (req.isAuthenticated()) {
         return next();
@@ -120,8 +123,6 @@ const getLocationAndTimezone = async (req) => {
     return { location, timezone };
 };
 
-module.exports = getLocationAndTimezone;
-
 /*** PAGES ***/
 app.get('/', (req, res) => {
     res.render('main');
@@ -132,6 +133,7 @@ app.get('/signup', (req, res) => {
     res.render('signup');
 });
 
+//signup handling function after pressing signup button
 app.post('/signupSubmit', async (req, res) => {
     const { username, email, password, location, timezone } = req.body;
     // checks if the fields are empty
@@ -184,9 +186,7 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
-/**
- * 
- */
+//logging function
 app.post('/loggingin', (req, res, next) => {
     passport.authenticate('local', async (err, user, info) => {
         if (err) {
@@ -232,6 +232,7 @@ app.get('/forgotPass', (req, res) => {
     res.render('forgotPass');
 });
 
+//forget password function
 app.post('/forgotPass', async (req, res) => {
     const { email, password } = req.body
 
@@ -254,8 +255,6 @@ app.post('/forgotPass', async (req, res) => {
 
     res.render('passwordChanged');
 });
-
-/************************************************* AUTHENTICATED PAGES *************************************************/
 
 /***** PROJECT CREATION *****/
 //create project funx
@@ -637,6 +636,7 @@ app.get('/getProjectTasks', ensureAuth, async (req, res) => {
     }
 });
 
+// Get members from a project and display
 app.get('/getProjectMembers', ensureAuth, async (req, res) => {
     try {
         const projectId = req.query.projectId;
@@ -886,6 +886,7 @@ app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
     }
 });
 
+//gets details of a task card for the specific project
 app.get('/getTaskcardDetails/:taskId', async (req, res) => {
     try {
         const taskId = req.params.taskId;
@@ -948,9 +949,37 @@ app.get('/getTaskcardDetails/:taskId', async (req, res) => {
 });
 /* TaskPage END */
 
+/***** TIMELINE PAGE ROUTE *****/
+app.get('/timelinePage', ensureAuth, async (req, res) => {
+    if (req.isAuthenticated()) {
+        const projectId = req.query.projectId;
 
-/* TimelinePage START */
-/* functions */
+        if (projectId) {
+            try {
+                res.render('timelinePage', {
+                    authenticated: req.isAuthenticated(),
+                    username: req.user.username,
+                    isTaskPage: false,
+                    projectId: projectId
+                });
+            } catch (error) {
+                console.error('Error occurred: ', error);
+                res.status(500).send('Internal Server Error');
+            }
+        } else {
+            res.render('timelinePage', {
+                authenticated: req.isAuthenticated(),
+                username: req.user.username,
+                isTaskPage: false,
+                projectId: ""
+            });
+        }
+    } else {
+        res.redirect('/homepage');
+    }
+});
+
+//get project members timezones and location for timezone difference calc
 async function getProjectMembersInfo(projectId) {
     try {
         const project = await Project.findById(projectId);
@@ -973,6 +1002,7 @@ async function getProjectMembersInfo(projectId) {
     }
 }
 
+//gets details of a task for the project function
 async function getOneTaskDetails(taskId) {
     try {
         // Find the task by taskId
@@ -1013,7 +1043,7 @@ async function getOneTaskDetails(taskId) {
     }
 }
 
-// get the task data from chart in timeline page
+//get the task data from chart in timeline page
 app.get("/timelineData", ensureAuth, async (req, res) => {
     if (req.isAuthenticated()) {
         const projectId = req.query.projectId;
@@ -1056,35 +1086,7 @@ app.get("/timelineData", ensureAuth, async (req, res) => {
     }
 })
 
-app.get('/timelinePage', ensureAuth, async (req, res) => {
-    if (req.isAuthenticated()) {
-        const projectId = req.query.projectId;
-
-        if (projectId) {
-            try {
-                res.render('timelinePage', {
-                    authenticated: req.isAuthenticated(),
-                    username: req.user.username,
-                    isTaskPage: false,
-                    projectId: projectId
-                });
-            } catch (error) {
-                console.error('Error occurred: ', error);
-                res.status(500).send('Internal Server Error');
-            }
-        } else {
-            res.render('timelinePage', {
-                authenticated: req.isAuthenticated(),
-                username: req.user.username,
-                isTaskPage: false,
-                projectId: ""
-            });
-        }
-    } else {
-        res.redirect('/homepage');
-    }
-});
-
+//gets project members 
 app.get('/getProjectMembersInfo', async (req, res) => {
     try {
         const projectId = req.query.projectId;
@@ -1096,6 +1098,7 @@ app.get('/getProjectMembersInfo', async (req, res) => {
     }
 });
 
+//gets the current users timezone 
 app.get('/getUserTimezone', ensureAuth, async (req, res) => {
     if (req.isAuthenticated()) {
         try {
@@ -1114,6 +1117,7 @@ app.get('/getUserTimezone', ensureAuth, async (req, res) => {
     }
 });
 
+//get details of a singular task route
 app.get('/getOneTaskDetails', async (req, res) => {
     try {
         const taskId = req.query.taskId;
@@ -1125,10 +1129,7 @@ app.get('/getOneTaskDetails', async (req, res) => {
     }
 });
 
-/* TimelinePage END */
-
-/*****CALENDAR ****/
-// Calendar page route
+/***** CALENDAR ROUTE *****/
 app.get('/calendarPage', ensureAuth, async (req, res) => {
     const projectId = req.query.projectId;
     const userId = req.user._id;
@@ -1142,12 +1143,12 @@ app.get('/calendarPage', ensureAuth, async (req, res) => {
     });
 });
 
-/* Easter Egg START */
+/***** EASTER EGG ROUTE *****/
 app.get('/easterEgg', ensureAuth, (req, res) => {
     res.render('easterEgg');
 });
-/* Easter Egg END */
 
+/***** LOGOUT ROUTE *****/
 app.get('/logout', (req, res) => {
     req.logout((err) => {
         if (err) {
@@ -1162,6 +1163,7 @@ app.get('/logout', (req, res) => {
     });
 });
 
+/***** 404 PAGE ROUTE *****/
 app.get('*', (req, res) => {
     res.status(404);
     res.render('404error');
