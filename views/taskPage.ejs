@@ -36,6 +36,22 @@
         <%- include("taskForm") %>
     </div>
 
+    <!-- modal for showing task details -->
+    <div class="modal fade" id="taskdetailModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-content" style="height: 80vh;">
+            <div class="modal-header">
+                <h5>Task Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="taskdetailModalBody">
+              ..
+            </div>            
 
-    <%- include("templates/footerAfter", {dropdown: true, footer: true, isTaskPage: isTaskPage, isTimelinePage: false})
-        %>
+          </div>
+        </div>
+    </div>
+    
+
+<%- include("templates/footerAfter", {dropdown: true, footer: true, isTaskPage: isTaskPage, isTimelinePage: false})
+    %>

@@ -890,6 +890,67 @@ app.post('/removeUserFromCompletedMembers/:taskId', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
+app.get('/getTaskcardDetails/:taskId', async (req,res) =>{
+    try{
+        const taskId = req.params.taskId;
+        const task = await Task.findById(taskId);
+        if (!task) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+
+        // get details from task
+        const { title, description, startDate, startTime, dueDate, dueTime, taskOwner, taskMember, status, completedMembers } = task;
+
+        // get username of taskOwner 
+        const taskOwnerUser = await User.findById(taskOwner);
+        const taskOwnerUsername = taskOwnerUser ? taskOwnerUser.username : null;
+
+        // get all usernames in taskMember 
+        const taskMemberUsernames = [];
+        for (const memberId of task.taskMembers) {
+            const memberUser = await User.findById(memberId);
+            if (memberUser) {
+                taskMemberUsernames.push({
+                    _id: memberUser._id,
+                    username: memberUser.username, 
+                    email: memberUser.email, 
+                    timezone: memberUser.timezone
+                });
+            }
+        }
+
+        // get all the usernames in completedMembers, if its [] return []
+        const completedMembersUsernames = [];
+        if (completedMembers.length > 0) {
+            for (const memberId of completedMembers) {
+                const memberUser = await User.findById(memberId);
+                if (memberUser) {
+                    completedMembersUsernames.push(memberUser.username);
+                }
+            }
+        }
+
+        const responseData = {
+            title,
+            description,
+            startDate,
+            startTime,
+            dueDate,
+            dueTime,
+            taskOwner: taskOwnerUsername,
+            taskMember: taskMemberUsernames,
+            status,
+            completedMembers: completedMembersUsernames
+        };
+
+        console.log(responseData);
+        res.json(responseData);
+    } catch (error) {
+        console.error('Error fetching task details:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 /* TaskPage END */
 
 

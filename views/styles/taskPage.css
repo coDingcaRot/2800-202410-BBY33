@@ -111,8 +111,6 @@ li {
   }
 }
 
-
-
 /* task card body in task page style */
 .task-card {
   width: 100%;
@@ -551,3 +549,8 @@ hr {
   bottom: 0;
   background: white;
 }
+
+.task-modal-username {
+  text-transform: capitalize;
+}
+
