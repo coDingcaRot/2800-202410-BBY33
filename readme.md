@@ -14,87 +14,79 @@ SyncPro is a centralized application designed to streamline task and meeting sch
 
 ## Listing of File Contents
 project_directory/
-|   .env
-|   .gitignore
-|   file_structure.txt
-|   index.js
-|   package-lock.json
-|   package.json
-|   Procfile
-|   readme.md
-|   
-+---modules
-|       passport.js
-|       project.js
-|       task.js
-|       user.js
-|       utils.js
-|           
-+---public
-|       favicon.ico
-|       favicon.png
-|       
-+---views
-|       403error.ejs
-|       404error.ejs
-|       addMembersPage.ejs
-|       calendarPage.ejs
-|       easterEgg.ejs
-|       errormessage.ejs
-|       forgotPass.ejs
-|       forgotPassError.ejs
-|       homepage.ejs
-|       initializeTimezone.ejs
-|       login.ejs
-|       loginError.ejs
-|       main.ejs
-|       passwordChanged.ejs
-|       profile.ejs
-|       projectCreated.ejs
-|       signup.ejs
-|       signupError.ejs
-|       successMessage.ejs
-|       taskForm.ejs
-|       taskFormCalendar.ejs
-|       taskPage.ejs
-|       timelinePage.ejs
-|       userLocationNotification.ejs
-|       workspaceSetting.ejs
-|       
-|   +---img
-|   |       clock.gif
-|   |       favicon.png
-|   |       
-|   +---scripts
-|   |       addMembersToProject.js
-|   |       calendar.js
-|   |       dropdown.js
-|   |       easterEgg.js
-|   |       locationNotif.js
-|   |       membersLink.js
-|   |       taskPage.js
-|   |       timelinePage.js
-|   |       
-|   +---styles
-|   |       calendar.css
-|   |       clock.css
-|   |       easterEgg.css
-|   |       errorMessage.css
-|   |       nav.css
-|   |       successMessage.css
-|   |       taskPage.css
-|   |       timelinePage.css
-|   |       
-|   \---templates
-|           footerAfter.ejs
-|           footerBefore.ejs
-|           header.ejs
-|           headerAfter.ejs
-|           headerBefore.ejs
-|           memberManagementList.ejs
-|           notification.ejs
-|           successModal.ejs
-
+├── .env
+├── .gitignore
+├── file_structure.txt
+├── index.js
+├── package-lock.json
+├── package.json
+├── Procfile
+├── readme.md
+├── modules
+│   ├── passport.js
+│   ├── project.js
+│   ├── task.js
+│   ├── user.js
+│   └── utils.js
+├── public
+│   ├── favicon.ico
+│   └── favicon.png
+└── views
+    ├── 403error.ejs
+    ├── 404error.ejs
+    ├── addMembersPage.ejs
+    ├── calendarPage.ejs
+    ├── easterEgg.ejs
+    ├── errormessage.ejs
+    ├── forgotPass.ejs
+    ├── forgotPassError.ejs
+    ├── homepage.ejs
+    ├── initializeTimezone.ejs
+    ├── login.ejs
+    ├── loginError.ejs
+    ├── main.ejs
+    ├── passwordChanged.ejs
+    ├── profile.ejs
+    ├── projectCreated.ejs
+    ├── signup.ejs
+    ├── signupError.ejs
+    ├── successMessage.ejs
+    ├── taskForm.ejs
+    ├── taskFormCalendar.ejs
+    ├── taskPage.ejs
+    ├── timelinePage.ejs
+    ├── userLocationNotification.ejs
+    └── workspaceSetting.ejs
+    ├── img
+    │   ├── clock.gif
+    │   └── favicon.png
+    ├── scripts
+    │   ├── addMembersToProject.js
+    │   ├── calendar.js
+    │   ├── dropdown.js
+    │   ├── easterEgg.js
+    │   ├── locationNotif.js
+    │   ├── membersLink.js
+    │   ├── taskPage.js
+    │   └── timelinePage.js
+    ├── styles
+    │   ├── calendar.css
+    │   ├── clock.css
+    │   ├── easterEgg.css
+    │   ├── errorMessage.css
+    │   ├── nav.css
+    │   ├── successMessage.css
+    │   ├── taskPage.css
+    │   └── timelinePage.css
+    └── templates
+        ├── footerAfter.ejs
+        ├── footerBefore.ejs
+        ├── header.ejs
+        ├── headerAfter.ejs
+        ├── headerBefore.ejs
+        ├── memberManagementList.ejs
+        ├── notification.ejs
+        └── successModal.ejs
 
 
 ## Features added
