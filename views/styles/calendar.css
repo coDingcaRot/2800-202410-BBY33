@@ -1,0 +1,221 @@
+#calendar {
+    min-width: 50%;
+    max-width: 900px;
+    margin: 40px auto;
+    max-height: 70%;
+}
+
+.add-task {
+    position: absolute;
+    bottom: 80px;
+    right: 20px;
+    z-index: 4;
+}
+
+.add-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    border-radius: 50%;
+}
+
+.modal-content {
+    height: auto;
+    overflow-y: auto;
+    position: relative;
+}
+
+.footer {
+    z-index: 5;
+}
+
+/* CSS for the sliding up Task Form */
+.task-form {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #ffffff;
+    padding: 20px;
+    border-top: 1px solid #dee2e6;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+    transform: translateY(100%);
+    height: 93%;
+    /* overflow-y: auto;  */
+    border-radius: 15px;
+    z-index: 1040;
+}
+
+.task-form.show {
+    display: block;
+    transform: translateY(0);
+}
+
+.taskform-header {
+    position: relative;
+}
+
+#taskform-close-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+/* adjust reminder switch style */
+.form-switch-lg .form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+}
+
+.form-switch-lg .form-check-input:checked {
+    background-color: #0d6efd;
+}
+
+.form-switch-lg .form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-switch-lg .form-check-input:checked:before {
+    transform: translateX(1em);
+}
+
+.form-switch-lg .form-check-label {
+    margin-left: 0.75em;
+    font-size: 1.25rem;
+}
+
+/* switch toggle style in task form*/
+/* The switch - the box around the slider */
+.switch-container {
+    width: 41px;
+    height: 23px;
+    position: relative;
+    margin-right: 10px;
+}
+
+/* Hide default HTML checkbox */
+.checkbox {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.switch {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background-color: #e9e9eb;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+}
+
+/* The slider */
+.slider {
+    width: 21px;
+    height: 21px;
+    position: absolute;
+    left: calc(50% - 21px/2 - 10px);
+    top: calc(50% - 21px/2);
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.15), 0px 3px 1px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease-out;
+    cursor: pointer;
+}
+
+.checkbox:checked+.switch {
+    background-color: #34C759;
+}
+
+.checkbox:checked+.switch .slider {
+    left: calc(50% - 21px/2 + 10px);
+    top: calc(50% - 21px/2);
+}
+
+/* add member modal style */
+#add-member-modal {
+    position: absolute;
+    top: 20%;
+    right: 50%;
+}
+
+/* search bar inside add member modal style*/
+.member-search {
+    display: flex;
+    line-height: 28px;
+    align-items: center;
+    position: relative;
+    max-width: 250px;
+}
+
+.member-search .input {
+    width: 100%;
+    height: 40px;
+    line-height: 28px;
+    padding: 0 1rem;
+    padding-left: 2.5rem;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    outline: none;
+    background-color: #f3f3f4;
+    color: #0d0c22;
+    transition: 0.3s ease;
+}
+
+.member-search .input::placeholder {
+    color: #9e9ea7;
+}
+
+.member-search .input:focus,
+.member-search input:hover {
+    outline: none;
+    border-color: rgba(234, 226, 183, 0.4);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgb(234 226 183 / 10%);
+}
+
+.member-search .icon {
+    position: absolute;
+    left: 1rem;
+    fill: #9e9ea7;
+    width: 1rem;
+    height: 1rem;
+}
+
+/* member list in add member modal style */
+.member-list-wrap {
+    max-width: 240px;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.member-list-wrap li {
+    font-size: medium;
+}
+
+/* new-task form profile image style */
+#taskform-member-list .task-card-img {
+    margin-right: 10px;
+}
+
+@media screen and (max-width: 768px) {
+    #calendar {
+        margin-top: 2%;
+        height: 75%;
+        width: 100%;
+    }
+
+    .fc-header-toolbar {
+        font-size: 70%;
+    }
+
+    .fc-view-harness.fc-view-harness-active {
+        height: 600px !important;
+        width: 100% !important;
+    }
+}

@@ -1,0 +1,57 @@
+<%- include("templates/headerAfter", {dropdown: true, page: "/" , isTaskPage: isTaskPage }) %>
+
+    <div class="container">
+        <div class="welcome">
+            <h2>
+                <%= username.charAt(0).toUpperCase() + username.slice(1) %>'s Task
+            </h2>
+        </div>
+
+        <div class="task-wrapper">
+
+            <div class="controls">
+                <div class="filters">
+                    <span class="active" id="all">All</span>
+                    <span id="pending">Pending</span>
+                    <span id="completed">Completed</span>
+                </div>
+            </div>
+
+            <div class="row task-card-container" id="task-card-container">
+                <!-- The dynamically created task cards will be inserted here -->
+            </div>
+
+        </div>
+
+
+        <div class="add-task">
+            <button class="add-btn btn btn-outline-secondary" id="add-task-btn">+</button>
+        </div>
+    </div>
+
+
+
+    <!-- Hidden form -->
+    <div class="task-form" id="task-form">
+        <%- include("taskForm") %>
+    </div>
+
+    <!-- modal for showing task details -->
+    <div class="modal fade" id="taskdetailModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-content" style="height: 80vh;">
+            <div class="modal-header">
+                <h5>Task Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="taskdetailModalBody">
+              ..
+            </div>            
+
+          </div>
+        </div>
+    </div>
+    
+
+<%- include("templates/footerAfter", {dropdown: true, footer: true, isTaskPage: isTaskPage, isTimelinePage: false})
+    %>

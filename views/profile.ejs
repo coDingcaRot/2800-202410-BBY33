@@ -1,0 +1,45 @@
+<%- include("templates/headerAfter", {page: "/profile" , dropdown: false, backlink: "/homepage" , isTaskPage: false}) %>
+    <!-- Deleted , { currentURL: '/profile' , navLinks: navLinks }-->
+    <div class="container my-5">
+        <div class="p-5 text-center bg-body-tertiary rounded-3">
+            <form>
+                <div class="container mt-5">
+                    <h2>User Profile</h2>
+                    <form action="/profile" method="post">
+                        <div class="row g-3" style="justify-content: center; max-width: 450px; margin: auto;">
+                            <div class="col-12 text-start">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="usename" value="<%= userinfo.username %>"
+                                    readonly>
+                            </div>
+
+                            <div class="col-12 text-start">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" value="<%= userinfo.email %>"
+                                    readonly>
+                            </div>
+                            <div class="col-12 text-start">
+                                <label for="timezone" class="form-label">Time Zone</label>
+                                <input type="timezone" class="form-control" id="timezone"
+                                    value="<%= userinfo.timezone %>" readonly>
+                            </div>
+
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- <button class="btn btn-primary" type="submit">Save</button> -->
+                        <a href="/homepage" class="btn btn-secondary ms-5">Back</a>
+                    </form>
+                </div>
+            </form>
+
+        </div>
+    </div>
+    <style>
+        .btn-secondary:hover {
+            background-color: rgba(31, 31, 36, 0.861);
+            color: white;
+        }
+    </style>
+    <%- include("templates/footerAfter", {footer: false, dropdown: false, isTaskPage: false, isTimelinePage: false}) %>

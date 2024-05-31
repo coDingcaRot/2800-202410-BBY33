@@ -1,0 +1,121 @@
+<div class="mb-2 taskform-header">
+  <h3>New Task</h3>
+  <button type="button" class="btn-close" id="taskform-close-btn"></button>
+  <div class="line"></div>
+</div>
+
+<div class="taskform-wrapper">
+  <form name="new-task" class="d-flex flex-column justify-content-between" action="/addTaskCalendar" method="post">
+    <div class="form-group mb-3">
+      <label for="title">Title</label>
+      <input type="text" class="form-control" id="title" name="title" required>
+    </div>
+
+    <div class="form-group mb-3">
+      <label for="description">Description</label>
+      <input type="text" class="form-control" id="description" name="description">
+    </div>
+
+    <!-- start date and start time input -->
+    <div class="form-group mb-3">
+      <div class="row">
+        <div class="col-md-6">
+          <label for="start-date">Start Date</label>
+          <input type="date" class="form-control" id="start-date" name="startDate">
+        </div>
+        <div class="col-md-6">
+          <label for="start-time">Start Time</label>
+          <input type="time" class="form-control" id="start-time" name="startTime">
+        </div>
+      </div>
+    </div>
+
+    <!-- due date and start time input -->
+    <div class="form-group mb-3">
+      <div class="row">
+        <div class="col-md-6">
+          <label for="due-date">Due Date</label>
+          <input type="date" class="form-control" id="due-date" name="dueDate">
+        </div>
+        <div class="col-md-6">
+          <label for="due-time">Due Time</label>
+          <input type="time" class="form-control" id="due-time" name="dueTime">
+        </div>
+      </div>
+    </div>
+
+    <!-- reminder in new task form -->
+    <div class="form-group mb-3">
+      <div class="row">
+        <div class="col-md-6 d-flex align-items-center">
+          <span style="margin-right: 8px;">Reminder</span>
+          <div class="switch-container">
+            <input type="checkbox" class="checkbox" id="reminder-checkbox">
+            <label class="switch" for="reminder-checkbox">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <input type="datetime-local" id="reminder-datetime" name="reminderDatetime" style="display: none;">
+        </div>
+      </div>
+    </div>
+</div>
+
+
+
+<!-- add members function in new task form -->
+<div class="form-group mb-1">
+  <span>Members</span>
+  <button type="button" class="btn btn-light px-2 btn-sm" id="add-member-btn">+</button>
+</div>
+
+<div class="task-card-member-wrapper" id="taskform-member-list">
+  <!-- members been selected to specific task will show up here -->
+</div>
+
+<!-- add member pop up list modal -->
+<div class="modal fade" id="add-member-modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Assign to members</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body d-flex flex-column align-items-center ">
+        <!-- Add your content here -->
+        <div class="member-search mb-1">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="icon">
+            <g>
+              <path
+                d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z">
+              </path>
+            </g>
+          </svg>
+          <input class="input" type="search" placeholder="Search" id="member-search-filter" />
+        </div>
+
+        <div class="member-list-wrap">
+          <ul class="member-list-group">
+            <!-- Add more list items dynamically as needed -->
+          </ul>
+        </div>
+      </div>
+
+      <div class="modal-footer d-flex justify-content-center">
+        <button type="button" class="btn btn-primary" id="modal-add-member-btn">Add members</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="hidden" id="taskform-selected-member-list" name="selectedTaskMembers" value="">
+
+<!-- for tag the task form to make sure add to the corresponding project document -->
+<input type="hidden" id="taskform-project-id" name="projectId" value="">
+
+<div class="form-group mb-4 text-center">
+  <button type="submit" class="btn btn-primary">Add Task</button>
+</div>
+</form>
+</div>

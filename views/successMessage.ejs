@@ -1,0 +1,23 @@
+<!-- Success Message Modal -->
+<%- include("templates/headerBefore", {page: "/success"}) %>
+<div class="modal fade modal-dialog-centered modal-dialog" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <!-- <h5 class="modal-title" id="successModalLabel">Success</h5> -->
+                <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
+            </div>
+            <div class="modal-body text-center">
+                <div class="checkmark-circle">
+                    <div class="background"></div>
+                    <div class="checkmark draw"></div>
+                </div>
+                <h4><%= success %></h4>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <a href="<%= backlink %>" class="btn btn-primary">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+<%- include("templates/footerAfter", {footer: false, dropdown: false, isTaskPage: false, isTimelinePage: false} ) %> 

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="Your description goes here">
+    <meta name="keywords" content="one, two, three">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- external CSS link -->
+    <link rel="stylesheet" type="text/css" href="/styles/easterEgg.css">
+</head>
+<body>
+    <h2></h2>
+    <button id="easterEgg-btn">Lets Sync together</button>
+    
+    <script>
+        //Random Background Color 
+        const btn = document.getElementById('easterEgg-btn');
+        const text = "You found the EASTER EGG!!";
+        let index = 0;
+
+        // Event listener for the button to go back to the previous page
+        btn.addEventListener('click', () => {
+            history.back();
+        });
+
+        function randomBg(){
+            return `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`;
+        }
+
+        function changeBackground() {
+            document.body.style.backgroundColor = randomBg();
+        }
+
+        // Automatic letter on Dom 
+        function writeText() {
+            document.querySelector('h2').innerText = text.slice(0, index);
+            index++;
+
+            if (index > text.length) {
+                index = 0;
+            }
+        }
+        setInterval(writeText, 200);
+        setInterval(changeBackground, 1500);
+
+        //Emoji falling
+        // function createEmoji(){
+        //     const emoji = document.createElement ("div");
+        //     emoji.classList.add("emoji");            
+
+        //     emoji.style.left = Math.random() * 200 + "vw";
+        //     emoji.style.animationDuration = Math.random() * 2 + 3 + "s";
+
+        //     // emoji.innerText = "⏰"
+        //     document.body.appendChild(emoji);
+
+        //     setTimeout(() => {
+        //         emoji.remove();
+        //     }, 5000)
+        // }
+        // setInterval(createEmoji, 100)
+
+        // Image falling
+        function createFallingImage(){
+            const emoji = document.createElement("img");
+            emoji.src = "/img/favicon.png"; 
+
+            emoji.classList.add("emoji");            
+
+            emoji.style.width = "30px"; 
+            emoji.style.height = "30px";
+            emoji.style.left = Math.random() * 100 + "vw"; 
+            emoji.style.top = "-50px"; 
+            emoji.style.animationDuration = Math.random() * 2 + 3 + "s";
+
+            document.body.appendChild(emoji);
+
+            setTimeout(() => {
+                emoji.remove();
+            }, 5000)
+        }
+        setInterval(createFallingImage, 100)
+
+    </script>
+    
+</body>
+</html>

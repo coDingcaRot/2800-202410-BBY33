@@ -12,7 +12,7 @@
 </head>
 <body>
     <!-- If page is / or an error page it will not have the back button -->
-    <% if(page == '/' || page == '/error'){ %>
+    <% if(page == '/' || page == '/error' || page == '/success'){ %> <!-- Define page type or name -->
         <% for(var i = 0; i < 10; i++){ %>
             <br>
         <% } %>
@@ -20,7 +20,7 @@
         <div class="container">
             <header class="d-flex flex-wrap py-3 mb-4">
                 <ul class="nav nav-pills">
-                    <li class="nav-item"><a href="/" class="nav-link">&ltBack</a></li>
+                    <li class="nav-item"><a href=<%= backlink %> class="nav-link">&ltBack</a></li> <!-- define backlink -->
                 </ul>
             </header>
         </div>
