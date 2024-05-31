@@ -184,6 +184,9 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
+/**
+ * 
+ */
 app.post('/loggingin', (req, res, next) => {
     passport.authenticate('local', async (err, user, info) => {
         if (err) {
@@ -224,7 +227,7 @@ app.post('/loggingin', (req, res, next) => {
     })(req, res, next);
 });
 
-/***** FORGET PASS ROUTES *****/
+/***** FORGET PASS ROUTES (Not working)*****/
 app.get('/forgotPass', (req, res) => {
     res.render('forgotPass');
 });
@@ -255,11 +258,6 @@ app.post('/forgotPass', async (req, res) => {
 /************************************************* AUTHENTICATED PAGES *************************************************/
 
 /***** PROJECT CREATION *****/
-//create project page
-// app.post('/createProject', ensureAuth, (req, res) => {
-//     res.render("homepage", {createProject: true});
-// })
-
 //create project funx
 app.post('/createProjectSubmit', async (req, res) => {
     const { projectName } = req.body;
@@ -378,7 +376,7 @@ app.post('/addMembersPageSubmit', async (req, res) => {
     }
 });
 
-//deletes a 
+//deletes a member
 app.post('/deleteMember', async (req, res) => {
     const { projectId, memberEmail } = req.body;
     try {
@@ -439,9 +437,6 @@ app.post('/profile', ensureAuth, async (req, res) => {
         res.status(500).render('errormessage', { errorMessage: "Failed to update timezone." });
     }
 });
-
-
-/************************************************* AUTHENTICATED PAGES *************************************************/
 
 /* TaskPage START */
 // get the task data of specific project, matching same projectId and userId 
@@ -1061,7 +1056,6 @@ app.get("/timelineData", ensureAuth, async (req, res) => {
     }
 })
 
-
 app.get('/timelinePage', ensureAuth, async (req, res) => {
     if (req.isAuthenticated()) {
         const projectId = req.query.projectId;
@@ -1120,7 +1114,6 @@ app.get('/getUserTimezone', ensureAuth, async (req, res) => {
     }
 });
 
-
 app.get('/getOneTaskDetails', async (req, res) => {
     try {
         const taskId = req.query.taskId;
@@ -1131,7 +1124,6 @@ app.get('/getOneTaskDetails', async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 });
-
 
 /* TimelinePage END */
 

@@ -1,3 +1,9 @@
+/**
+ * Task template to replace joi using mongoose and more efficient CRUD operations
+ * 
+ * @author https://chat.openai.com/
+ * @author Jonathaniel Alipes
+ */
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
