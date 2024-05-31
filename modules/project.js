@@ -1,3 +1,9 @@
+/**
+ * Project template to replace joi using mongoose and more efficient CRUD operations
+ * 
+ * @author https://chat.openai.com/
+ * @author Jonathaniel
+ */
 const mongoose = require("mongoose");
 
 const projectSchema = new mongoose.Schema({
