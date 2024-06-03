@@ -79,8 +79,6 @@ const User = require('./modules/user.js');
 const Project = require('./modules/project.js');
 const Task = require('./modules/task.js');
 const { access } = require('fs');
-module.exports = getLocationAndTimezone;
-
 //Authentication function with passport
 function ensureAuth(req, res, next) {
     if (req.isAuthenticated()) {
@@ -122,6 +120,8 @@ const getLocationAndTimezone = async (req) => {
 
     return { location, timezone };
 };
+
+module.exports = getLocationAndTimezone;
 
 /*** PAGES ***/
 app.get('/', (req, res) => {
